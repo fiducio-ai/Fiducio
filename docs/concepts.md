@@ -52,8 +52,14 @@ all handled by the same code, which flattens every spatial position into a
 
 Multiclass segmentation with `C` classes is the default case. **Binary**
 (foreground/background) segmentation should be expressed as **two channels**
-(`C = 2`) — the same softmax machinery then applies. A single-channel sigmoid
-output should be converted to two channels before calibration.
+(`C = 2`) — the same softmax machinery then applies. If your model produces a
+single-channel sigmoid output, convert it first with
+[`fiducio.two_channel_from_binary`](api/metrics.md):
+
+```python
+from fiducio import two_channel_from_binary
+two_channel = two_channel_from_binary(sigmoid_logits, input_type="logits")  # (B, 2, *)
+```
 
 ## Masks and `ignore_index`
 
@@ -88,6 +94,25 @@ argument:
 `lr` and `max_iter` default to per-optimizer values (Adam: `lr=0.1`,
 `max_iter=200`; L-BFGS: `lr=1.0`, `max_iter=100`; the class-conditional
 calibrators keep `lr=0.01` for Adam), and can be overridden explicitly.
+
+## Calibrated probabilities vs logits
+
+`transform` (and its alias `predict_proba`) return calibrated **probabilities**.
+If you need the calibrated **logits** instead — for example to feed another loss
+— use `decision_function`, which returns pre-softmax scores of the same shape;
+`softmax(decision_function(x), dim=1)` equals `transform(x)`. Both run under
+`torch.no_grad()` and never build an autograd graph.
+
+## Memory and large volumes
+
+Fitting loads **all valid voxels** of the calibration set into a single
+`(N, C)` tensor in memory. This is fast and simple for typical calibration sets
+(a few dozen volumes), but for very large 3D datasets the flattened tensor can
+become large. If you hit memory limits, fit on a representative subset of cases
+or crop to a region of interest with a `mask`; calibration parameters are low
+dimensional and rarely need the full dataset. (Streaming/batched fitting is on
+the roadmap.) `transform` itself is applied volume by volume and is not memory
+bound in the same way.
 
 ## Behaviour before `fit`
 

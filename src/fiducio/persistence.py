@@ -22,12 +22,24 @@ from typing import Any
 import torch
 
 from .registry import get_calibrator_class
+from .utils import get_logger
 
 FORMAT_NAME = "fiducio-calibrator"
 FORMAT_VERSION = 1
 
 PathLike = str | os.PathLike
 MapLocation = str | torch.device
+
+_logger = get_logger(__name__)
+
+
+def _major(version_str: str | None) -> int | None:
+    if not version_str:
+        return None
+    try:
+        return int(str(version_str).split(".")[0])
+    except ValueError:
+        return None
 
 
 def _fiducio_version() -> str:
@@ -115,6 +127,16 @@ def load_calibrator(
 
     if not isinstance(payload, dict) or payload.get("format") != FORMAT_NAME:
         raise ValueError(f"{path} is not a Fiducio calibrator file")
+
+    saved_version = payload.get("fiducio_version")
+    saved_major, current_major = _major(saved_version), _major(_fiducio_version())
+    if saved_major is not None and current_major is not None and saved_major != current_major:
+        _logger.warning(
+            "calibrator was saved with fiducio %s but the installed version is %s; "
+            "loading may not be fully compatible",
+            saved_version,
+            _fiducio_version(),
+        )
 
     calibrator_id = payload["calibrator_id"]
     cls = get_calibrator_class(calibrator_id)

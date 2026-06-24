@@ -35,6 +35,8 @@ calibrated = calibrator.transform(new_logits)   # calibrated probabilities (B, C
 
 `transform` always returns **probabilities** that sum to 1 along the class axis.
 `predict_proba` is an alias, and `fit_transform(logits, labels)` does both steps.
+If you need calibrated **logits** instead, use `decision_function(new_logits)`
+(`softmax` of its output equals `transform`).
 
 ## 4. Measure the effect
 

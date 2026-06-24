@@ -197,3 +197,35 @@ def apply_mask_to_probabilities(
         return probs
     mask_b = mask.to(dtype=probs.dtype).unsqueeze(1)
     return probs * mask_b
+
+
+def two_channel_from_binary(
+    scores: ArrayLike, *, input_type: str = "logits"
+) -> torch.Tensor:
+    """Convert single-channel binary outputs to the two-channel form Fiducio uses.
+
+    Fiducio represents binary segmentation as two channels (``C = 2``). Use this
+    helper to convert a single-channel sigmoid output, whose class axis at
+    dimension 1 has size 1 (shape ``(B, 1, *spatial)``), into ``(B, 2, *spatial)``.
+    Class 1 is the positive class.
+
+    Parameters
+    ----------
+    scores:
+        ``(B, 1, *spatial)`` score for the positive class.
+    input_type:
+        ``"logits"`` — a sigmoid logit ``z``; returns logits ``[0, z]`` whose
+        softmax equals ``[1 - sigmoid(z), sigmoid(z)]``. ``"probs"`` — a
+        probability ``p``; returns ``[1 - p, p]``.
+    """
+    x = to_tensor(scores, dtype=torch.float32)
+    if x.ndim < 2 or x.shape[1] != 1:
+        raise ValueError(
+            "scores must have a singleton class axis at dimension 1, i.e. shape "
+            f"(B, 1, *spatial); got {tuple(x.shape)}"
+        )
+    if input_type == "logits":
+        return torch.cat([torch.zeros_like(x), x], dim=1)
+    if input_type == "probs":
+        return torch.cat([1.0 - x, x], dim=1)
+    raise ValueError(f"input_type must be 'logits' or 'probs', got {input_type!r}")

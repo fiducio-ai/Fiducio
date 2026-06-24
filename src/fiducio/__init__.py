@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from importlib.metadata import PackageNotFoundError, version
 
+from . import plots
 from .base import Calibrator, NotFittedError
 from .calibrators import (
     CMS,
@@ -29,12 +30,15 @@ from .calibrators import (
     VectorScaling,
 )
 from .metrics import (
+    ReliabilityCurve,
     brier_score,
     expected_calibration_error,
     negative_log_likelihood,
+    reliability_curve,
 )
 from .persistence import load_calibrator, save_calibrator
-from .registry import registered_ids
+from .registry import get_calibrator_class, registered_ids
+from .utils import two_channel_from_binary
 
 try:
     __version__ = version("fiducio")
@@ -64,12 +68,19 @@ __all__ = [
     "CMS",
     "CMSAP",
     "CMSOP",
-    # persistence
+    # persistence & registry
     "save_calibrator",
     "load_calibrator",
     "registered_ids",
+    "get_calibrator_class",
     # metrics
     "negative_log_likelihood",
     "expected_calibration_error",
     "brier_score",
+    "reliability_curve",
+    "ReliabilityCurve",
+    # helpers
+    "two_channel_from_binary",
+    # plotting (optional, requires fiducio[plots])
+    "plots",
 ]

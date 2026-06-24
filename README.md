@@ -28,8 +28,8 @@ pip install "git+https://github.com/fiducio-ai/Fiducio.git"
 ```
 
 The core install depends only on `numpy` and `torch`. Optional extras:
-`fiducio[plots]`, `fiducio[medical]`, `fiducio[docs]`, `fiducio[dev]`,
-`fiducio[all]`.
+`fiducio[plots]` (matplotlib reliability diagrams), `fiducio[docs]`,
+`fiducio[dev]`, `fiducio[all]`.
 
 ## Quick start
 
@@ -83,8 +83,13 @@ channels (`C = 2`). `mask` and `ignore_index` exclude voxels from fitting.
 | `ArgmaxPreservingMatrixScaling` | `CMSAP` | preserves argmax |
 | `OrderPreservingMatrixScaling` | `CMSOP` | preserves full order |
 
+Every calibrator also exposes `decision_function` (calibrated logits) and a
+configurable `optimizer` (`"adam"` default, or `"lbfgs"`).
+
 Calibration metrics are included: `negative_log_likelihood`,
-`expected_calibration_error`, `brier_score`.
+`expected_calibration_error`, `brier_score`, `reliability_curve`, plus an
+optional reliability-diagram plot (`fiducio.plots.reliability_diagram`, needs
+`fiducio[plots]`).
 
 ## Documentation
 

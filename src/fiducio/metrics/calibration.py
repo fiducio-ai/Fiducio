@@ -2,11 +2,13 @@
 
 All metrics accept probabilities of shape ``(B, C, *spatial)`` (class axis at
 dimension 1) and integer labels of shape ``(B, *spatial)``, with optional
-``mask`` and ``ignore_index``. They return Python floats.
+``mask`` and ``ignore_index``. They return Python floats (or, for
+:func:`reliability_curve`, a :class:`ReliabilityCurve`).
 """
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 import torch
@@ -65,6 +67,69 @@ def brier_score(
     return float((p - one_hot).square().sum(dim=1).mean().item())
 
 
+@dataclass
+class ReliabilityCurve:
+    """Per-bin reliability statistics from top-1 confidence binning.
+
+    Attributes
+    ----------
+    bin_edges:
+        ``(n_bins + 1,)`` bin boundaries in ``[0, 1]``.
+    bin_confidence:
+        ``(n_bins,)`` mean predicted confidence per bin (0 for empty bins).
+    bin_accuracy:
+        ``(n_bins,)`` mean accuracy per bin (0 for empty bins).
+    bin_counts:
+        ``(n_bins,)`` number of voxels per bin.
+    ece:
+        Expected calibration error (count-weighted mean ``|confidence -
+        accuracy|``).
+    """
+
+    bin_edges: torch.Tensor
+    bin_confidence: torch.Tensor
+    bin_accuracy: torch.Tensor
+    bin_counts: torch.Tensor
+    ece: float
+
+
+def reliability_curve(
+    probs: Any,
+    targets: Any,
+    mask: Any | None = None,
+    ignore_index: int = -100,
+    n_bins: int = 15,
+) -> ReliabilityCurve:
+    """Compute top-1 reliability statistics with uniform binning.
+
+    The confidence is the maximum predicted probability and the accuracy is
+    whether the argmax matches the label. Useful both for reporting ECE and for
+    drawing reliability diagrams (see :func:`fiducio.plots.reliability_diagram`).
+    """
+    if n_bins < 1:
+        raise ValueError("n_bins must be >= 1")
+    p, y = _flatten_valid(probs, targets, mask, ignore_index)
+    edges = torch.linspace(0.0, 1.0, n_bins + 1)
+    if p.shape[0] == 0:
+        zeros = torch.zeros(n_bins)
+        return ReliabilityCurve(edges, zeros, zeros.clone(), zeros.clone(), float("nan"))
+
+    confidence, prediction = p.max(dim=1)
+    correct = (prediction == y).to(torch.float32)
+    # Bin index in [0, n_bins - 1].
+    idx = torch.bucketize(confidence, edges[1:-1].contiguous(), right=False)
+
+    counts = torch.zeros(n_bins).scatter_add_(0, idx, torch.ones_like(confidence))
+    sum_conf = torch.zeros(n_bins).scatter_add_(0, idx, confidence)
+    sum_acc = torch.zeros(n_bins).scatter_add_(0, idx, correct)
+    safe_counts = counts.clamp_min(1.0)
+    bin_conf = sum_conf / safe_counts
+    bin_acc = sum_acc / safe_counts
+    total = float(confidence.shape[0])
+    ece = float(((counts / total) * (bin_conf - bin_acc).abs()).sum().item())
+    return ReliabilityCurve(edges, bin_conf, bin_acc, counts, ece)
+
+
 def expected_calibration_error(
     probs: Any,
     targets: Any,
@@ -77,24 +142,4 @@ def expected_calibration_error(
     The confidence is the maximum predicted probability and the accuracy is
     whether the argmax matches the label. Bins partition ``[0, 1]`` uniformly.
     """
-    if n_bins < 1:
-        raise ValueError("n_bins must be >= 1")
-    p, y = _flatten_valid(probs, targets, mask, ignore_index)
-    if p.shape[0] == 0:
-        return float("nan")
-    confidence, prediction = p.max(dim=1)
-    correct = (prediction == y).to(torch.float32)
-    edges = torch.linspace(0.0, 1.0, n_bins + 1, device=p.device)
-    # bin index in [0, n_bins-1]
-    idx = torch.bucketize(confidence, edges[1:-1].contiguous(), right=False)
-    total = confidence.shape[0]
-    ece = torch.zeros((), device=p.device)
-    for b in range(n_bins):
-        in_bin = idx == b
-        count = int(in_bin.sum().item())
-        if count == 0:
-            continue
-        avg_conf = confidence[in_bin].mean()
-        avg_acc = correct[in_bin].mean()
-        ece = ece + (count / total) * (avg_conf - avg_acc).abs()
-    return float(ece.item())
+    return reliability_curve(probs, targets, mask, ignore_index, n_bins).ece

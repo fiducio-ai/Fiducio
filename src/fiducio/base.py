@@ -132,18 +132,25 @@ class Calibrator(ABC):
         """
         if not self._fitted:
             raise NotFittedError("call fit() before transform()")
-        preds, _, msk = self._prepare(predictions, None, mask, with_targets=False)
-        validate_predictions(
-            preds, input_type=self.input_type, expected_num_classes=self._num_classes
-        )
-        canonical = self._to_canonical(preds)
-        calibrated_logits = self._map_logits(canonical)
-        probs = F.softmax(calibrated_logits, dim=1)
+        logits, msk = self._calibrated_logits(predictions, mask)
+        probs = F.softmax(logits, dim=1)
         return apply_mask_to_probabilities(probs, msk)
 
     def predict_proba(self, predictions: Any, mask: Any | None = None) -> torch.Tensor:
         """Alias for :meth:`transform`; returns calibrated probabilities."""
         return self.transform(predictions, mask=mask)
+
+    def decision_function(self, predictions: Any) -> torch.Tensor:
+        """Return calibrated **logits** (pre-softmax) of the input shape.
+
+        Unlike :meth:`transform`, no mask is applied — a logit of 0 is a
+        meaningful value, so masking calibrated logits is left to the caller.
+        ``softmax`` of the result along dimension 1 equals :meth:`transform`.
+        """
+        if not self._fitted:
+            raise NotFittedError("call fit() before decision_function()")
+        logits, _ = self._calibrated_logits(predictions, None)
+        return logits
 
     def fit_transform(
         self,
@@ -169,6 +176,13 @@ class Calibrator(ABC):
         }
         config.update(self._constructor_config())
         return config
+
+    def __repr__(self) -> str:
+        status = "fitted" if self._fitted else "unfitted"
+        return (
+            f"{type(self).__name__}(input_type={self.input_type!r}, "
+            f"{status}, device={self.device})"
+        )
 
     # ------------------------------------------------------------- subclass API
 
@@ -223,3 +237,16 @@ class Calibrator(ABC):
         if self.input_type == "probs":
             return safe_log(predictions)
         return F.log_softmax(predictions, dim=1)
+
+    def _calibrated_logits(
+        self, predictions: Any, mask: Any | None
+    ) -> tuple[torch.Tensor, torch.Tensor | None]:
+        """Validate inputs and return calibrated logits (no autograd graph)."""
+        preds, _, msk = self._prepare(predictions, None, mask, with_targets=False)
+        validate_predictions(
+            preds, input_type=self.input_type, expected_num_classes=self._num_classes
+        )
+        with torch.no_grad():
+            canonical = self._to_canonical(preds)
+            logits = self._map_logits(canonical)
+        return logits, msk

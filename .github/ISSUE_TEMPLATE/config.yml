@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://fiducio-ai.github.io/Fiducio/
+    about: Installation, quickstart, concepts and the full API reference.

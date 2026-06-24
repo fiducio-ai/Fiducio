@@ -35,9 +35,11 @@ nav:
   - Concepts: concepts.md
   - Calibrators: calibrators.md
   - Examples: examples.md
+  - Plotting: plots.md
   - API Reference:
       - Calibrators: api/calibrators.md
-      - Metrics: api/metrics.md
+      - Metrics & helpers: api/metrics.md
+      - Plotting: api/plots.md
       - Persistence: api/persistence.md
 
 markdown_extensions:

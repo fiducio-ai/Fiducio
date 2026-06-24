@@ -25,18 +25,18 @@ loaded only when you ask for them:
 
 | Extra | Installs | For |
 |-------|----------|-----|
-| `fiducio[plots]` | `matplotlib` | plotting helpers |
-| `fiducio[medical]` | `nibabel`, `monai` | reading medical-image volumes |
+| `fiducio[plots]` | `matplotlib` | reliability-diagram plots |
 | `fiducio[docs]` | MkDocs Material + mkdocstrings | building the docs |
-| `fiducio[dev]` | pytest, ruff, mypy, build | development |
+| `fiducio[dev]` | pytest, ruff, mypy, build, matplotlib | development |
 | `fiducio[all]` | all of the above | everything |
 
 ```bash
-pip install "fiducio[medical]"
+pip install "fiducio[plots]"
 ```
 
-A minimal install can `import fiducio` and use every calibrator without
-MONAI, nibabel or matplotlib present.
+A minimal install can `import fiducio` and use every calibrator and metric
+without matplotlib present; matplotlib is only needed for the optional
+plotting helpers.
 
 ## Verifying the install
 

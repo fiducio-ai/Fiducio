@@ -36,6 +36,31 @@ def test_cmsop_preserves_argmax_too():
     assert torch.equal(to_probs(logits).argmax(dim=1), out.argmax(dim=1))
 
 
+def test_cmsap_preserves_argmax_on_unrelated_random_inputs():
+    # Preservation is a structural property of the map: it must hold for inputs
+    # unrelated to the calibration set, including near-ties from small logits.
+    torch.manual_seed(99)
+    logits = torch.randn(4, 5, 8, 8)
+    labels = torch.randint(0, 5, (4, 8, 8))
+    cal = ArgmaxPreservingMatrixScaling(device="cpu", max_iter=50).fit(logits, labels)
+    test_logits = torch.randn(3, 5, 8, 8) * 0.5
+    out = cal.transform(test_logits)
+    assert torch.equal(to_probs(test_logits).argmax(dim=1), out.argmax(dim=1))
+
+
+def test_cmsop_preserves_order_on_unrelated_random_inputs():
+    torch.manual_seed(100)
+    logits = torch.randn(4, 5, 8, 8)
+    labels = torch.randint(0, 5, (4, 8, 8))
+    cal = OrderPreservingMatrixScaling(device="cpu", max_iter=50).fit(logits, labels)
+    test_logits = torch.randn(3, 5, 8, 8) * 0.5
+    out = cal.transform(test_logits)
+    c = test_logits.shape[1]
+    raw_order = to_probs(test_logits).movedim(1, -1).reshape(-1, c).argsort(dim=1)
+    cal_order = out.movedim(1, -1).reshape(-1, c).argsort(dim=1)
+    assert torch.equal(raw_order, cal_order)
+
+
 def test_translation_invariance():
     logits, labels = synthetic_logits((3, 4, 6, 6), seed=13)
     cal = TranslationInvariantMatrixScaling(device="cpu").fit(logits, labels)

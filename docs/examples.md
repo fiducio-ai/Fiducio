@@ -44,3 +44,15 @@ def collect_logits(model, loader):
 The exact same procedure applies to a **U-Net**, **nnU-Net** or **SegFormer** —
 only the model and the source of `images`/`targets` change. See
 [Concepts](concepts.md#integrating-with-u-net-nnu-net-and-segformer).
+
+## 3. Reliability diagram
+
+[`examples/reliability_diagram.py`](https://github.com/fiducio-ai/Fiducio/blob/main/examples/reliability_diagram.py)
+
+Fits `TemperatureScaling` and saves a before/after reliability diagram as a PNG.
+Requires the plotting extra (`pip install "fiducio[plots]"`); see
+[Plotting](plots.md).
+
+```bash
+python examples/reliability_diagram.py
+```

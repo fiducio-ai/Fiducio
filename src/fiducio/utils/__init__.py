@@ -12,6 +12,7 @@ from .tensors import (
     restore_class_first,
     safe_log,
     to_tensor,
+    two_channel_from_binary,
     validate_predictions,
     validate_targets,
 )
@@ -26,6 +27,7 @@ __all__ = [
     "restore_class_first",
     "safe_log",
     "to_tensor",
+    "two_channel_from_binary",
     "validate_predictions",
     "validate_targets",
 ]

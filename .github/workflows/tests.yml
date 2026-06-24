@@ -45,6 +45,7 @@ jobs:
         run: |
           python examples/basic_segmentation_calibration.py
           python examples/pytorch_model_calibration.py
+          python examples/reliability_diagram.py
 
   docs-build:
     runs-on: ubuntu-latest

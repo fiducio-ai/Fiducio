@@ -10,6 +10,7 @@ import torch.nn.functional as F
 from ..base import Calibrator, DeviceLike
 from ..registry import register_calibrator
 from ..utils import class_last_flatten, restore_class_first, safe_log
+from ._optim import minimize, resolve_optimizer
 
 _EPS = 1e-12
 _T_EPS = 1e-6
@@ -32,10 +33,13 @@ class EnsembleTemperatureScaling(Calibrator):
     ----------
     init_temperature:
         Initial temperature for stage 1.
-    max_iter:
-        Maximum L-BFGS iterations per stage.
+    optimizer:
+        ``"adam"`` (default) or ``"lbfgs"``.
     lr:
-        L-BFGS learning rate.
+        Learning rate. Defaults to ``0.1`` (Adam) or ``1.0`` (L-BFGS).
+    max_iter:
+        Maximum optimizer iterations per stage. Defaults to ``200`` (Adam) or
+        ``100`` (L-BFGS).
     input_type, ignore_index, device:
         See :class:`fiducio.Calibrator`.
 
@@ -51,8 +55,9 @@ class EnsembleTemperatureScaling(Calibrator):
         self,
         *,
         init_temperature: float = 1.0,
-        max_iter: int = 100,
-        lr: float = 0.1,
+        optimizer: str = "adam",
+        lr: float | None = None,
+        max_iter: int | None = None,
         input_type: str = "logits",
         ignore_index: int = -100,
         device: DeviceLike | None = None,
@@ -61,8 +66,10 @@ class EnsembleTemperatureScaling(Calibrator):
         if init_temperature <= 0:
             raise ValueError("init_temperature must be positive")
         self.init_temperature = float(init_temperature)
-        self.max_iter = int(max_iter)
-        self.lr = float(lr)
+        self.optimizer, self.lr, self.max_iter = resolve_optimizer(
+            optimizer, lr, max_iter,
+            adam_lr=0.1, lbfgs_lr=1.0, adam_max_iter=200, lbfgs_max_iter=100,
+        )
         self.temperature: float = float(init_temperature)
         self.weights: torch.Tensor = torch.tensor([1.0, 0.0, 0.0], device=self.device)
 
@@ -70,18 +77,12 @@ class EnsembleTemperatureScaling(Calibrator):
         init = max(self.init_temperature, _T_EPS)
         raw = torch.log(torch.expm1(torch.tensor(init, device=self.device)))
         raw_t = raw.clone().requires_grad_(True)
-        optimizer = torch.optim.LBFGS(
-            [raw_t], lr=self.lr, max_iter=self.max_iter, line_search_fn="strong_wolfe"
-        )
 
-        def closure() -> torch.Tensor:
-            optimizer.zero_grad()
+        def loss_fn() -> torch.Tensor:
             temperature = F.softplus(raw_t) + _T_EPS
-            loss = F.cross_entropy(z_flat / temperature, y_flat)
-            loss.backward()
-            return loss
+            return F.cross_entropy(z_flat / temperature, y_flat)
 
-        optimizer.step(closure)
+        minimize(self.optimizer, [raw_t], loss_fn, lr=self.lr, max_iter=self.max_iter)
         self.temperature = float((F.softplus(raw_t) + _T_EPS).detach().cpu().item())
 
     def _fit_weights(self, z_flat: torch.Tensor, y_flat: torch.Tensor, num_classes: int) -> None:
@@ -90,20 +91,13 @@ class EnsembleTemperatureScaling(Calibrator):
         p1 = F.softmax(z_flat, dim=1).detach()
         p2 = torch.full_like(p0, 1.0 / float(num_classes))
         raw_w = torch.tensor([1.0, 0.0, 0.0], device=self.device).requires_grad_(True)
-        optimizer = torch.optim.LBFGS(
-            [raw_w], lr=self.lr, max_iter=self.max_iter, line_search_fn="strong_wolfe"
-        )
 
-        def closure() -> torch.Tensor:
-            optimizer.zero_grad()
+        def loss_fn() -> torch.Tensor:
             w = F.softmax(raw_w, dim=0)
-            p = w[0] * p0 + w[1] * p1 + w[2] * p2
-            p = p.clamp_min(_EPS)
-            loss = F.nll_loss(torch.log(p), y_flat)
-            loss.backward()
-            return loss
+            p = (w[0] * p0 + w[1] * p1 + w[2] * p2).clamp_min(_EPS)
+            return F.nll_loss(torch.log(p), y_flat)
 
-        optimizer.step(closure)
+        minimize(self.optimizer, [raw_w], loss_fn, lr=self.lr, max_iter=self.max_iter)
         self.weights = F.softmax(raw_w, dim=0).detach()
 
     def _fit_core(self, z_flat: torch.Tensor, y_flat: torch.Tensor, num_classes: int) -> None:
@@ -127,8 +121,9 @@ class EnsembleTemperatureScaling(Calibrator):
     def _constructor_config(self) -> dict[str, Any]:
         return {
             "init_temperature": self.init_temperature,
-            "max_iter": self.max_iter,
+            "optimizer": self.optimizer,
             "lr": self.lr,
+            "max_iter": self.max_iter,
         }
 
     def _get_state(self) -> dict[str, Any]:

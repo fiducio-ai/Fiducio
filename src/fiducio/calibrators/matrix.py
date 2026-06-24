@@ -16,10 +16,13 @@ class MatrixScaling(_AffineCalibrator):
 
     Parameters
     ----------
-    max_iter:
-        Maximum L-BFGS iterations.
+    optimizer:
+        ``"adam"`` (default) or ``"lbfgs"``.
     lr:
-        L-BFGS learning rate.
+        Learning rate. Defaults to ``0.1`` (Adam) or ``1.0`` (L-BFGS).
+    max_iter:
+        Maximum optimizer iterations. Defaults to ``200`` (Adam) or ``100``
+        (L-BFGS).
     lambda_reg:
         L2 penalty on the off-diagonal entries of ``W`` (ODIR).
     mu_reg:

@@ -9,6 +9,7 @@ import torch.nn.functional as F
 
 from ..base import Calibrator, DeviceLike
 from ..utils import class_last_flatten, restore_class_first
+from ._optim import minimize, resolve_optimizer
 
 
 class _AffineCalibrator(Calibrator):
@@ -30,8 +31,9 @@ class _AffineCalibrator(Calibrator):
     def __init__(
         self,
         *,
-        max_iter: int = 100,
-        lr: float = 1.0,
+        optimizer: str = "adam",
+        lr: float | None = None,
+        max_iter: int | None = None,
         lambda_reg: float = 0.0,
         mu_reg: float = 0.0,
         input_type: str = "logits",
@@ -39,8 +41,10 @@ class _AffineCalibrator(Calibrator):
         device: DeviceLike | None = None,
     ) -> None:
         super().__init__(input_type=input_type, ignore_index=ignore_index, device=device)
-        self.max_iter = int(max_iter)
-        self.lr = float(lr)
+        self.optimizer, self.lr, self.max_iter = resolve_optimizer(
+            optimizer, lr, max_iter,
+            adam_lr=0.1, lbfgs_lr=1.0, adam_max_iter=200, lbfgs_max_iter=100,
+        )
         self.lambda_reg = float(lambda_reg)
         self.mu_reg = float(mu_reg)
         self._weight: torch.Tensor | None = None  # (C, C) or (C,) for diagonal
@@ -90,18 +94,12 @@ class _AffineCalibrator(Calibrator):
         self._init_params(num_classes)
         assert self._weight is not None and self._bias is not None
         params = [self._weight.requires_grad_(True), self._bias.requires_grad_(True)]
-        optimizer = torch.optim.LBFGS(
-            params, lr=self.lr, max_iter=self.max_iter, line_search_fn="strong_wolfe"
-        )
 
-        def closure() -> torch.Tensor:
-            optimizer.zero_grad()
+        def loss_fn() -> torch.Tensor:
             logits = self._apply_flat(z_flat)
-            loss = F.cross_entropy(logits, y_flat) + self._regularization()
-            loss.backward()
-            return loss
+            return F.cross_entropy(logits, y_flat) + self._regularization()
 
-        optimizer.step(closure)
+        minimize(self.optimizer, params, loss_fn, lr=self.lr, max_iter=self.max_iter)
         self._weight = self._weight.detach()
         self._bias = self._bias.detach()
 
@@ -114,8 +112,9 @@ class _AffineCalibrator(Calibrator):
 
     def _constructor_config(self) -> dict[str, Any]:
         return {
-            "max_iter": self.max_iter,
+            "optimizer": self.optimizer,
             "lr": self.lr,
+            "max_iter": self.max_iter,
             "lambda_reg": self.lambda_reg,
             "mu_reg": self.mu_reg,
         }

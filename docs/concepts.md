@@ -74,6 +74,21 @@ no probability mass.
 - Saved calibrators **load on CPU by default**; pass `map_location="cuda"` to
   `load_calibrator` to load onto a GPU. The device used when saving is not forced.
 
+## Optimizer
+
+Every calibrator is fitted by gradient descent and exposes an `optimizer`
+argument:
+
+- `optimizer="adam"` (default) — Adam, matching the common reference
+  implementations; robust and the safe choice.
+- `optimizer="lbfgs"` — L-BFGS with strong-Wolfe line search; fast and
+  deterministic for the convex scaling objectives (temperature, vector, matrix,
+  Dirichlet).
+
+`lr` and `max_iter` default to per-optimizer values (Adam: `lr=0.1`,
+`max_iter=200`; L-BFGS: `lr=1.0`, `max_iter=100`; the class-conditional
+calibrators keep `lr=0.01` for Adam), and can be overridden explicitly.
+
 ## Behaviour before `fit`
 
 Calling `transform` before `fit` raises `NotFittedError`. After fitting, passing

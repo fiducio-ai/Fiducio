@@ -29,6 +29,8 @@ First public beta release.
   - `ClassConditionalMatrixScaling` (`CMS`)
   - `ArgmaxPreservingMatrixScaling` (`CMSAP`)
   - `OrderPreservingMatrixScaling` (`CMSOP`)
+- Configurable optimizer on every calibrator: `optimizer="adam"` (default) or
+  `optimizer="lbfgs"`, with sensible per-optimizer `lr` / `max_iter` defaults.
 - Calibration metrics: negative log-likelihood, expected calibration error
   (ECE) and multiclass Brier score.
 - Registry-backed persistence (`save` / `load_calibrator`) that loads on CPU by

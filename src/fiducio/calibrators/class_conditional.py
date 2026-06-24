@@ -24,6 +24,7 @@ import torch.nn.functional as F
 from ..base import Calibrator, DeviceLike
 from ..registry import register_calibrator
 from ..utils import class_last_flatten, restore_class_first
+from ._optim import minimize, resolve_optimizer
 
 
 def _inv_softplus(value: float, device: torch.device) -> torch.Tensor:
@@ -41,8 +42,9 @@ class _ClassConditionalBase(Calibrator):
     def __init__(
         self,
         *,
-        max_iter: int = 200,
-        lr: float = 1e-2,
+        optimizer: str = "adam",
+        lr: float | None = None,
+        max_iter: int | None = None,
         lambda_reg: float = 0.0,
         mu_reg: float = 0.0,
         min_expert_voxels: int = 1,
@@ -53,8 +55,10 @@ class _ClassConditionalBase(Calibrator):
         device: DeviceLike | None = None,
     ) -> None:
         super().__init__(input_type=input_type, ignore_index=ignore_index, device=device)
-        self.max_iter = int(max_iter)
-        self.lr = float(lr)
+        self.optimizer, self.lr, self.max_iter = resolve_optimizer(
+            optimizer, lr, max_iter,
+            adam_lr=1e-2, lbfgs_lr=1.0, adam_max_iter=200, lbfgs_max_iter=100,
+        )
         self.lambda_reg = float(lambda_reg)
         self.mu_reg = float(mu_reg)
         self.min_expert_voxels = max(1, int(min_expert_voxels))
@@ -135,29 +139,26 @@ class _ClassConditionalBase(Calibrator):
             targets = y_flat[sel]
             b_c = self._raw_b[c].clone().requires_grad_(True)
             mu_c = self._raw_mu[c].clone().requires_grad_(True)
-            optimizer = torch.optim.Adam([b_c, mu_c], lr=self.lr)
-            best_loss = float("inf")
-            best_b = b_c.detach().clone()
-            best_mu = mu_c.detach().clone()
-            for _ in range(self.max_iter):
-                optimizer.zero_grad()
+
+            def loss_fn(
+                b_c: torch.Tensor = b_c,
+                mu_c: torch.Tensor = mu_c,
+                c: int = c,
+                rows: torch.Tensor = rows,
+                targets: torch.Tensor = targets,
+            ) -> torch.Tensor:
                 bp = self._positive(b_c)
                 mup = self._positive(mu_c)
                 logits = self._expert_logits(rows, c, bp, mup)
                 affine_a, affine_b = self._logit_affine(num_classes, c, bp, mup)
-                loss = F.cross_entropy(logits, targets) + self._ms_regularization(
+                return F.cross_entropy(logits, targets) + self._ms_regularization(
                     affine_a, affine_b, self.lambda_reg, self.mu_reg
                 )
-                loss.backward()
-                optimizer.step()
-                value = float(loss.detach().item())
-                if value + 1e-9 < best_loss:
-                    best_loss = value
-                    best_b = b_c.detach().clone()
-                    best_mu = mu_c.detach().clone()
+
+            minimize(self.optimizer, [b_c, mu_c], loss_fn, lr=self.lr, max_iter=self.max_iter)
             with torch.no_grad():
-                self._raw_b[c] = best_b
-                self._raw_mu[c] = best_mu
+                self._raw_b[c] = b_c.detach()
+                self._raw_mu[c] = mu_c.detach()
 
     def _route(self, logp_flat: torch.Tensor, num_classes: int) -> torch.Tensor:
         assert self._raw_b is not None and self._raw_mu is not None
@@ -182,8 +183,9 @@ class _ClassConditionalBase(Calibrator):
 
     def _constructor_config(self) -> dict[str, Any]:
         return {
-            "max_iter": self.max_iter,
+            "optimizer": self.optimizer,
             "lr": self.lr,
+            "max_iter": self.max_iter,
             "lambda_reg": self.lambda_reg,
             "mu_reg": self.mu_reg,
             "min_expert_voxels": self.min_expert_voxels,

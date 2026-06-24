@@ -1,0 +1,104 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fiducio"
+version = "0.1.0"
+description = "Model-agnostic post-hoc calibration for 2D and 3D semantic segmentation"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "Fiducio maintainers (fiducio-ai)" }]
+maintainers = [{ name = "fiducio-ai" }]
+keywords = [
+  "calibration",
+  "post-hoc calibration",
+  "semantic segmentation",
+  "uncertainty",
+  "temperature scaling",
+  "matrix scaling",
+  "dirichlet calibration",
+  "pytorch",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Operating System :: OS Independent",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Typing :: Typed",
+]
+dependencies = [
+  "numpy>=1.22",
+  "torch>=2.0",
+]
+
+[project.optional-dependencies]
+plots = ["matplotlib>=3.5"]
+medical = ["nibabel>=5.0", "monai>=1.3"]
+docs = [
+  "mkdocs>=1.6",
+  "mkdocs-material>=9.5",
+  "mkdocstrings[python]>=0.30",
+]
+dev = [
+  "pytest>=8.0",
+  "pytest-cov>=4.0",
+  "ruff>=0.4.0",
+  "mypy>=1.11",
+  "build>=1.0",
+]
+all = [
+  "fiducio[plots]",
+  "fiducio[medical]",
+  "fiducio[docs]",
+  "fiducio[dev]",
+]
+
+[project.urls]
+Homepage = "https://github.com/fiducio-ai/Fiducio"
+Documentation = "https://fiducio-ai.github.io/Fiducio/"
+Repository = "https://github.com/fiducio-ai/Fiducio"
+Issues = "https://github.com/fiducio-ai/Fiducio/issues"
+Changelog = "https://github.com/fiducio-ai/Fiducio/blob/main/CHANGELOG.md"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["fiducio*"]
+
+[tool.setuptools.package-data]
+fiducio = ["py.typed"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests", "examples"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["B011"]
+"examples/**" = ["E402"]
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+files = ["src/fiducio"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

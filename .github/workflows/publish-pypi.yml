@@ -1,0 +1,44 @@
+# PyPI publishing via Trusted Publishing (OpenID Connect, no long-lived tokens).
+#
+# DISABLED BY DEFAULT: this workflow only runs when started manually
+# (workflow_dispatch) AND requires confirmation. Before the first publish you
+# must configure a Trusted Publisher for the `fiducio` project on PyPI and create
+# a protected `pypi` environment in the repository settings. No API token is
+# stored in the repository.
+name: Publish to PyPI (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "publish" to confirm uploading to PyPI'
+        required: true
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    if: ${{ github.event.inputs.confirm == 'publish' }}
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/fiducio
+    permissions:
+      id-token: write  # required for Trusted Publishing
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Build wheel and sdist
+        run: |
+          python -m pip install --upgrade build
+          python -m build
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

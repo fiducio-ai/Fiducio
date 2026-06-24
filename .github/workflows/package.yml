@@ -1,0 +1,74 @@
+name: Package
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Build wheel and sdist
+        run: |
+          python -m pip install --upgrade build twine
+          python -m build
+
+      - name: Check artifacts
+        run: twine check dist/*
+
+      - name: Upload distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: distributions
+          path: dist/
+
+  smoke-install:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Download distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: distributions
+          path: dist/
+
+      - name: Install CPU PyTorch
+        run: pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Install the built wheel
+        run: pip install dist/*.whl
+
+      - name: Smoke test the installed wheel
+        run: |
+          python -c "import fiducio; print(fiducio.__version__); print(fiducio.registered_ids())"
+          python - <<'PY'
+          import torch
+          from fiducio import TemperatureScaling, load_calibrator
+          logits = torch.randn(4, 3, 8, 8)
+          labels = torch.randint(0, 3, (4, 8, 8))
+          cal = TemperatureScaling(device="cpu").fit(logits, labels)
+          out = cal.transform(logits)
+          assert out.shape == logits.shape
+          cal.save("cal.pt")
+          assert torch.allclose(out, load_calibrator("cal.pt").transform(logits), atol=1e-6)
+          print("wheel smoke test OK")
+          PY

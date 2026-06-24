@@ -1,0 +1,77 @@
+site_name: Fiducio
+site_description: Model-agnostic post-hoc calibration for 2D and 3D semantic segmentation
+site_url: https://fiducio-ai.github.io/Fiducio/
+repo_url: https://github.com/fiducio-ai/Fiducio
+repo_name: fiducio-ai/Fiducio
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+  language: en
+
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Quickstart: quickstart.md
+  - Concepts: concepts.md
+  - Calibrators: calibrators.md
+  - Examples: examples.md
+  - API Reference:
+      - Calibrators: api/calibrators.md
+      - Metrics: api/metrics.md
+      - Persistence: api/persistence.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.arithmatex:
+      generic: true
+  - tables
+  - attr_list
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: numpy
+            show_source: true
+            show_root_heading: true
+            show_root_full_path: false
+            members_order: source
+            heading_level: 2
+            show_signature_annotations: true
+            separate_signature: true
+            merge_init_into_class: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/fiducio-ai/Fiducio
+
+extra_javascript:
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js

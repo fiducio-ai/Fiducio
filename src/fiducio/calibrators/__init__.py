@@ -22,9 +22,15 @@ TS = TemperatureScaling
 ETS = EnsembleTemperatureScaling
 VS = VectorScaling
 MS = MatrixScaling
+MSc = TranslationInvariantMatrixScaling
 CMS = ClassConditionalMatrixScaling
 CMSAP = ArgmaxPreservingMatrixScaling
 CMSOP = OrderPreservingMatrixScaling
+
+# Aliases matching the paper's exact shorthand for the class-conditional family.
+CDC = ClassConditionalMatrixScaling
+CMSap = ArgmaxPreservingMatrixScaling
+CMSop = OrderPreservingMatrixScaling
 
 __all__ = [
     "TemperatureScaling",
@@ -41,7 +47,12 @@ __all__ = [
     "ETS",
     "VS",
     "MS",
+    "MSc",
     "CMS",
     "CMSAP",
     "CMSOP",
+    # paper-shorthand aliases
+    "CDC",
+    "CMSap",
+    "CMSop",
 ]

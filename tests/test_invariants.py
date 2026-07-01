@@ -19,9 +19,32 @@ def test_cmsap_preserves_argmax():
     assert torch.equal(to_probs(logits).argmax(dim=1), out.argmax(dim=1))
 
 
+def test_cmsap_preserves_argmax_with_independent_experts():
+    # The argmax guarantee comes from the margin parameterization, not from how
+    # the experts are optimized, so it must hold under independent_experts=True too.
+    logits, labels = synthetic_logits((4, 4, 8, 8), seed=15)
+    cal = ArgmaxPreservingMatrixScaling(
+        device="cpu", max_iter=80, independent_experts=True
+    ).fit(logits, labels)
+    out = cal.transform(logits)
+    assert torch.equal(to_probs(logits).argmax(dim=1), out.argmax(dim=1))
+
+
 def test_cmsop_preserves_full_order():
     logits, labels = synthetic_logits((3, 5, 6, 6), seed=11)
     cal = OrderPreservingMatrixScaling(device="cpu", max_iter=80).fit(logits, labels)
+    out = cal.transform(logits)
+    c = logits.shape[1]
+    raw_order = to_probs(logits).movedim(1, -1).reshape(-1, c).argsort(dim=1)
+    cal_order = out.movedim(1, -1).reshape(-1, c).argsort(dim=1)
+    assert torch.equal(raw_order, cal_order)
+
+
+def test_cmsop_preserves_full_order_with_independent_experts():
+    logits, labels = synthetic_logits((3, 5, 6, 6), seed=16)
+    cal = OrderPreservingMatrixScaling(
+        device="cpu", max_iter=80, independent_experts=True
+    ).fit(logits, labels)
     out = cal.transform(logits)
     c = logits.shape[1]
     raw_order = to_probs(logits).movedim(1, -1).reshape(-1, c).argsort(dim=1)

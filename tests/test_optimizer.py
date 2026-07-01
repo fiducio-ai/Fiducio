@@ -49,6 +49,13 @@ def test_explicit_lr_and_max_iter_override():
     assert cal.lr == 0.05 and cal.max_iter == 37
 
 
+@pytest.mark.parametrize("calibrator_id", ALL_CALIBRATOR_IDS)
+@pytest.mark.parametrize("max_iter", [0, -1])
+def test_non_positive_max_iter_rejected(calibrator_id, max_iter):
+    with pytest.raises(ValueError, match="max_iter must be > 0"):
+        make_calibrator(calibrator_id, max_iter=max_iter)
+
+
 @pytest.mark.parametrize("optimizer", ["adam", "lbfgs"])
 def test_optimizer_persisted_in_roundtrip(tmp_path, optimizer):
     logits, labels = synthetic_logits((3, 3, 6, 6), seed=51)

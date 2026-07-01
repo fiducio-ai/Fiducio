@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Paper-shorthand aliases for the class-conditional family: `CDC` (alias of
+  `ClassConditionalMatrixScaling`), `CMSap` (`ArgmaxPreservingMatrixScaling`)
+  and `CMSop` (`OrderPreservingMatrixScaling`), plus `MSc` for
+  `TranslationInvariantMatrixScaling`.
+- `independent_experts` constructor option on the class-conditional calibrators
+  (CDC/CMSap/CMSop): `False` (default) jointly optimizes all experts in a
+  single loss, matching the paper; `True` fits each expert in its own
+  optimization loop on only the voxels routed to it.
+
+### Fixed
+
+- `max_iter` is now validated to be strictly positive on every calibrator; a
+  non-positive value (e.g. `max_iter=0`) previously fit silently without
+  raising or optimizing.
+- `ClassConditionalMatrixScaling` / `ArgmaxPreservingMatrixScaling` /
+  `OrderPreservingMatrixScaling` (CDC/CMSap/CMSop) now optimize all experts
+  **jointly** (a single optimizer minimizing one cross-entropy loss over every
+  voxel at once, regularization averaged across experts), matching the paper's
+  method. They previously optimized each expert independently in its own
+  optimization loop, which is a different training procedure.
+
+### Removed
+
+- `min_expert_voxels` constructor argument on the class-conditional calibrators
+  (CDC/CMSap/CMSop): meaningless now that all experts are optimized jointly in
+  a single loss.
+
 ## [0.1.0] - 2026-06-24
 
 First public beta release.

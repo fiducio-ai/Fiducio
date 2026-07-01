@@ -77,14 +77,35 @@ channels (`C = 2`). `mask` and `ignore_index` exclude voxels from fitting.
 | `EnsembleTemperatureScaling` | `ETS` | — |
 | `VectorScaling` | `VS` | — |
 | `MatrixScaling` | `MS` | — |
-| `TranslationInvariantMatrixScaling` | — | invariant to logit translation |
+| `TranslationInvariantMatrixScaling` | `MSc` | invariant to logit translation |
 | `DirichletCalibration` | — | — |
-| `ClassConditionalMatrixScaling` | `CMS` | — |
-| `ArgmaxPreservingMatrixScaling` | `CMSAP` | preserves argmax |
-| `OrderPreservingMatrixScaling` | `CMSOP` | preserves full order |
+| `ClassConditionalMatrixScaling` | `CMS` / `CDC` | — |
+| `ArgmaxPreservingMatrixScaling` | `CMSAP` / `CMSap` | preserves argmax |
+| `OrderPreservingMatrixScaling` | `CMSOP` / `CMSop` | preserves full order |
 
 Every calibrator also exposes `decision_function` (calibrated logits) and a
 configurable `optimizer` (`"adam"` default, or `"lbfgs"`).
+
+### Paper method mapping
+
+| Paper method | Class |
+|--------------|-------|
+| TS | `TemperatureScaling` |
+| MS | `MatrixScaling` |
+| MSc | `TranslationInvariantMatrixScaling` |
+| CDC | `ClassConditionalMatrixScaling` |
+| CMSap | `ArgmaxPreservingMatrixScaling` |
+| CMSop | `OrderPreservingMatrixScaling` |
+
+CDC, CMSap and CMSop are class-conditional: they fit one affine map per
+uncalibrated top class, all experts optimized **jointly** by a single
+optimizer minimizing one cross-entropy loss over every voxel at once, with L2
+regularization (`lambda_reg` / `mu_reg`) applied to the affine map induced in
+the common *logit* space rather than to the raw per-expert parameters — this
+keeps the regularization meaningful for CMSap/CMSop, whose parameters are
+non-negative margins/gaps rather than raw matrix entries. Pass
+`independent_experts=True` to instead fit each expert in its own optimization
+loop on only the voxels routed to it.
 
 Calibration metrics are included: `negative_log_likelihood`,
 `expected_calibration_error`, `brier_score`, `reliability_curve`, plus an

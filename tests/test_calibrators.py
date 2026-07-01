@@ -94,6 +94,28 @@ def test_predict_proba_alias_equivalent():
 
 
 @pytest.mark.parametrize("calibrator_id", ALL_CALIBRATOR_IDS)
+def test_refit_overwrites_previous_fit(calibrator_id):
+    logits, labels = synthetic_logits((4, 3, 10, 10), seed=10)
+    cal = make_calibrator(calibrator_id)
+    cal.fit(logits, labels)
+    out_first = cal.transform(logits)
+
+    # Refitting on the same data must be deterministic and not raise.
+    cal.fit(logits, labels)
+    out_second = cal.transform(logits)
+    assert cal.is_fitted is True
+    assert torch.allclose(out_first, out_second, atol=1e-5)
+
+    # Refitting with a different number of classes must also work cleanly,
+    # discarding all state from the previous fit.
+    logits5, labels5 = synthetic_logits((4, 5, 10, 10), seed=11)
+    cal.fit(logits5, labels5)
+    assert cal.num_classes == 5
+    out_new = cal.transform(logits5)
+    _check_output(out_new, to_probs(logits5))
+
+
+@pytest.mark.parametrize("calibrator_id", ALL_CALIBRATOR_IDS)
 def test_reduces_nll_on_overconfident_data(calibrator_id):
     from fiducio import negative_log_likelihood
 

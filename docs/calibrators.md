@@ -12,14 +12,45 @@ transform is and in what they guarantee.
 | [`EnsembleTemperatureScaling`](api/calibrators.md#fiducio.EnsembleTemperatureScaling) | `ETS` | `T` + 3 mixture weights | — |
 | [`VectorScaling`](api/calibrators.md#fiducio.VectorScaling) | `VS` | per-class scale + bias | — |
 | [`MatrixScaling`](api/calibrators.md#fiducio.MatrixScaling) | `MS` | full `C × C` matrix + bias | — |
-| [`TranslationInvariantMatrixScaling`](api/calibrators.md#fiducio.TranslationInvariantMatrixScaling) | — | constrained `C × C` matrix + bias | invariant to logit translation |
+| [`TranslationInvariantMatrixScaling`](api/calibrators.md#fiducio.TranslationInvariantMatrixScaling) | `MSc` | constrained `C × C` matrix + bias | invariant to logit translation |
 | [`DirichletCalibration`](api/calibrators.md#fiducio.DirichletCalibration) | — | `C × C` matrix on log-probs | — |
-| [`ClassConditionalMatrixScaling`](api/calibrators.md#fiducio.ClassConditionalMatrixScaling) | `CMS` | one affine map per top class | — |
-| [`ArgmaxPreservingMatrixScaling`](api/calibrators.md#fiducio.ArgmaxPreservingMatrixScaling) | `CMSAP` | per-class margin map | preserves argmax |
-| [`OrderPreservingMatrixScaling`](api/calibrators.md#fiducio.OrderPreservingMatrixScaling) | `CMSOP` | per-class gap map | preserves full order |
+| [`ClassConditionalMatrixScaling`](api/calibrators.md#fiducio.ClassConditionalMatrixScaling) | `CMS` / `CDC` | one affine map per top class | — |
+| [`ArgmaxPreservingMatrixScaling`](api/calibrators.md#fiducio.ArgmaxPreservingMatrixScaling) | `CMSAP` / `CMSap` | per-class margin map | preserves argmax |
+| [`OrderPreservingMatrixScaling`](api/calibrators.md#fiducio.OrderPreservingMatrixScaling) | `CMSOP` / `CMSop` | per-class gap map | preserves full order |
 
 Short aliases (`TS`, `MS`, `CMS`, ...) are provided for convenience; the explicit
 names are recommended in code that others will read.
+
+## Paper method mapping
+
+The reference paper reports six methods; this is how each maps to a class:
+
+| Paper method | Class | Alias |
+|--------------|-------|-------|
+| TS | [`TemperatureScaling`](api/calibrators.md#fiducio.TemperatureScaling) | `TS` |
+| MS | [`MatrixScaling`](api/calibrators.md#fiducio.MatrixScaling) | `MS` |
+| MSc | [`TranslationInvariantMatrixScaling`](api/calibrators.md#fiducio.TranslationInvariantMatrixScaling) | `MSc` |
+| CDC | [`ClassConditionalMatrixScaling`](api/calibrators.md#fiducio.ClassConditionalMatrixScaling) | `CDC` |
+| CMSap | [`ArgmaxPreservingMatrixScaling`](api/calibrators.md#fiducio.ArgmaxPreservingMatrixScaling) | `CMSap` |
+| CMSop | [`OrderPreservingMatrixScaling`](api/calibrators.md#fiducio.OrderPreservingMatrixScaling) | `CMSop` |
+
+CDC, CMSap and CMSop are class-conditional calibrators: each fits one affine
+map per uncalibrated top class. By default (`independent_experts=False`,
+matching the paper) all experts are optimized **jointly** — a single optimizer
+minimizes one cross-entropy loss over every voxel at once (each voxel passing
+through its own expert's map) — with `lambda_reg` / `mu_reg` regularizing the
+affine map induced in the common *logit* space (not the raw per-expert
+parameters), averaged across experts. This logit-space regularization is what
+makes the penalty meaningful for CMSap/CMSop, whose raw parameters are
+non-negative margins/gaps rather than matrix entries — a naive penalty on the
+raw parameters would not correspond to "close to the identity" in the space
+the map actually operates in.
+
+Set `independent_experts=True` to instead fit each expert in its own
+optimization loop, using only the voxels routed to it. This avoids an expert
+with few routed voxels being drowned out by the joint loss, at the cost of
+`C` times the optimizer work (one full `max_iter`-step fit per class instead
+of one shared fit across all classes).
 
 ## Choosing a calibrator
 
@@ -44,10 +75,10 @@ A practical decision guide:
 - **Want a flexible per-region map with no constraints?**
   `ClassConditionalMatrixScaling` fits one affine map per uncalibrated top class.
 
-The class-conditional calibrators (`CMS`, `CMSAP`, `CMSOP`) optimise each expert
-independently and regularise the affine map induced in the common logit space.
-They are the most expressive option and benefit most from a reasonably sized
-calibration set.
+The class-conditional calibrators (`CDC`/`CMS`, `CMSap`/`CMSAP`, `CMSop`/`CMSOP`)
+jointly optimise all experts in a single loss and regularise the affine map
+induced in the common logit space. They are the most expressive option and
+benefit most from a reasonably sized calibration set.
 
 ## Regularisation
 

@@ -100,6 +100,13 @@ class Calibrator(ABC):
             ``(B, *spatial)`` integer labels.
         mask:
             Optional ``(B, *spatial)`` boolean mask; ``True`` marks valid voxels.
+
+        Notes
+        -----
+        Calling ``fit`` again on an already-fitted instance re-fits from
+        scratch: all learned parameters are reinitialised and overwritten, and
+        a new ``num_classes`` (which may differ from the previous fit) is
+        recorded. No state from the previous fit is reused.
         """
         preds, tgts, msk = self._prepare(predictions, targets, mask, with_targets=True)
         assert tgts is not None  # guaranteed by with_targets=True

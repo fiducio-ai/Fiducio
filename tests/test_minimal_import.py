@@ -53,6 +53,11 @@ def test_aliases_point_to_classes():
     assert fiducio.ETS is fiducio.EnsembleTemperatureScaling
     assert fiducio.VS is fiducio.VectorScaling
     assert fiducio.MS is fiducio.MatrixScaling
+    assert fiducio.MSc is fiducio.TranslationInvariantMatrixScaling
     assert fiducio.CMS is fiducio.ClassConditionalMatrixScaling
     assert fiducio.CMSAP is fiducio.ArgmaxPreservingMatrixScaling
     assert fiducio.CMSOP is fiducio.OrderPreservingMatrixScaling
+    # Paper-shorthand aliases for the class-conditional family.
+    assert fiducio.CDC is fiducio.ClassConditionalMatrixScaling
+    assert fiducio.CMSap is fiducio.ArgmaxPreservingMatrixScaling
+    assert fiducio.CMSop is fiducio.OrderPreservingMatrixScaling

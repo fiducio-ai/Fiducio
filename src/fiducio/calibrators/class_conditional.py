@@ -1,10 +1,17 @@
 """Class-conditional matrix scaling: CMS, argmax- and order-preserving variants.
 
 These calibrators route each voxel to an expert affine map selected by the
-uncalibrated top class, and operate in log-probability space. Each expert is
-optimized **independently** on the voxels routed to it, and regularization is
-applied to the affine map induced in the common logit space (matrix-scaling
-style off-diagonal / bias penalties).
+uncalibrated top class, and operate in log-probability space. By default
+(``independent_experts=False``, matching the paper) all experts are optimized
+**jointly**: a single optimizer minimizes one cross-entropy loss over every
+voxel at once (each voxel's contribution passing through its own expert's
+affine map), plus a regularization term that is the *mean*, over all experts,
+of the penalty on the affine map each expert induces in the common logit space
+(matrix-scaling style off-diagonal / bias penalties). Setting
+``independent_experts=True`` instead fits each expert in its own optimization
+loop on only the voxels routed to it, which avoids experts with few routed
+voxels being dominated by the joint loss, at the cost of ``C`` times the
+optimizer work.
 
 * :class:`ClassConditionalMatrixScaling` (CMS) – an unconstrained affine map per
   expert.
@@ -47,7 +54,7 @@ class _ClassConditionalBase(Calibrator):
         max_iter: int | None = None,
         lambda_reg: float = 0.0,
         mu_reg: float = 0.0,
-        min_expert_voxels: int = 1,
+        independent_experts: bool = False,
         init_alpha: float = 1.0,
         init_floor: float = 1e-6,
         input_type: str = "logits",
@@ -61,7 +68,7 @@ class _ClassConditionalBase(Calibrator):
         )
         self.lambda_reg = float(lambda_reg)
         self.mu_reg = float(mu_reg)
-        self.min_expert_voxels = max(1, int(min_expert_voxels))
+        self.independent_experts = bool(independent_experts)
         self.init_alpha = float(init_alpha)
         self.init_floor = float(init_floor)
         self._raw_b: torch.Tensor | None = None  # (C, K, K) or (C, C, C)
@@ -129,11 +136,42 @@ class _ClassConditionalBase(Calibrator):
     def _fit_core(self, z_flat: torch.Tensor, y_flat: torch.Tensor, num_classes: int) -> None:
         self._init_params(num_classes)
         assert self._raw_b is not None and self._raw_mu is not None
+        if self.independent_experts:
+            self._fit_independent(z_flat, y_flat, num_classes)
+        else:
+            self._fit_joint(z_flat, y_flat, num_classes)
+
+    def _fit_joint(self, z_flat: torch.Tensor, y_flat: torch.Tensor, num_classes: int) -> None:
+        """Optimize all experts together in a single loss (the paper's method)."""
+        assert self._raw_b is not None and self._raw_mu is not None
+        raw_b = self._raw_b.clone().requires_grad_(True)
+        raw_mu = self._raw_mu.clone().requires_grad_(True)
+
+        def loss_fn(raw_b: torch.Tensor = raw_b, raw_mu: torch.Tensor = raw_mu) -> torch.Tensor:
+            logits = self._route(z_flat, num_classes, raw_b=raw_b, raw_mu=raw_mu)
+            data_loss = F.cross_entropy(logits, y_flat)
+            reg_terms = []
+            for c in range(num_classes):
+                bp = self._positive(raw_b[c])
+                mup = self._positive(raw_mu[c])
+                affine_a, affine_b = self._logit_affine(num_classes, c, bp, mup)
+                reg_terms.append(
+                    self._ms_regularization(affine_a, affine_b, self.lambda_reg, self.mu_reg)
+                )
+            return data_loss + torch.stack(reg_terms).mean()
+
+        minimize(self.optimizer, [raw_b, raw_mu], loss_fn, lr=self.lr, max_iter=self.max_iter)
+        with torch.no_grad():
+            self._raw_b = raw_b.detach()
+            self._raw_mu = raw_mu.detach()
+
+    def _fit_independent(self, z_flat: torch.Tensor, y_flat: torch.Tensor, num_classes: int) -> None:
+        """Optimize each expert in its own loop, on only the voxels routed to it."""
+        assert self._raw_b is not None and self._raw_mu is not None
         top = torch.argmax(z_flat, dim=1)
         for c in range(num_classes):
             sel = top == c
-            count = int(sel.sum().item())
-            if count < self.min_expert_voxels:
+            if not bool(sel.any()):
                 continue
             rows = z_flat[sel]
             targets = y_flat[sel]
@@ -160,8 +198,18 @@ class _ClassConditionalBase(Calibrator):
                 self._raw_b[c] = b_c.detach()
                 self._raw_mu[c] = mu_c.detach()
 
-    def _route(self, logp_flat: torch.Tensor, num_classes: int) -> torch.Tensor:
-        assert self._raw_b is not None and self._raw_mu is not None
+    def _route(
+        self,
+        logp_flat: torch.Tensor,
+        num_classes: int,
+        *,
+        raw_b: torch.Tensor | None = None,
+        raw_mu: torch.Tensor | None = None,
+    ) -> torch.Tensor:
+        """Route each row to its top-class expert; ``raw_b``/``raw_mu`` default to fitted state."""
+        raw_b = self._raw_b if raw_b is None else raw_b
+        raw_mu = self._raw_mu if raw_mu is None else raw_mu
+        assert raw_b is not None and raw_mu is not None
         top = torch.argmax(logp_flat, dim=1)
         out = torch.empty_like(logp_flat)
         for c in range(num_classes):
@@ -169,8 +217,8 @@ class _ClassConditionalBase(Calibrator):
             if idx.numel() == 0:
                 continue
             rows = logp_flat.index_select(0, idx)
-            bp = self._positive(self._raw_b[c])
-            mup = self._positive(self._raw_mu[c])
+            bp = self._positive(raw_b[c])
+            mup = self._positive(raw_mu[c])
             out.index_copy_(0, idx, self._expert_logits(rows, c, bp, mup))
         return out
 
@@ -188,7 +236,7 @@ class _ClassConditionalBase(Calibrator):
             "max_iter": self.max_iter,
             "lambda_reg": self.lambda_reg,
             "mu_reg": self.mu_reg,
-            "min_expert_voxels": self.min_expert_voxels,
+            "independent_experts": self.independent_experts,
             "init_alpha": self.init_alpha,
             "init_floor": self.init_floor,
         }
@@ -210,7 +258,8 @@ class ClassConditionalMatrixScaling(_ClassConditionalBase):
     One unconstrained affine map ``A_c log p + b_c`` per uncalibrated top class
     ``c``. Unlike the preserving variants it may change the argmax. Off-diagonal
     and bias L2 regularization (``lambda_reg`` / ``mu_reg``) keep each expert
-    matrix close to the identity.
+    matrix close to the identity. Experts are optimized jointly by default; set
+    ``independent_experts=True`` to fit each one in its own optimization loop.
     """
 
     _positive_params = False
@@ -235,7 +284,8 @@ class ArgmaxPreservingMatrixScaling(_ClassConditionalBase):
 
     Parameterised through non-negative margins between the top class and its
     competitors, which guarantees the calibrated argmax equals the uncalibrated
-    argmax for every voxel.
+    argmax for every voxel. Experts are optimized jointly by default; set
+    ``independent_experts=True`` to fit each one in its own optimization loop.
     """
 
     _positive_params = True
@@ -282,7 +332,8 @@ class OrderPreservingMatrixScaling(_ClassConditionalBase):
 
     Parameterised through non-negative gaps between consecutively ranked
     classes, which guarantees the full class ranking is preserved for every
-    voxel.
+    voxel. Experts are optimized jointly by default; set
+    ``independent_experts=True`` to fit each one in its own optimization loop.
     """
 
     _positive_params = True

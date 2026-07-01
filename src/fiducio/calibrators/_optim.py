@@ -29,6 +29,12 @@ def resolve_optimizer(
 
     Returns the lowercased optimizer name and the resolved ``lr`` and
     ``max_iter`` so that they can be stored and reproduced on reload.
+
+    Raises
+    ------
+    ValueError
+        If ``optimizer`` is unknown or the resolved ``max_iter`` is not
+        strictly positive.
     """
     name = str(optimizer).lower()
     if name not in VALID_OPTIMIZERS:
@@ -39,6 +45,8 @@ def resolve_optimizer(
         if max_iter is None
         else int(max_iter)
     )
+    if resolved_iter <= 0:
+        raise ValueError(f"max_iter must be > 0, got {resolved_iter}")
     return name, resolved_lr, resolved_iter
 
 

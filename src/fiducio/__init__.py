@@ -12,6 +12,7 @@ from importlib.metadata import PackageNotFoundError, version
 from . import plots
 from .base import Calibrator, NotFittedError
 from .calibrators import (
+    CDC,
     CMS,
     CMSAP,
     CMSOP,
@@ -21,9 +22,12 @@ from .calibrators import (
     VS,
     ArgmaxPreservingMatrixScaling,
     ClassConditionalMatrixScaling,
+    CMSap,
+    CMSop,
     DirichletCalibration,
     EnsembleTemperatureScaling,
     MatrixScaling,
+    MSc,
     OrderPreservingMatrixScaling,
     TemperatureScaling,
     TranslationInvariantMatrixScaling,
@@ -65,9 +69,14 @@ __all__ = [
     "ETS",
     "VS",
     "MS",
+    "MSc",
     "CMS",
     "CMSAP",
     "CMSOP",
+    # paper-shorthand aliases
+    "CDC",
+    "CMSap",
+    "CMSop",
     # persistence & registry
     "save_calibrator",
     "load_calibrator",

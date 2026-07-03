@@ -28,6 +28,20 @@ def test_shape_mismatch_targets():
         cal.fit(logits, torch.zeros(2, 5, 5, dtype=torch.long))
 
 
+def test_fit_without_targets_raises():
+    cal = TemperatureScaling(device="cpu")
+    with pytest.raises(ValueError, match="targets are required"):
+        cal.fit(torch.randn(2, 3, 4, 4), None)
+
+
+def test_mask_shape_mismatch_rejected():
+    cal = TemperatureScaling(device="cpu")
+    logits, labels = synthetic_logits((2, 3, 4, 4), seed=25)
+    bad_mask = torch.ones(2, 5, 5, dtype=torch.bool)
+    with pytest.raises(ValueError, match="mask must have shape"):
+        cal.fit(logits, labels, mask=bad_mask)
+
+
 def test_class_count_mismatch_on_transform():
     logits, labels = synthetic_logits((2, 3, 4, 4), seed=20)
     cal = MatrixScaling(device="cpu").fit(logits, labels)

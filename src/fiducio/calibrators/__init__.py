@@ -23,6 +23,7 @@ ETS = EnsembleTemperatureScaling
 VS = VectorScaling
 MS = MatrixScaling
 MSc = TranslationInvariantMatrixScaling
+DC = DirichletCalibration
 CMS = ClassConditionalMatrixScaling
 CMSAP = ArgmaxPreservingMatrixScaling
 CMSOP = OrderPreservingMatrixScaling
@@ -48,6 +49,7 @@ __all__ = [
     "VS",
     "MS",
     "MSc",
+    "DC",
     "CMS",
     "CMSAP",
     "CMSOP",

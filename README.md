@@ -78,7 +78,7 @@ channels (`C = 2`). `mask` and `ignore_index` exclude voxels from fitting.
 | `VectorScaling` | `VS` | — |
 | `MatrixScaling` | `MS` | — |
 | `TranslationInvariantMatrixScaling` | `MSc` | invariant to logit translation |
-| `DirichletCalibration` | — | — |
+| `DirichletCalibration` | `DC` | — |
 | `ClassConditionalMatrixScaling` | `CMS` / `CDC` | — |
 | `ArgmaxPreservingMatrixScaling` | `CMSAP` / `CMSap` | preserves argmax |
 | `OrderPreservingMatrixScaling` | `CMSOP` / `CMSop` | preserves full order |
@@ -124,7 +124,9 @@ Full guide and API reference: **https://fiducio-ai.github.io/Fiducio/**
 
 ## Citation
 
-If you use Fiducio in your research, please cite it using the metadata in
+Fiducio accompanies the paper *Rethinking Post-Hoc Calibration in Semantic
+Segmentation* ([arXiv:2607.01902](https://arxiv.org/abs/2607.01902)). If you use
+Fiducio in your research, please cite it using the metadata in
 [`CITATION.cff`](CITATION.cff).
 
 ## Status

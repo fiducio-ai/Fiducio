@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Paper-shorthand aliases for the class-conditional family: `CDC` (alias of
   `ClassConditionalMatrixScaling`), `CMSap` (`ArgmaxPreservingMatrixScaling`)
   and `CMSop` (`OrderPreservingMatrixScaling`), plus `MSc` for
-  `TranslationInvariantMatrixScaling`.
+  `TranslationInvariantMatrixScaling` and `DC` for `DirichletCalibration`.
 - `independent_experts` constructor option on the class-conditional calibrators
   (CDC/CMSap/CMSop): `False` (default) jointly optimizes all experts in a
   single loss, matching the paper; `True` fits each expert in its own

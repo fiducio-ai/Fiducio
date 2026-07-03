@@ -54,6 +54,7 @@ def test_aliases_point_to_classes():
     assert fiducio.VS is fiducio.VectorScaling
     assert fiducio.MS is fiducio.MatrixScaling
     assert fiducio.MSc is fiducio.TranslationInvariantMatrixScaling
+    assert fiducio.DC is fiducio.DirichletCalibration
     assert fiducio.CMS is fiducio.ClassConditionalMatrixScaling
     assert fiducio.CMSAP is fiducio.ArgmaxPreservingMatrixScaling
     assert fiducio.CMSOP is fiducio.OrderPreservingMatrixScaling

@@ -7,6 +7,16 @@ import torch
 
 from conftest import ALL_CALIBRATOR_IDS, make_calibrator, synthetic_logits, to_probs
 
+REGULARIZED_CALIBRATOR_IDS = [
+    "vector_scaling",
+    "matrix_scaling",
+    "translation_invariant_matrix_scaling",
+    "dirichlet_calibration",
+    "class_conditional_matrix_scaling",
+    "argmax_preserving_matrix_scaling",
+    "order_preserving_matrix_scaling",
+]
+
 
 def _check_output(out, like):
     assert out.shape == like.shape
@@ -126,3 +136,49 @@ def test_reduces_nll_on_overconfident_data(calibrator_id):
     # Overconfident inputs: a sane calibrator should not increase NLL much and
     # generally reduces it.
     assert negative_log_likelihood(out, labels) <= negative_log_likelihood(raw, labels) + 1e-3
+
+
+@pytest.mark.parametrize("calibrator_id", REGULARIZED_CALIBRATOR_IDS)
+def test_regularization_has_a_measurable_effect(calibrator_id):
+    # lambda_reg/mu_reg are documented on every affine-family calibrator but were
+    # not exercised by any other test; a broken regularization term (wrong
+    # shape, NaN, no effect) would previously have gone unnoticed.
+    logits, labels = synthetic_logits((6, 4, 10, 10), seed=70, scale=5.0)
+    unregularized = make_calibrator(calibrator_id, lambda_reg=0.0, mu_reg=0.0)
+    regularized = make_calibrator(calibrator_id, lambda_reg=1.0, mu_reg=1.0)
+    out_plain = unregularized.fit_transform(logits, labels)
+    out_reg = regularized.fit_transform(logits, labels)
+    _check_output(out_reg, to_probs(logits))
+    assert not torch.allclose(out_plain, out_reg, atol=1e-5), (
+        "regularization had no measurable effect on the fitted map"
+    )
+
+
+@pytest.mark.parametrize(
+    "calibrator_id",
+    [
+        "class_conditional_matrix_scaling",
+        "argmax_preserving_matrix_scaling",
+        "order_preserving_matrix_scaling",
+    ],
+)
+@pytest.mark.parametrize("independent_experts", [False, True])
+def test_expert_never_selected_as_top1(calibrator_id, independent_experts):
+    # An expert that never wins the argmax during fit must be left at its
+    # identity-initialized state without crashing, and must still work at
+    # inference time if it wins the argmax on new data.
+    torch.manual_seed(40)
+    logits = torch.randn(6, 4, 10, 10)
+    logits[:, 3] -= 10.0  # class 3 never wins the argmax during fit
+    labels = logits.argmax(dim=1)
+    assert (labels == 3).sum() == 0
+
+    cal = make_calibrator(calibrator_id, independent_experts=independent_experts)
+    out = cal.fit_transform(logits, labels)
+    _check_output(out, to_probs(logits))
+
+    test_logits = torch.randn(3, 4, 6, 6)
+    test_logits[:, 3] += 10.0  # class 3 wins the argmax at inference time
+    assert (test_logits.argmax(dim=1) == 3).any()
+    out_new = cal.transform(test_logits)
+    _check_output(out_new, to_probs(test_logits))

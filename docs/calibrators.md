@@ -13,7 +13,7 @@ transform is and in what they guarantee.
 | [`VectorScaling`](api/calibrators.md#fiducio.VectorScaling) | `VS` | per-class scale + bias | — |
 | [`MatrixScaling`](api/calibrators.md#fiducio.MatrixScaling) | `MS` | full `C × C` matrix + bias | — |
 | [`TranslationInvariantMatrixScaling`](api/calibrators.md#fiducio.TranslationInvariantMatrixScaling) | `MSc` | constrained `C × C` matrix + bias | invariant to logit translation |
-| [`DirichletCalibration`](api/calibrators.md#fiducio.DirichletCalibration) | — | `C × C` matrix on log-probs | — |
+| [`DirichletCalibration`](api/calibrators.md#fiducio.DirichletCalibration) | `DC` | `C × C` matrix on log-probs | — |
 | [`ClassConditionalMatrixScaling`](api/calibrators.md#fiducio.ClassConditionalMatrixScaling) | `CMS` / `CDC` | one affine map per top class | — |
 | [`ArgmaxPreservingMatrixScaling`](api/calibrators.md#fiducio.ArgmaxPreservingMatrixScaling) | `CMSAP` / `CMSap` | per-class margin map | preserves argmax |
 | [`OrderPreservingMatrixScaling`](api/calibrators.md#fiducio.OrderPreservingMatrixScaling) | `CMSOP` / `CMSop` | per-class gap map | preserves full order |

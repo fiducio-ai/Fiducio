@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: "If you use Fiducio in your research, please cite it as below."
+message: "If you use Fiducio in your research, please cite the paper below."
 title: "Fiducio: Model-agnostic post-hoc calibration for 2D and 3D semantic segmentation"
 version: "0.1.0"
 date-released: "2026-06-24"
@@ -20,3 +20,31 @@ abstract: >
   for temperature, vector, matrix, Dirichlet and class-conditional matrix scaling
   calibrators that operate on logits or probabilities produced by any segmentation
   model.
+preferred-citation:
+  type: preprint
+  title: "Rethinking Post-Hoc Calibration in Semantic Segmentation"
+  authors:
+    - given-names: "Tristan"
+      family-names: "Kirscher"
+    - given-names: "Kim-Celine"
+      family-names: "Kahl"
+    - given-names: "Balint"
+      family-names: "Kovacs"
+    - given-names: "Maximilian R."
+      family-names: "Rokuss"
+    - given-names: "Klaus"
+      family-names: "Maier-Hein"
+    - given-names: "Xavier"
+      family-names: "Coubez"
+    - given-names: "Philippe"
+      family-names: "Meyer"
+    - given-names: "Sylvain"
+      family-names: "Faisan"
+  year: 2026
+  month: 7
+  url: "https://arxiv.org/abs/2607.01902"
+  doi: "10.48550/arXiv.2607.01902"
+  identifiers:
+    - type: other
+      value: "arXiv:2607.01902"
+      description: "arXiv preprint"

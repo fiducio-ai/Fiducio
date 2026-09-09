@@ -17,18 +17,20 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: astral-sh/setup-uv@v7
         with:
+          version: "0.12.3"
+          enable-cache: true
           python-version: "3.11"
-          cache: pip
+
+      - name: Sync locked build tools
+        run: uv sync --locked --only-group build
 
       - name: Build wheel and sdist
-        run: |
-          python -m pip install --upgrade build twine
-          python -m build
+        run: uv build --no-build-isolation
 
       - name: Check artifacts
-        run: twine check dist/*
+        run: uv run --no-sync twine check dist/*
 
       - name: Upload distributions
         uses: actions/upload-artifact@v4
@@ -40,9 +42,13 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: astral-sh/setup-uv@v7
         with:
+          version: "0.12.3"
+          enable-cache: true
           python-version: "3.11"
 
       - name: Download distributions
@@ -51,17 +57,20 @@ jobs:
           name: distributions
           path: dist/
 
-      - name: Install CPU PyTorch
-        run: pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - name: Sync locked runtime dependencies without the source package
+        run: uv sync --locked --no-dev --no-install-project
 
       - name: Install the built wheel
-        run: pip install dist/*.whl
+        run: uv pip install --no-deps dist/*.whl
 
       - name: Smoke test the installed wheel
         run: |
-          python -c "import fiducio; print(fiducio.__version__); print(fiducio.registered_ids())"
-          python - <<'PY'
+          uv run --no-sync python -c "import fiducio; print(fiducio.__version__); print(fiducio.registered_ids())"
+          uv run --no-sync python - <<'PY'
+          from pathlib import Path
+          import fiducio
           import torch
+          assert "site-packages" in Path(fiducio.__file__).parts
           from fiducio import TemperatureScaling, load_calibrator
           logits = torch.randn(4, 3, 8, 8)
           labels = torch.randint(0, 3, (4, 8, 8))

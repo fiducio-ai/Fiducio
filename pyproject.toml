@@ -59,6 +59,30 @@ all = [
   "fiducio[dev]",
 ]
 
+# Keep the published extras compatible; groups describe repository tooling.
+[dependency-groups]
+dev = [
+  "pytest>=8.0",
+  "pytest-cov>=4.0",
+  "ruff>=0.4.0",
+  "mypy>=1.11",
+  "matplotlib>=3.5",
+]
+build = ["build>=1.0", "twine>=6.0", "setuptools>=77.0.3", "wheel"]
+
+[tool.uv]
+required-version = "==0.12.3"
+
+# CPU is the repository's development/CI backend. These source settings are
+# not part of the wheel's runtime dependency metadata.
+[tool.uv.sources]
+torch = { index = "pytorch-cpu", marker = "sys_platform != 'darwin'" }
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
 [project.urls]
 Homepage = "https://github.com/fiducio-ai/Fiducio"
 Documentation = "https://fiducio-ai.github.io/Fiducio/"

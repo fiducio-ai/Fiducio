@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Locked uv development, documentation and build environments, a default
+  Python 3.12 selection, and uv-based CI for Python 3.10–3.12. Repository
+  tooling selects CPU PyTorch; published runtime dependencies remain portable.
 - Synthetic research references for MS, MSc, CDC, CMSap and CMSop, testing
   mapped logits, regularization, gradients and one production Adam step.
 - Ensemble pooling example and paper implementation/reproducibility guide.

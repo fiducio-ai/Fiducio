@@ -27,6 +27,11 @@ uses the research parameterization; regularized fits can therefore change.
 
 ## Numerical regression
 
+The repository's development and CI dependencies are recorded in `uv.lock`.
+Use `uv sync --locked --extra docs --group build`, then `uv run --no-sync pytest`.
+This CPU development environment is separate from historical experiment
+environments, which still require their own provenance records.
+
 `tests/fixtures/research_reference.json` contains only synthetic tensors and
 reference outputs. It records the research HEAD, whether its checkout was dirty,
 the SHA-256 hashes of the imported source files, and the PyTorch version.
@@ -43,7 +48,7 @@ tests and do not yet have research-generated numerical references.
 To regenerate into a **new** file using a separately available research checkout:
 
 ```bash
-python reproducibility/generate_reference.py \
+uv run --no-sync python reproducibility/generate_reference.py \
   --research-root /path/to/research/Fiducio \
   --output /path/to/new-reference.json
 ```

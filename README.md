@@ -17,11 +17,29 @@ the architecture.
 
 ## Install
 
+For development from a checkout, use the committed uv lockfile:
+
+```bash
+uv sync --locked
+uv run --no-sync pytest
+```
+
+This uses CPU PyTorch for development. See [CONTRIBUTING.md](CONTRIBUTING.md)
+for the pinned uv version, documentation and build commands.
+
+For an existing uv application before the first PyPI release:
+
+```bash
+uv add "fiducio @ git+https://github.com/fiducio-ai/Fiducio.git"
+```
+
+Once a PyPI release is available, the standard installation is:
+
 ```bash
 pip install fiducio
 ```
 
-Until the first PyPI release, install from GitHub:
+With pip, before the first PyPI release, install from GitHub:
 
 ```bash
 pip install "git+https://github.com/fiducio-ai/Fiducio.git"

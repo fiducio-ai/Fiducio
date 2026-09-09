@@ -5,23 +5,44 @@ up a development environment and the conventions we follow.
 
 ## Development setup
 
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/) version
+`0.12.3`, matching `tool.uv.required-version` and CI. The checkout defaults to
+Python 3.12; CI also checks Python 3.10 and 3.11.
+
 ```bash
 git clone https://github.com/fiducio-ai/Fiducio.git
 cd Fiducio
-python -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
+uv sync --locked --extra docs --group build
 ```
 
 ## Running the checks
 
 ```bash
-ruff check .          # lint
-mypy                  # type check (src/fiducio)
-pytest                # tests
+uv run --no-sync ruff check .
+uv run --no-sync mypy
+uv run --no-sync pytest
+uv run --no-sync mkdocs build --strict
+uv build --no-build-isolation
+uv run --no-sync twine check dist/*
 ```
 
-All three should pass before opening a pull request. New behaviour should come
+`uv sync` creates `.venv` and installs the project plus the default `dev` group.
+The command above also installs documentation extras and locked build tools.
+`--locked` rejects an out-of-date lockfile. After syncing, `--no-sync` keeps
+commands from changing that explicitly selected environment.
+
+The repository selects CPU PyTorch on Linux/Windows and PyPI PyTorch on macOS.
+This is a development/CI choice, not a restriction on the installed library:
+wheel metadata still requires only `torch>=2.0`. GPU applications can install
+Fiducio into their own environment with their compatible PyTorch build.
+
+Commit `uv.lock` whenever dependencies change. Run `uv lock` after editing
+dependency declarations; use `uv lock --upgrade-package PACKAGE` for a deliberate
+update, then sync and repeat the checks. Do not hand-edit the lockfile.
+The lock identifies compatible versions per Python/platform; it does not imply
+every platform uses the same package versions or reproduces a paper experiment.
+
+These checks should pass before opening a pull request. New behaviour should come
 with tests, and public API changes should be reflected in the documentation
 under `docs/` and in `CHANGELOG.md`.
 

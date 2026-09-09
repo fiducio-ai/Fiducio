@@ -23,7 +23,8 @@ names are recommended in code that others will read.
 
 ## Paper method mapping
 
-The reference paper reports six methods; this is how each maps to a class:
+The following paper methods are implemented here. LTS is not included in this
+release; this table is not the complete experimental method inventory.
 
 | Paper method | Class | Alias |
 |--------------|-------|-------|
@@ -62,7 +63,7 @@ A practical decision guide:
 - **Need per-class flexibility?** Try `VectorScaling`, then `MatrixScaling`. Use
   the off-diagonal/bias regularisation (`lambda_reg`, `mu_reg`) when the number
   of classes is large relative to the calibration set, to avoid overfitting.
-- **Want matrix scaling without the gauge redundancy?** Use
+- **Want matrix scaling invariant to logit shifts?** Use
   `TranslationInvariantMatrixScaling`, which is invariant to adding a constant to
   all input logits.
 - **Probability-space transform?** `DirichletCalibration` applies an affine map
@@ -85,9 +86,17 @@ benefit most from a reasonably sized calibration set.
 `MatrixScaling`, `TranslationInvariantMatrixScaling`, `DirichletCalibration` and
 the class-conditional calibrators accept:
 
-- `lambda_reg` — L2 penalty on off-diagonal matrix entries (keeps the map close
-  to the identity);
+- `lambda_reg` — L2 penalty on off-diagonal matrix entries (diagonal entries
+  are not directly penalized);
 - `mu_reg` — L2 penalty on the bias.
 
 `VectorScaling`'s `lambda_reg` pulls the scale vector towards 1. Start at `0` and
 increase if the calibrator overfits a small calibration set.
+
+MSc optimizes `C-1` free columns and a learned common row sum; the final column
+is reconstructed before applying the off-diagonal penalty. Initialization is
+the identity. This differs from the older pre-release row-centering approach.
+
+The guarantees above apply to valid unmasked voxels, subject to floating-point
+precision. Exact ties follow PyTorch selection/sorting behavior; preserving
+strict ranks does not imply preserving every set of tied scores.

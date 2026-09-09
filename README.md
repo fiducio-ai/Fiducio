@@ -8,8 +8,8 @@
 **Fiducio** is a model-agnostic Python library for **post-hoc calibration of 2D
 and 3D semantic segmentation** models. Give it the logits or probabilities of any
 segmentation model and a labelled calibration set, and it returns
-better-calibrated probabilities — without retraining and without changing the
-segmentation.
+calibrated probabilities without retraining the segmentation model. Whether the
+segmentation is preserved depends on the calibrator; see the guarantees below.
 
 It works with PyTorch U-Net, nnU-Net, SegFormer or any model that produces
 logits: Fiducio only ever sees `(B, C, *spatial)` tensors and never needs to know
@@ -108,11 +108,18 @@ non-negative margins/gaps rather than raw matrix entries. Pass
 loop on only the voxels routed to it.
 
 Calibration metrics are included: `negative_log_likelihood`,
-`expected_calibration_error`, `brier_score`, `reliability_curve`, plus an
+`expected_calibration_error` (ECE, population-weighted), `average_calibration_error`
+(ACE, unweighted over the same bins — doesn't let a sparsely populated bin get
+drowned out by a large one), `brier_score`, `reliability_curve`, plus an
 optional reliability-diagram plot (`fiducio.plots.reliability_diagram`, needs
 `fiducio[plots]`).
 
 ## Documentation
+
+The [paper implementation guide](reproducibility/README.md) records method
+mapping, numerical-reference coverage, fitting limits and the remaining steps
+needed to reproduce the paper's experiments. For ensemble inputs, see
+[`examples/ensemble_pooling.py`](examples/ensemble_pooling.py).
 
 Full guide and API reference: **https://fiducio-ai.github.io/Fiducio/**
 

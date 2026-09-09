@@ -10,9 +10,8 @@ from ._affine import _AffineCalibrator
 class MatrixScaling(_AffineCalibrator):
     """Matrix scaling: ``softmax(W z + b)`` with a full ``C x C`` matrix.
 
-    Optional off-diagonal / bias L2 regularisation (ODIR) keeps the matrix close
-    to the identity, which is recommended when the number of classes is large
-    relative to the calibration set.
+    Optional off-diagonal / bias L2 regularisation (ODIR) penalizes class mixing
+    and bias. Diagonal entries are not directly penalized.
 
     Parameters
     ----------
@@ -44,11 +43,13 @@ class MatrixScaling(_AffineCalibrator):
 class TranslationInvariantMatrixScaling(_AffineCalibrator):
     """Constrained matrix scaling that is invariant to logit translations.
 
-    The matrix ``W`` is constrained so that every row sums to zero. Because
+    The matrix ``W`` is constrained so that every row has the same learned sum. Because
     ``softmax`` ignores constant shifts of its input, this makes the calibrated
     output invariant to adding the same constant to every input logit
-    (``g(z + c·1) = g(z)``), removing the gauge redundancy of unconstrained
-    matrix scaling.
+    (``g(z + c·1) = g(z)``). The first ``C-1`` columns and the common row sum
+    are optimized, with the final column reconstructed. Initialization is the
+    identity and regularization uses the reconstructed matrix, matching the
+    research MSc parameterization.
 
     Parameters are identical to :class:`MatrixScaling`.
     """

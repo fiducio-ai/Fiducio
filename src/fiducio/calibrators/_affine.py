@@ -19,7 +19,7 @@ class _AffineCalibrator(Calibrator):
 
     * ``"diagonal"`` – ``W = diag(w)`` (vector scaling);
     * ``"matrix"`` – full ``W`` (matrix scaling / Dirichlet calibration);
-    * ``"matrix_ti"`` – full ``W`` constrained so each row sums to zero, which
+    * ``"matrix_ti"`` – full ``W`` constrained so each row has the same sum, which
       makes the map invariant to adding a constant to all input logits.
 
     ``z`` is the canonical representation produced by the base class (logits for
@@ -49,13 +49,18 @@ class _AffineCalibrator(Calibrator):
         self.mu_reg = float(mu_reg)
         self._weight: torch.Tensor | None = None  # (C, C) or (C,) for diagonal
         self._bias: torch.Tensor | None = None  # (C,)
+        self._row_sum: torch.Tensor | None = None
 
     # --------------------------------------------------------------- internals
 
     def _init_params(self, num_classes: int) -> None:
         c = int(num_classes)
+        self._row_sum = None
         if self._mode == "diagonal":
             self._weight = torch.ones(c, device=self.device)
+        elif self._mode == "matrix_ti":
+            self._weight = torch.eye(c, device=self.device)[:, :-1].clone()
+            self._row_sum = torch.tensor(1.0, device=self.device)
         else:
             self._weight = torch.eye(c, device=self.device)
         self._bias = torch.zeros(c, device=self.device)
@@ -63,6 +68,10 @@ class _AffineCalibrator(Calibrator):
     def _effective_weight(self) -> torch.Tensor:
         assert self._weight is not None
         if self._mode == "matrix_ti":
+            if self._row_sum is not None:
+                last = self._row_sum - self._weight.sum(dim=1, keepdim=True)
+                return torch.cat((self._weight, last), dim=1)
+            # Pre-release checkpoints stored a full, row-centered matrix.
             return self._weight - self._weight.mean(dim=1, keepdim=True)
         return self._weight
 
@@ -94,6 +103,8 @@ class _AffineCalibrator(Calibrator):
         self._init_params(num_classes)
         assert self._weight is not None and self._bias is not None
         params = [self._weight.requires_grad_(True), self._bias.requires_grad_(True)]
+        if self._row_sum is not None:
+            params.append(self._row_sum.requires_grad_(True))
 
         def loss_fn() -> torch.Tensor:
             logits = self._apply_flat(z_flat)
@@ -102,6 +113,8 @@ class _AffineCalibrator(Calibrator):
         minimize(self.optimizer, params, loss_fn, lr=self.lr, max_iter=self.max_iter)
         self._weight = self._weight.detach()
         self._bias = self._bias.detach()
+        if self._row_sum is not None:
+            self._row_sum = self._row_sum.detach()
 
     def _map_logits(self, canonical: torch.Tensor) -> torch.Tensor:
         flat, shape = class_last_flatten(canonical)
@@ -120,10 +133,12 @@ class _AffineCalibrator(Calibrator):
         }
 
     def _get_state(self) -> dict[str, Any]:
-        return {"weight": self._weight, "bias": self._bias}
+        return {"weight": self._weight, "bias": self._bias, "row_sum": self._row_sum}
 
     def _set_state(self, state: dict[str, Any]) -> None:
         weight = state.get("weight")
         bias = state.get("bias")
         self._weight = None if weight is None else torch.as_tensor(weight, device=self.device)
         self._bias = None if bias is None else torch.as_tensor(bias, device=self.device)
+        row_sum = state.get("row_sum")
+        self._row_sum = None if row_sum is None else torch.as_tensor(row_sum, device=self.device)

@@ -1,8 +1,8 @@
 # Examples
 
-Two runnable, CPU-only examples ship in the
+Runnable, CPU-only examples ship in the
 [`examples/`](https://github.com/fiducio-ai/Fiducio/tree/main/examples) directory.
-Neither downloads any model or dataset.
+They do not download any model or dataset.
 
 ## 1. Synthetic data
 
@@ -56,3 +56,10 @@ Requires the plotting extra (`pip install "fiducio[plots]"`); see
 ```bash
 python examples/reliability_diagram.py
 ```
+
+## 4. Ensemble pooling
+
+`python examples/ensemble_pooling.py` demonstrates two separate CMSap fits:
+one on the mean probabilities (`input_type="probs"`) and one on the mean logits
+(`input_type="logits"`). Members are pooled before fitting. Calibration and test
+cases are disjoint. These are synthetic examples, not paper benchmark results.

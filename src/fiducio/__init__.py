@@ -36,6 +36,7 @@ from .calibrators import (
 )
 from .metrics import (
     ReliabilityCurve,
+    average_calibration_error,
     brier_score,
     expected_calibration_error,
     negative_log_likelihood,
@@ -87,6 +88,7 @@ __all__ = [
     # metrics
     "negative_log_likelihood",
     "expected_calibration_error",
+    "average_calibration_error",
     "brier_score",
     "reliability_curve",
     "ReliabilityCurve",

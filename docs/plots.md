@@ -38,8 +38,19 @@ fig.savefig("reliability.png", dpi=150)
 larger figures. It accepts the same `mask` / `ignore_index` arguments as the
 metrics.
 
+By default the panel is annotated with the population-weighted ECE. Pass
+`metric="ace"` to annotate with the unweighted ACE instead (same bins, but
+averaged without weighting by bin population) — more informative when
+confidence bins are very unevenly populated, since a sparsely populated (but
+badly calibrated) bin no longer gets drowned out by a large, well-calibrated
+one:
+
+```python
+reliability_diagram(calibrator.transform(logits), labels, ax=ax2, metric="ace")
+```
+
 ## Custom plots
 
 If you want to build your own figure, [`fiducio.reliability_curve`](api/metrics.md)
 returns the raw per-bin statistics (`bin_edges`, `bin_confidence`,
-`bin_accuracy`, `bin_counts`, `ece`) as tensors.
+`bin_accuracy`, `bin_counts`, `ece`, `ace`) as tensors.

@@ -43,6 +43,25 @@ def test_reliability_diagram_accepts_existing_axes():
 
     logits, labels = synthetic_logits((3, 4, 8, 8), seed=71)
     fig, ax = plt.subplots()
-    out = reliability_diagram(to_probs(logits), labels, ax=ax, title=None, show_ece=False)
+    out = reliability_diagram(to_probs(logits), labels, ax=ax, title=None, metric=None)
     assert out is ax
     plt.close(fig)
+
+
+def test_reliability_diagram_supports_ace_metric():
+    import matplotlib.pyplot as plt
+
+    from fiducio.plots import reliability_diagram
+
+    logits, labels = synthetic_logits((3, 4, 8, 8), seed=72)
+    ax = reliability_diagram(to_probs(logits), labels, metric="ace")
+    assert ax.__class__.__name__ == "Axes"
+    plt.close("all")
+
+
+def test_reliability_diagram_rejects_unknown_metric():
+    from fiducio.plots import reliability_diagram
+
+    logits, labels = synthetic_logits((2, 3, 6, 6), seed=73)
+    with pytest.raises(ValueError, match="metric must be"):
+        reliability_diagram(to_probs(logits), labels, metric="mce")

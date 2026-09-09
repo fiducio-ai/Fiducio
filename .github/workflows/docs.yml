@@ -41,6 +41,8 @@ jobs:
           path: ./site
 
   deploy:
+    # Enable after configuring GitHub Pages to use GitHub Actions.
+    if: vars.PAGES_ENABLED == 'true'
     needs: build
     runs-on: ubuntu-latest
     environment:

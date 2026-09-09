@@ -83,7 +83,11 @@ class ReliabilityCurve:
         ``(n_bins,)`` number of voxels per bin.
     ece:
         Expected calibration error (count-weighted mean ``|confidence -
-        accuracy|``).
+        accuracy|`` over bins).
+    ace:
+        Average calibration error (unweighted mean ``|confidence - accuracy|``
+        over non-empty bins). Unlike ``ece``, a sparsely populated bin counts
+        as much as a densely populated one.
     """
 
     bin_edges: torch.Tensor
@@ -91,6 +95,7 @@ class ReliabilityCurve:
     bin_accuracy: torch.Tensor
     bin_counts: torch.Tensor
     ece: float
+    ace: float
 
 
 def reliability_curve(
@@ -103,8 +108,9 @@ def reliability_curve(
     """Compute top-1 reliability statistics with uniform binning.
 
     The confidence is the maximum predicted probability and the accuracy is
-    whether the argmax matches the label. Useful both for reporting ECE and for
-    drawing reliability diagrams (see :func:`fiducio.plots.reliability_diagram`).
+    whether the argmax matches the label. Useful both for reporting ECE/ACE and
+    for drawing reliability diagrams (see
+    :func:`fiducio.plots.reliability_diagram`).
     """
     if n_bins < 1:
         raise ValueError("n_bins must be >= 1")
@@ -112,7 +118,9 @@ def reliability_curve(
     edges = torch.linspace(0.0, 1.0, n_bins + 1)
     if p.shape[0] == 0:
         zeros = torch.zeros(n_bins)
-        return ReliabilityCurve(edges, zeros, zeros.clone(), zeros.clone(), float("nan"))
+        return ReliabilityCurve(
+            edges, zeros, zeros.clone(), zeros.clone(), float("nan"), float("nan")
+        )
 
     confidence, prediction = p.max(dim=1)
     correct = (prediction == y).to(torch.float32)
@@ -126,8 +134,11 @@ def reliability_curve(
     bin_conf = sum_conf / safe_counts
     bin_acc = sum_acc / safe_counts
     total = float(confidence.shape[0])
-    ece = float(((counts / total) * (bin_conf - bin_acc).abs()).sum().item())
-    return ReliabilityCurve(edges, bin_conf, bin_acc, counts, ece)
+    gap = (bin_conf - bin_acc).abs()
+    ece = float(((counts / total) * gap).sum().item())
+    nonempty = counts > 0
+    ace = float(gap[nonempty].mean().item()) if bool(nonempty.any()) else float("nan")
+    return ReliabilityCurve(edges, bin_conf, bin_acc, counts, ece, ace)
 
 
 def expected_calibration_error(
@@ -140,6 +151,26 @@ def expected_calibration_error(
     """Top-1 expected calibration error (ECE) with uniform binning.
 
     The confidence is the maximum predicted probability and the accuracy is
-    whether the argmax matches the label. Bins partition ``[0, 1]`` uniformly.
+    whether the argmax matches the label. Bins partition ``[0, 1]`` uniformly
+    and each bin's gap is weighted by its share of voxels — see
+    :func:`average_calibration_error` for the unweighted variant.
     """
     return reliability_curve(probs, targets, mask, ignore_index, n_bins).ece
+
+
+def average_calibration_error(
+    probs: Any,
+    targets: Any,
+    mask: Any | None = None,
+    ignore_index: int = -100,
+    n_bins: int = 15,
+) -> float:
+    """Top-1 average calibration error (ACE) with uniform binning.
+
+    Uses the same uniform confidence bins as :func:`expected_calibration_error`,
+    but averages the per-bin ``|confidence - accuracy|`` gap **unweighted**
+    over non-empty bins instead of weighting each bin by its share of voxels.
+    A confidence region visited by only a handful of voxels therefore counts as
+    much as a densely populated one, which ECE would otherwise drown out.
+    """
+    return reliability_curve(probs, targets, mask, ignore_index, n_bins).ace

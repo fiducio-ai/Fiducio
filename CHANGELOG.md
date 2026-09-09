@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Synthetic research references for MS, MSc, CDC, CMSap and CMSop, testing
+  mapped logits, regularization, gradients and one production Adam step.
+- Ensemble pooling example and paper implementation/reproducibility guide.
 - Paper-shorthand aliases for the class-conditional family: `CDC` (alias of
   `ClassConditionalMatrixScaling`), `CMSap` (`ArgmaxPreservingMatrixScaling`)
   and `CMSop` (`OrderPreservingMatrixScaling`), plus `MSc` for
@@ -17,9 +20,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (CDC/CMSap/CMSop): `False` (default) jointly optimizes all experts in a
   single loss, matching the paper; `True` fits each expert in its own
   optimization loop on only the voxels routed to it.
+- `average_calibration_error` (ACE): the same uniform confidence bins as
+  `expected_calibration_error`, but the per-bin gap is averaged **unweighted**
+  over non-empty bins instead of weighted by bin population, so a sparsely
+  populated bin counts as much as a densely populated one.
+  `reliability_curve`'s `ReliabilityCurve` now also exposes an `ace` field, and
+  `fiducio.plots.reliability_diagram` accepts `metric="ece"|"ace"|None`
+  (replacing the old `show_ece: bool` argument) to choose which one annotates
+  the panel.
 
 ### Fixed
 
+- MSc now uses the research common-row-sum parameterization and applies ODIR
+  to the reconstructed matrix. This changes regularized fits compared with
+  the pre-release zero-row-sum implementation; old saved predictions remain
+  readable, while refitting uses the new parameterization.
+- Mypy targets each CI interpreter instead of forcing Python 3.10 syntax on
+  newer dependency stubs. Packaging requires a PEP 639-compatible setuptools.
+- GitHub Pages deployment is opt-in through `PAGES_ENABLED=true`; strict
+  documentation builds still run before Pages is configured.
+- README preservation guarantees now depend on the selected calibrator.
 - `max_iter` is now validated to be strictly positive on every calibrator; a
   non-positive value (e.g. `max_iter=0`) previously fit silently without
   raising or optimizing.

@@ -36,7 +36,7 @@ jobs:
         run: ruff check .
 
       - name: Type check (mypy)
-        run: mypy
+        run: mypy --python-version ${{ matrix.python-version }}
 
       - name: Run tests with coverage
         run: pytest --cov=fiducio --cov-report=term-missing
@@ -46,6 +46,7 @@ jobs:
           python examples/basic_segmentation_calibration.py
           python examples/pytorch_model_calibration.py
           python examples/reliability_diagram.py
+          python examples/ensemble_pooling.py
 
   docs-build:
     runs-on: ubuntu-latest

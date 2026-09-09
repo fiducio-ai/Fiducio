@@ -257,8 +257,8 @@ class ClassConditionalMatrixScaling(_ClassConditionalBase):
 
     One unconstrained affine map ``A_c log p + b_c`` per uncalibrated top class
     ``c``. Unlike the preserving variants it may change the argmax. Off-diagonal
-    and bias L2 regularization (``lambda_reg`` / ``mu_reg``) keep each expert
-    matrix close to the identity. Experts are optimized jointly by default; set
+    and bias L2 regularization (``lambda_reg`` / ``mu_reg``) penalize class mixing
+    and bias, leaving the diagonal unpenalized. Experts are optimized jointly by default; set
     ``independent_experts=True`` to fit each one in its own optimization loop.
     """
 

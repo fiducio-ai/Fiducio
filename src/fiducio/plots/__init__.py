@@ -34,7 +34,7 @@ def reliability_diagram(
     *,
     ax: Any | None = None,
     title: str | None = "Reliability diagram",
-    show_ece: bool = True,
+    metric: str | None = "ece",
 ) -> Any:
     """Draw a top-1 reliability diagram and return the matplotlib ``Axes``.
 
@@ -52,8 +52,11 @@ def reliability_diagram(
         Existing axes to draw on. A new figure/axes is created when ``None``.
     title:
         Plot title (``None`` to omit).
-    show_ece:
-        Annotate the panel with the expected calibration error.
+    metric:
+        Which calibration error to annotate the panel with: ``"ece"``
+        (population-weighted, the default), ``"ace"`` (unweighted mean over
+        non-empty bins — see :func:`fiducio.average_calibration_error`), or
+        ``None`` to omit the annotation.
 
     Returns
     -------
@@ -98,11 +101,17 @@ def reliability_diagram(
     ax.set_aspect("equal")
     if title:
         ax.set_title(title)
-    if show_ece:
+    if metric is not None:
+        if metric == "ece":
+            label, value = "ECE", curve.ece
+        elif metric == "ace":
+            label, value = "ACE", curve.ace
+        else:
+            raise ValueError(f"metric must be 'ece', 'ace' or None, got {metric!r}")
         ax.text(
             0.05,
             0.95,
-            f"ECE = {curve.ece:.4f}",
+            f"{label} = {value:.4f}",
             transform=ax.transAxes,
             va="top",
             ha="left",

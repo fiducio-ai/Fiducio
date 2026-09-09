@@ -7,7 +7,13 @@ import math
 import torch
 
 from conftest import synthetic_logits, to_probs
-from fiducio import brier_score, expected_calibration_error, negative_log_likelihood
+from fiducio import (
+    average_calibration_error,
+    brier_score,
+    expected_calibration_error,
+    negative_log_likelihood,
+    reliability_curve,
+)
 
 
 def test_perfect_predictions_have_zero_metrics():
@@ -18,6 +24,7 @@ def test_perfect_predictions_have_zero_metrics():
     assert negative_log_likelihood(probs, labels) < 1e-5
     assert brier_score(probs, labels) < 1e-6
     assert expected_calibration_error(probs, labels) < 1e-6
+    assert average_calibration_error(probs, labels) < 1e-6
 
 
 def test_nll_matches_manual():
@@ -49,7 +56,38 @@ def test_ece_in_unit_interval():
     assert 0.0 <= ece <= 1.0
 
 
+def test_ace_in_unit_interval():
+    logits, labels = synthetic_logits((4, 3, 8, 8), seed=42)
+    probs = to_probs(logits)
+    ace = average_calibration_error(probs, labels, n_bins=20)
+    assert 0.0 <= ace <= 1.0
+
+
+def test_ace_gives_sparse_bins_equal_weight_unlike_ece():
+    # A large, well-calibrated bin (confidence ~0.95, accuracy ~0.95) and a
+    # small, badly-calibrated bin (confidence ~0.55, accuracy ~1.0) land in
+    # different confidence bins. ECE is dominated by the populous bin; ACE
+    # gives the sparse, badly-calibrated bin equal weight.
+    n_large, n_small = 1000, 10
+    probs_large = torch.tensor([0.95, 0.05]).repeat(n_large, 1)
+    labels_large = torch.zeros(n_large, dtype=torch.long)
+    labels_large[: int(0.05 * n_large)] = 1  # ~5% wrong -> accuracy ~0.95
+
+    probs_small = torch.tensor([0.55, 0.45]).repeat(n_small, 1)
+    labels_small = torch.zeros(n_small, dtype=torch.long)  # all correct -> gap ~0.45
+
+    probs = torch.cat([probs_large, probs_small], dim=0)
+    labels = torch.cat([labels_large, labels_small], dim=0)
+
+    curve = reliability_curve(probs, labels, n_bins=10)
+    assert curve.ece < 0.05, "ECE should be dominated by the large, well-calibrated bin"
+    assert curve.ace > 0.15, "ACE should reflect the small, badly-calibrated bin fully"
+    assert curve.ace > curve.ece
+
+
 def test_empty_valid_returns_nan():
     probs = to_probs(torch.randn(1, 3, 4, 4))
     labels = torch.full((1, 4, 4), -100, dtype=torch.long)
     assert math.isnan(negative_log_likelihood(probs, labels))
+    assert math.isnan(expected_calibration_error(probs, labels))
+    assert math.isnan(average_calibration_error(probs, labels))

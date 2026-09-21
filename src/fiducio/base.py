@@ -18,6 +18,7 @@ from .utils import (
     validate_predictions,
     validate_targets,
 )
+from .utils.stopping import StoppingRule, resolve_stopping
 
 DeviceLike = str | torch.device
 
@@ -49,6 +50,23 @@ class Calibrator(ABC):
         Label value excluded from fitting (default ``-100``).
     device:
         Computation device. ``None`` selects CUDA when available, else CPU.
+
+    Notes
+    -----
+    Calibrators fitted by gradient descent (all of them) also accept, as
+    keyword-only constructor arguments, an optional validation-based early
+    stopping rule (Adam only):
+
+    * ``patience`` -- stop after this many iterations without the validation
+      NLL improving by more than ``min_delta`` (default ``0.0``);
+    * ``lr_patience`` / ``lr_factor`` -- multiply the learning rate by
+      ``lr_factor`` (default ``0.1``) after ``lr_patience`` iterations without
+      improvement (``ReduceLROnPlateau``).
+
+    Setting either requires ``val_predictions`` / ``val_targets`` in :meth:`fit`;
+    the iterate with the best validation NLL is kept. With ``max_iter`` acting as
+    an upper bound, this reproduces the "Adam + early stopping on validation
+    NLL" recipe used in the paper.
     """
 
     #: Stable id assigned by :func:`fiducio.registry.register_calibrator`.
@@ -70,9 +88,17 @@ class Calibrator(ABC):
         self.device = resolve_device(device)
         self._num_classes: int | None = None
         self._fitted: bool = False
+        self._val: tuple[torch.Tensor, torch.Tensor] | None = None
         self._logger = get_logger(type(self).__name__)
 
     # ------------------------------------------------------------------ public
+
+    #: early-stopping settings (see :meth:`_init_stopping`); disabled by default.
+    patience: int | None = None
+    min_delta: float = 0.0
+    lr_patience: int | None = None
+    lr_factor: float = 0.1
+    _stopping: StoppingRule | None = None
 
     @property
     def is_fitted(self) -> bool:
@@ -89,6 +115,10 @@ class Calibrator(ABC):
         predictions: Any,
         targets: Any,
         mask: Any | None = None,
+        *,
+        val_predictions: Any | None = None,
+        val_targets: Any | None = None,
+        val_mask: Any | None = None,
     ) -> Calibrator:
         """Fit the calibrator on a labelled calibration set.
 
@@ -100,6 +130,12 @@ class Calibrator(ABC):
             ``(B, *spatial)`` integer labels.
         mask:
             Optional ``(B, *spatial)`` boolean mask; ``True`` marks valid voxels.
+        val_predictions, val_targets, val_mask:
+            Optional held-out validation set, in the same format as
+            ``predictions`` / ``targets`` / ``mask``. Required when early
+            stopping is configured (``patience`` or ``lr_patience``), and
+            rejected otherwise. The validation NLL (without regularization) is
+            monitored after every Adam step and the best iterate is kept.
 
         Notes
         -----
@@ -122,7 +158,14 @@ class Calibrator(ABC):
                 "no valid voxels to fit on (all positions are masked out or equal "
                 "ignore_index)"
             )
-        self._fit_core(z_flat, y_flat, num_classes)
+        val_data = self._prepare_validation(
+            val_predictions, val_targets, val_mask, num_classes=num_classes
+        )
+        self._val = val_data
+        try:
+            self._fit_core(z_flat, y_flat, num_classes)
+        finally:
+            self._val = None
         self._fitted = True
         return self
 
@@ -164,9 +207,20 @@ class Calibrator(ABC):
         predictions: Any,
         targets: Any,
         mask: Any | None = None,
+        *,
+        val_predictions: Any | None = None,
+        val_targets: Any | None = None,
+        val_mask: Any | None = None,
     ) -> torch.Tensor:
         """Fit on the calibration set, then transform the same predictions."""
-        self.fit(predictions, targets, mask=mask)
+        self.fit(
+            predictions,
+            targets,
+            mask=mask,
+            val_predictions=val_predictions,
+            val_targets=val_targets,
+            val_mask=val_mask,
+        )
         return self.transform(predictions, mask=mask)
 
     def save(self, path: Any) -> None:
@@ -182,6 +236,13 @@ class Calibrator(ABC):
             "ignore_index": self.ignore_index,
         }
         config.update(self._constructor_config())
+        if self._stopping is not None:
+            config.update(
+                patience=self.patience,
+                min_delta=self.min_delta,
+                lr_patience=self.lr_patience,
+                lr_factor=self.lr_factor,
+            )
         return config
 
     def __repr__(self) -> str:
@@ -214,6 +275,60 @@ class Calibrator(ABC):
         return {}
 
     # --------------------------------------------------------------- internals
+
+    def _init_stopping(
+        self,
+        optimizer: str,
+        patience: int | None,
+        min_delta: float,
+        lr_patience: int | None,
+        lr_factor: float,
+    ) -> None:
+        """Validate and store early-stopping settings (call after ``optimizer`` is set)."""
+        self._stopping = resolve_stopping(optimizer, patience, min_delta, lr_patience, lr_factor)
+        if self._stopping is not None:
+            self.patience = self._stopping.patience
+            self.min_delta = self._stopping.min_delta
+            self.lr_patience = self._stopping.lr_patience
+            self.lr_factor = self._stopping.lr_factor
+
+    def _prepare_validation(
+        self,
+        val_predictions: Any | None,
+        val_targets: Any | None,
+        val_mask: Any | None,
+        *,
+        num_classes: int,
+    ) -> tuple[torch.Tensor, torch.Tensor] | None:
+        """Flatten the optional validation set into canonical ``(N, C)`` / ``(N,)`` tensors."""
+        if val_predictions is None and val_targets is None:
+            if val_mask is not None:
+                raise ValueError("val_mask given without val_predictions and val_targets")
+            if self._stopping is not None:
+                raise ValueError(
+                    "early stopping (patience / lr_patience) requires val_predictions "
+                    "and val_targets in fit()"
+                )
+            return None
+        if val_predictions is None or val_targets is None:
+            raise ValueError("val_predictions and val_targets must be given together")
+        if self._stopping is None:
+            raise ValueError(
+                "validation data was given but early stopping is not configured; set "
+                "patience and/or lr_patience on the calibrator"
+            )
+        preds, tgts, msk = self._prepare(val_predictions, val_targets, val_mask, with_targets=True)
+        assert tgts is not None
+        val_classes = validate_predictions(preds, input_type=self.input_type)
+        if val_classes != num_classes:
+            raise ValueError(
+                f"validation predictions have {val_classes} classes, expected {num_classes}"
+            )
+        validate_targets(preds, tgts, msk, num_classes=num_classes, ignore_index=self.ignore_index)
+        z_val, y_val = flatten_valid(self._to_canonical(preds), tgts, msk, self.ignore_index)
+        if z_val.shape[0] == 0:
+            raise ValueError("no valid validation voxels (all masked out or equal ignore_index)")
+        return z_val, y_val
 
     def _prepare(
         self,

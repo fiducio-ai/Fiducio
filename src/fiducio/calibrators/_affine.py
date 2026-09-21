@@ -34,6 +34,10 @@ class _AffineCalibrator(Calibrator):
         optimizer: str = "adam",
         lr: float | None = None,
         max_iter: int | None = None,
+        patience: int | None = None,
+        min_delta: float = 0.0,
+        lr_patience: int | None = None,
+        lr_factor: float = 0.1,
         lambda_reg: float = 0.0,
         mu_reg: float = 0.0,
         input_type: str = "logits",
@@ -45,6 +49,7 @@ class _AffineCalibrator(Calibrator):
             optimizer, lr, max_iter,
             adam_lr=0.1, lbfgs_lr=1.0, adam_max_iter=200, lbfgs_max_iter=100,
         )
+        self._init_stopping(self.optimizer, patience, min_delta, lr_patience, lr_factor)
         self.lambda_reg = float(lambda_reg)
         self.mu_reg = float(mu_reg)
         self._weight: torch.Tensor | None = None  # (C, C) or (C,) for diagonal
@@ -110,7 +115,17 @@ class _AffineCalibrator(Calibrator):
             logits = self._apply_flat(z_flat)
             return F.cross_entropy(logits, y_flat) + self._regularization()
 
-        minimize(self.optimizer, params, loss_fn, lr=self.lr, max_iter=self.max_iter)
+        val_fn = None
+        if self._val is not None:
+            z_val, y_val = self._val
+
+            def val_fn() -> torch.Tensor:
+                return F.cross_entropy(self._apply_flat(z_val), y_val)
+
+        minimize(
+            self.optimizer, params, loss_fn, lr=self.lr, max_iter=self.max_iter,
+            val_fn=val_fn, stopping=self._stopping,
+        )
         self._weight = self._weight.detach()
         self._bias = self._bias.detach()
         if self._row_sum is not None:

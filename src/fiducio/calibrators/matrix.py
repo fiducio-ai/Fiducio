@@ -26,6 +26,10 @@ class MatrixScaling(_AffineCalibrator):
         L2 penalty on the off-diagonal entries of ``W`` (ODIR).
     mu_reg:
         L2 penalty on the bias vector (ODIR).
+    patience, min_delta, lr_patience, lr_factor:
+        Optional validation-based early stopping (Adam only), see
+        :class:`fiducio.Calibrator`. ``fit`` then requires ``val_predictions``
+        and ``val_targets``.
     input_type, ignore_index, device:
         See :class:`fiducio.Calibrator`.
 

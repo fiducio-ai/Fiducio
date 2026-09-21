@@ -11,7 +11,10 @@ of the penalty on the affine map each expert induces in the common logit space
 ``independent_experts=True`` instead fits each expert in its own optimization
 loop on only the voxels routed to it, which avoids experts with few routed
 voxels being dominated by the joint loss, at the cost of ``C`` times the
-optimizer work.
+optimizer work. Optional validation-based early stopping (``patience`` /
+``lr_patience``, see :class:`fiducio.Calibrator`) monitors the validation NLL
+over all voxels (joint) or over the validation voxels routed to each expert
+(independent; an expert with none of them runs to ``max_iter``).
 
 * :class:`ClassConditionalMatrixScaling` (CMS) – an unconstrained affine map per
   expert.
@@ -52,6 +55,10 @@ class _ClassConditionalBase(Calibrator):
         optimizer: str = "adam",
         lr: float | None = None,
         max_iter: int | None = None,
+        patience: int | None = None,
+        min_delta: float = 0.0,
+        lr_patience: int | None = None,
+        lr_factor: float = 0.1,
         lambda_reg: float = 0.0,
         mu_reg: float = 0.0,
         independent_experts: bool = False,
@@ -66,6 +73,7 @@ class _ClassConditionalBase(Calibrator):
             optimizer, lr, max_iter,
             adam_lr=1e-2, lbfgs_lr=1.0, adam_max_iter=200, lbfgs_max_iter=100,
         )
+        self._init_stopping(self.optimizer, patience, min_delta, lr_patience, lr_factor)
         self.lambda_reg = float(lambda_reg)
         self.mu_reg = float(mu_reg)
         self.independent_experts = bool(independent_experts)
@@ -160,7 +168,18 @@ class _ClassConditionalBase(Calibrator):
                 )
             return data_loss + torch.stack(reg_terms).mean()
 
-        minimize(self.optimizer, [raw_b, raw_mu], loss_fn, lr=self.lr, max_iter=self.max_iter)
+        val_fn = None
+        if self._val is not None:
+            z_val, y_val = self._val
+
+            def val_fn() -> torch.Tensor:
+                val_logits = self._route(z_val, num_classes, raw_b=raw_b, raw_mu=raw_mu)
+                return F.cross_entropy(val_logits, y_val)
+
+        minimize(
+            self.optimizer, [raw_b, raw_mu], loss_fn, lr=self.lr, max_iter=self.max_iter,
+            val_fn=val_fn, stopping=self._stopping,
+        )
         with torch.no_grad():
             self._raw_b = raw_b.detach()
             self._raw_mu = raw_mu.detach()
@@ -193,7 +212,29 @@ class _ClassConditionalBase(Calibrator):
                     affine_a, affine_b, self.lambda_reg, self.mu_reg
                 )
 
-            minimize(self.optimizer, [b_c, mu_c], loss_fn, lr=self.lr, max_iter=self.max_iter)
+            val_fn = None
+            if self._val is not None:
+                z_val, y_val = self._val
+                val_sel = torch.argmax(z_val, dim=1) == c
+                if bool(val_sel.any()):
+                    val_rows, val_targets = z_val[val_sel], y_val[val_sel]
+
+                    def val_fn(
+                        b_c: torch.Tensor = b_c,
+                        mu_c: torch.Tensor = mu_c,
+                        c: int = c,
+                        val_rows: torch.Tensor = val_rows,
+                        val_targets: torch.Tensor = val_targets,
+                    ) -> torch.Tensor:
+                        val_logits = self._expert_logits(
+                            val_rows, c, self._positive(b_c), self._positive(mu_c)
+                        )
+                        return F.cross_entropy(val_logits, val_targets)
+
+            minimize(
+                self.optimizer, [b_c, mu_c], loss_fn, lr=self.lr, max_iter=self.max_iter,
+                val_fn=val_fn, stopping=self._stopping,
+            )
             with torch.no_grad():
                 self._raw_b[c] = b_c.detach()
                 self._raw_mu[c] = mu_c.detach()

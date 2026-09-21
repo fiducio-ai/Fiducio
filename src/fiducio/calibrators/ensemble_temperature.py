@@ -40,6 +40,10 @@ class EnsembleTemperatureScaling(Calibrator):
     max_iter:
         Maximum optimizer iterations per stage. Defaults to ``200`` (Adam) or
         ``100`` (L-BFGS).
+    patience, min_delta, lr_patience, lr_factor:
+        Optional validation-based early stopping (Adam only), see
+        :class:`fiducio.Calibrator`. ``fit`` then requires ``val_predictions``
+        and ``val_targets``.
     input_type, ignore_index, device:
         See :class:`fiducio.Calibrator`.
 
@@ -58,6 +62,10 @@ class EnsembleTemperatureScaling(Calibrator):
         optimizer: str = "adam",
         lr: float | None = None,
         max_iter: int | None = None,
+        patience: int | None = None,
+        min_delta: float = 0.0,
+        lr_patience: int | None = None,
+        lr_factor: float = 0.1,
         input_type: str = "logits",
         ignore_index: int = -100,
         device: DeviceLike | None = None,
@@ -70,6 +78,7 @@ class EnsembleTemperatureScaling(Calibrator):
             optimizer, lr, max_iter,
             adam_lr=0.1, lbfgs_lr=1.0, adam_max_iter=200, lbfgs_max_iter=100,
         )
+        self._init_stopping(self.optimizer, patience, min_delta, lr_patience, lr_factor)
         self.temperature: float = float(init_temperature)
         self.weights: torch.Tensor = torch.tensor([1.0, 0.0, 0.0], device=self.device)
 
@@ -82,7 +91,17 @@ class EnsembleTemperatureScaling(Calibrator):
             temperature = F.softplus(raw_t) + _T_EPS
             return F.cross_entropy(z_flat / temperature, y_flat)
 
-        minimize(self.optimizer, [raw_t], loss_fn, lr=self.lr, max_iter=self.max_iter)
+        val_fn = None
+        if self._val is not None:
+            z_val, y_val = self._val
+
+            def val_fn() -> torch.Tensor:
+                return F.cross_entropy(z_val / (F.softplus(raw_t) + _T_EPS), y_val)
+
+        minimize(
+            self.optimizer, [raw_t], loss_fn, lr=self.lr, max_iter=self.max_iter,
+            val_fn=val_fn, stopping=self._stopping,
+        )
         self.temperature = float((F.softplus(raw_t) + _T_EPS).detach().cpu().item())
 
     def _fit_weights(self, z_flat: torch.Tensor, y_flat: torch.Tensor, num_classes: int) -> None:
@@ -97,7 +116,22 @@ class EnsembleTemperatureScaling(Calibrator):
             p = (w[0] * p0 + w[1] * p1 + w[2] * p2).clamp_min(_EPS)
             return F.nll_loss(torch.log(p), y_flat)
 
-        minimize(self.optimizer, [raw_w], loss_fn, lr=self.lr, max_iter=self.max_iter)
+        val_fn = None
+        if self._val is not None:
+            z_val, y_val = self._val
+            v0 = F.softmax(z_val / temperature, dim=1)
+            v1 = F.softmax(z_val, dim=1)
+            v2 = torch.full_like(v0, 1.0 / float(num_classes))
+
+            def val_fn() -> torch.Tensor:
+                w = F.softmax(raw_w, dim=0)
+                p = (w[0] * v0 + w[1] * v1 + w[2] * v2).clamp_min(_EPS)
+                return F.nll_loss(torch.log(p), y_val)
+
+        minimize(
+            self.optimizer, [raw_w], loss_fn, lr=self.lr, max_iter=self.max_iter,
+            val_fn=val_fn, stopping=self._stopping,
+        )
         self.weights = F.softmax(raw_w, dim=0).detach()
 
     def _fit_core(self, z_flat: torch.Tensor, y_flat: torch.Tensor, num_classes: int) -> None:

@@ -32,6 +32,10 @@ class TemperatureScaling(Calibrator):
     max_iter:
         Maximum optimizer iterations. Defaults to ``200`` (Adam) or ``100``
         (L-BFGS).
+    patience, min_delta, lr_patience, lr_factor:
+        Optional validation-based early stopping (Adam only), see
+        :class:`fiducio.Calibrator`. ``fit`` then requires ``val_predictions``
+        and ``val_targets``.
     input_type, ignore_index, device:
         See :class:`fiducio.Calibrator`.
 
@@ -49,6 +53,10 @@ class TemperatureScaling(Calibrator):
         optimizer: str = "adam",
         lr: float | None = None,
         max_iter: int | None = None,
+        patience: int | None = None,
+        min_delta: float = 0.0,
+        lr_patience: int | None = None,
+        lr_factor: float = 0.1,
         input_type: str = "logits",
         ignore_index: int = -100,
         device: DeviceLike | None = None,
@@ -61,6 +69,7 @@ class TemperatureScaling(Calibrator):
             optimizer, lr, max_iter,
             adam_lr=0.1, lbfgs_lr=1.0, adam_max_iter=200, lbfgs_max_iter=100,
         )
+        self._init_stopping(self.optimizer, patience, min_delta, lr_patience, lr_factor)
         self.temperature: float = float(init_temperature)
 
     def _fit_core(self, z_flat: torch.Tensor, y_flat: torch.Tensor, num_classes: int) -> None:
@@ -72,7 +81,17 @@ class TemperatureScaling(Calibrator):
             temperature = F.softplus(raw_t) + _T_EPS
             return F.cross_entropy(z_flat / temperature, y_flat)
 
-        minimize(self.optimizer, [raw_t], loss_fn, lr=self.lr, max_iter=self.max_iter)
+        val_fn = None
+        if self._val is not None:
+            z_val, y_val = self._val
+
+            def val_fn() -> torch.Tensor:
+                return F.cross_entropy(z_val / (F.softplus(raw_t) + _T_EPS), y_val)
+
+        minimize(
+            self.optimizer, [raw_t], loss_fn, lr=self.lr, max_iter=self.max_iter,
+            val_fn=val_fn, stopping=self._stopping,
+        )
         self.temperature = float((F.softplus(raw_t) + _T_EPS).detach().cpu().item())
 
     def _map_logits(self, canonical: torch.Tensor) -> torch.Tensor:

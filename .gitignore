@@ -37,3 +37,5 @@ env/
 *.pth
 outputs/
 data/
+# Persistence fixtures written by the published 0.1.0 wheel (tests)
+!tests/fixtures/v0_1_0/*.pt

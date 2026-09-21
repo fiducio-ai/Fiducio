@@ -33,7 +33,7 @@ commands from changing that explicitly selected environment.
 
 The repository selects CPU PyTorch on Linux/Windows and PyPI PyTorch on macOS.
 This is a development/CI choice, not a restriction on the installed library:
-wheel metadata still requires only `torch>=2.0`. GPU applications can install
+wheel metadata still requires only `torch>=2.10`. GPU applications can install
 Fiducio into their own environment with their compatible PyTorch build.
 
 Commit `uv.lock` whenever dependencies change. Run `uv lock` after editing
@@ -71,3 +71,5 @@ Calibrators subclass `fiducio.Calibrator` (or a shared helper base) and must:
 
 Be respectful and constructive. We follow the spirit of the
 [Contributor Covenant](https://www.contributor-covenant.org/).
+
+Release procedure: [docs/releasing.md](docs/releasing.md).

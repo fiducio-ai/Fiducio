@@ -34,12 +34,12 @@ import torch.nn.functional as F
 from ..base import Calibrator, DeviceLike
 from ..registry import register_calibrator
 from ..utils import class_last_flatten, restore_class_first
+from ..utils.tensors import inverse_softplus, positive_finite
 from ._optim import minimize, resolve_optimizer
 
 
 def _inv_softplus(value: float, device: torch.device) -> torch.Tensor:
-    v = torch.tensor(float(value), dtype=torch.float32, device=device)
-    return torch.log(torch.expm1(v.clamp_min(1e-12)))
+    return inverse_softplus(value, device)
 
 
 class _ClassConditionalBase(Calibrator):
@@ -74,11 +74,11 @@ class _ClassConditionalBase(Calibrator):
             adam_lr=1e-2, lbfgs_lr=1.0, adam_max_iter=200, lbfgs_max_iter=100,
         )
         self._init_stopping(self.optimizer, patience, min_delta, lr_patience, lr_factor)
-        self.lambda_reg = float(lambda_reg)
-        self.mu_reg = float(mu_reg)
+        self.lambda_reg = positive_finite(lambda_reg, "lambda_reg", allow_zero=True)
+        self.mu_reg = positive_finite(mu_reg, "mu_reg", allow_zero=True)
         self.independent_experts = bool(independent_experts)
-        self.init_alpha = float(init_alpha)
-        self.init_floor = float(init_floor)
+        self.init_alpha = positive_finite(init_alpha, "init_alpha")
+        self.init_floor = positive_finite(init_floor, "init_floor")
         self._raw_b: torch.Tensor | None = None  # (C, K, K) or (C, C, C)
         self._raw_mu: torch.Tensor | None = None  # (C, K) or (C, C)
 

@@ -10,6 +10,7 @@ import torch.nn.functional as F
 from ..base import Calibrator, DeviceLike
 from ..registry import register_calibrator
 from ..utils import class_last_flatten, restore_class_first, safe_log
+from ..utils.tensors import inverse_softplus, positive_finite
 from ._optim import minimize, resolve_optimizer
 
 _EPS = 1e-12
@@ -71,9 +72,7 @@ class EnsembleTemperatureScaling(Calibrator):
         device: DeviceLike | None = None,
     ) -> None:
         super().__init__(input_type=input_type, ignore_index=ignore_index, device=device)
-        if init_temperature <= 0:
-            raise ValueError("init_temperature must be positive")
-        self.init_temperature = float(init_temperature)
+        self.init_temperature = positive_finite(init_temperature, "init_temperature")
         self.optimizer, self.lr, self.max_iter = resolve_optimizer(
             optimizer, lr, max_iter,
             adam_lr=0.1, lbfgs_lr=1.0, adam_max_iter=200, lbfgs_max_iter=100,
@@ -84,7 +83,7 @@ class EnsembleTemperatureScaling(Calibrator):
 
     def _fit_temperature(self, z_flat: torch.Tensor, y_flat: torch.Tensor) -> None:
         init = max(self.init_temperature, _T_EPS)
-        raw = torch.log(torch.expm1(torch.tensor(init, device=self.device)))
+        raw = inverse_softplus(init, self.device)
         raw_t = raw.clone().requires_grad_(True)
 
         def loss_fn() -> torch.Tensor:

@@ -15,6 +15,8 @@ The class axis is *always* dimension 1. Fiducio never tries to guess it.
 
 from __future__ import annotations
 
+import math
+
 import numpy as np
 import torch
 
@@ -59,6 +61,42 @@ def safe_log(probs: torch.Tensor, eps: float = 1e-12) -> torch.Tensor:
     return torch.log(probs.clamp_min(eps))
 
 
+def positive_finite(value: float, name: str, *, allow_zero: bool = False) -> float:
+    """Validate a scalar hyperparameter before constructing tensors."""
+    value = float(value)
+    if not math.isfinite(value) or (value < 0 if allow_zero else value <= 0):
+        domain = "non-negative" if allow_zero else "positive"
+        raise ValueError(f"{name} must be finite and {domain}")
+    return value
+
+
+def inverse_softplus(value: float, device: torch.device) -> torch.Tensor:
+    """Stable inverse for a positive, float32-representable softplus value."""
+    value = positive_finite(value, "initial value")
+    v = torch.tensor(value, dtype=torch.float32, device=device)
+    if not torch.isfinite(v) or v <= 0:
+        raise ValueError("initial value must be positive and representable in float32")
+    return v + torch.log(-torch.expm1(-v))
+
+
+def integer_targets(targets: ArrayLike, *, device: torch.device) -> torch.Tensor:
+    """Reject fractional/non-finite labels before converting to int64."""
+    y = to_tensor(targets, device=device)
+    if y.is_complex() or not torch.isfinite(y).all():
+        raise ValueError("targets must contain finite integer labels")
+    if y.is_floating_point() and (not torch.equal(y, y.trunc()) or
+                                 (y >= 2**63).any() or (y < -(2**63)).any()):
+        raise ValueError("targets must contain integer labels representable in int64")
+    return y.long()
+
+
+def validate_mask(predictions: torch.Tensor, mask: torch.Tensor | None) -> None:
+    """Require the exact spatial layout, never implicit broadcasting."""
+    expected = (predictions.shape[0], *predictions.shape[2:])
+    if mask is not None and tuple(mask.shape) != expected:
+        raise ValueError(f"mask must have shape {expected}; got {tuple(mask.shape)}")
+
+
 def validate_predictions(
     predictions: torch.Tensor,
     *,
@@ -92,16 +130,16 @@ def validate_predictions(
         )
     if not torch.isfinite(predictions).all():
         raise ValueError("predictions contain non-finite values (nan/inf)")
-    if input_type == "probs":
+    if input_type == "probs" and predictions.numel():
         pmin = float(predictions.min())
         pmax = float(predictions.max())
-        if pmin < -_PROB_SUM_ATOL or pmax > 1.0 + _PROB_SUM_ATOL:
+        if pmin < 0.0 or pmax > 1.0:
             raise ValueError(
                 "input_type='probs' but values fall outside [0, 1]; "
                 "pass input_type='logits' for unnormalised scores"
             )
         sums = predictions.sum(dim=1)
-        if not torch.allclose(sums, torch.ones_like(sums), atol=_PROB_SUM_ATOL):
+        if not torch.allclose(sums, torch.ones_like(sums), atol=_PROB_SUM_ATOL, rtol=0):
             raise ValueError(
                 "input_type='probs' but probabilities do not sum to 1 along the "
                 "class axis (dimension 1)"
@@ -126,11 +164,7 @@ def validate_targets(
             f"targets must have shape {expected_shape} (predictions without the "
             f"class axis); got {tuple(targets.shape)}"
         )
-    if mask is not None:
-        if tuple(mask.shape) != expected_shape:
-            raise ValueError(
-                f"mask must have shape {expected_shape}; got {tuple(mask.shape)}"
-            )
+    validate_mask(predictions, mask)
     valid = targets != ignore_index
     if mask is not None:
         valid = valid & mask.to(torch.bool)
@@ -195,6 +229,7 @@ def apply_mask_to_probabilities(
     """
     if mask is None:
         return probs
+    validate_mask(probs, mask)
     mask_b = mask.to(dtype=probs.dtype).unsqueeze(1)
     return probs * mask_b
 

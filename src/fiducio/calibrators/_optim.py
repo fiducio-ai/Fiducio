@@ -8,11 +8,13 @@ default to sensible per-optimizer values when left as ``None``.
 
 from __future__ import annotations
 
+import math
 from collections.abc import Callable
 
 import torch
 
 from ..utils.stopping import StoppingRule
+from ..utils.tensors import positive_finite
 
 VALID_OPTIMIZERS = ("adam", "lbfgs")
 
@@ -47,6 +49,9 @@ def resolve_optimizer(
         if max_iter is None
         else int(max_iter)
     )
+    positive_finite(resolved_lr, "lr")
+    if max_iter is not None and (isinstance(max_iter, bool) or resolved_iter != max_iter):
+        raise ValueError("max_iter must be an integer")
     if resolved_iter <= 0:
         raise ValueError(f"max_iter must be > 0, got {resolved_iter}")
     return name, resolved_lr, resolved_iter
@@ -77,6 +82,19 @@ def minimize(
     ``stopping.patience`` consecutive iterations, and the learning rate is
     decayed on plateaus when ``stopping.lr_patience`` is set.
     """
+    def check_params(*, gradients: bool = False) -> None:
+        for p in params:
+            value = p.grad if gradients else p
+            if value is not None and not torch.isfinite(value).all():
+                raise ValueError("optimization produced non-finite parameters or gradients")
+
+    def checked_loss() -> torch.Tensor:
+        loss = loss_fn()
+        if not torch.isfinite(loss):
+            raise ValueError("optimization produced a non-finite loss")
+        return loss
+
+    check_params()
     if optimizer == "lbfgs":
         lbfgs = torch.optim.LBFGS(
             params, lr=lr, max_iter=max_iter, line_search_fn="strong_wolfe"
@@ -84,11 +102,15 @@ def minimize(
 
         def closure() -> torch.Tensor:
             lbfgs.zero_grad()
-            loss = loss_fn()
+            loss = checked_loss()
             loss.backward()
+            check_params(gradients=True)
             return loss
 
         lbfgs.step(closure)
+        check_params()
+        with torch.no_grad():
+            checked_loss()
         return
 
     rule = stopping if val_fn is not None else None
@@ -98,20 +120,31 @@ def minimize(
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
             adam, mode="min", factor=rule.lr_factor, patience=rule.lr_patience
         )
-    best_loss = float("inf")
+    def monitor() -> float:
+        with torch.no_grad():
+            value = float(val_fn() if rule is not None and val_fn is not None else checked_loss())
+        if not math.isfinite(value):
+            raise ValueError("optimization produced a non-finite monitored loss")
+        return value
+
+    best_loss = monitor()
+    patience_best = best_loss
     best_state = [p.detach().clone() for p in params]
     stale = 0
     for _ in range(max_iter):
         adam.zero_grad()
-        loss = loss_fn()
+        loss = checked_loss()
         loss.backward()
+        check_params(gradients=True)
         adam.step()
-        if rule is not None and val_fn is not None:
-            with torch.no_grad():
-                value = float(val_fn())
-            if value < best_loss - rule.min_delta:
-                best_loss = value
-                best_state = [p.detach().clone() for p in params]
+        check_params()
+        value = monitor()
+        if value < best_loss:
+            best_loss = value
+            best_state = [p.detach().clone() for p in params]
+        if rule is not None:
+            if value < patience_best - rule.min_delta:
+                patience_best = value
                 stale = 0
             else:
                 stale += 1
@@ -119,11 +152,6 @@ def minimize(
                 scheduler.step(value)
             if rule.patience is not None and stale >= rule.patience:
                 break
-        else:
-            value = float(loss.detach().item())
-            if value + 1e-9 < best_loss:
-                best_loss = value
-                best_state = [p.detach().clone() for p in params]
     with torch.no_grad():
         for p, best in zip(params, best_state, strict=True):
             p.copy_(best)

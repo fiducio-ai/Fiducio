@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 
 
@@ -46,18 +47,17 @@ def resolve_stopping(
         optimizer other than ``"adam"`` (L-BFGS runs as a single optimizer call
         and cannot be interrupted between iterations).
     """
+    if not math.isfinite(float(min_delta)) or float(min_delta) < 0:
+        raise ValueError("min_delta must be >= 0 and finite")
+    if not 0.0 < float(lr_factor) < 1.0:
+        raise ValueError("lr_factor must be in (0, 1)")
+    for name, value in (("patience", patience), ("lr_patience", lr_patience)):
+        if value is not None and (isinstance(value, bool) or not isinstance(value, int) or value <= 0):
+            raise ValueError(f"{name} must be > 0 and an integer")
     if patience is None and lr_patience is None:
         return None
     if optimizer != "adam":
         raise ValueError("early stopping (patience / lr_patience) requires optimizer='adam'")
-    if patience is not None and int(patience) <= 0:
-        raise ValueError(f"patience must be > 0, got {patience}")
-    if lr_patience is not None and int(lr_patience) <= 0:
-        raise ValueError(f"lr_patience must be > 0, got {lr_patience}")
-    if float(min_delta) < 0:
-        raise ValueError(f"min_delta must be >= 0, got {min_delta}")
-    if not 0.0 < float(lr_factor) < 1.0:
-        raise ValueError(f"lr_factor must be in (0, 1), got {lr_factor}")
     return StoppingRule(
         patience=None if patience is None else int(patience),
         min_delta=float(min_delta),

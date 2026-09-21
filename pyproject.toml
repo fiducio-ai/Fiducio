@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fiducio"
-version = "0.1.0"
+version = "0.1.1"
 description = "Model-agnostic post-hoc calibration for 2D and 3D semantic segmentation"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -35,7 +35,7 @@ classifiers = [
 ]
 dependencies = [
   "numpy>=1.22",
-  "torch>=2.0",
+  "torch>=2.10",
 ]
 
 [project.optional-dependencies]
@@ -84,6 +84,7 @@ url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
 [project.urls]
+"Project page" = "https://fiducio-ai.github.io/Fiducio/paper/"
 Homepage = "https://github.com/fiducio-ai/Fiducio"
 Documentation = "https://fiducio-ai.github.io/Fiducio/"
 Repository = "https://github.com/fiducio-ai/Fiducio"

@@ -30,6 +30,7 @@ theme:
 
 nav:
   - Home: index.md
+  - Project page: https://fiducio-ai.github.io/Fiducio/paper/
   - Installation: installation.md
   - Quickstart: quickstart.md
   - Concepts: concepts.md
@@ -59,6 +60,7 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
+          paths: [src]
           options:
             docstring_style: numpy
             show_source: true

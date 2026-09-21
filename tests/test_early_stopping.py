@@ -46,7 +46,7 @@ def test_minimize_restores_best_validation_iterate_and_stops_early():
     rule = StoppingRule(patience=5)
     minimize("adam", [x], loss_fn, lr=0.05, max_iter=500, val_fn=val_fn, stopping=rule)
     assert calls["val"] < 500
-    assert abs(float(x) - 1.0) < 0.1
+    assert abs(float(x.detach()) - 1.0) < 0.1
 
 
 def test_minimize_without_stopping_follows_training_loss():
@@ -60,8 +60,8 @@ def test_minimize_lr_patience_alone_runs_to_max_iter():
     x, calls, loss_fn, val_fn = _quadratic(3.0, 1.0)
     rule = StoppingRule(lr_patience=3, lr_factor=0.5)
     minimize("adam", [x], loss_fn, lr=0.05, max_iter=80, val_fn=val_fn, stopping=rule)
-    assert calls["val"] == 80
-    assert abs(float(x) - 1.0) < 0.1
+    assert calls["val"] == 81  # initial state plus 80 updates
+    assert abs(float(x.detach()) - 1.0) < 0.1
 
 
 def test_minimize_min_delta_stops_on_marginal_gains():
@@ -81,7 +81,7 @@ def test_minimize_min_delta_stops_on_marginal_gains():
         "adam", [x], loss_fn, lr=0.1, max_iter=200, val_fn=val_fn,
         stopping=StoppingRule(patience=3, min_delta=1e6),
     )
-    assert calls["n"] == 4  # one initial "improvement" over +inf, then 3 stale steps
+    assert calls["n"] == 4  # initial validation plus 3 stale steps
 
 
 # ------------------------------------------------------------- configuration

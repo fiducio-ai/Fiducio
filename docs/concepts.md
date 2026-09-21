@@ -175,3 +175,16 @@ they are the per-voxel class scores (you can calibrate before the usual argmax).
 For **SegFormer** they are the segmentation head logits, upsampled to the label
 resolution. In every case Fiducio only sees `(B, C, *spatial)` tensors and never
 needs to know the architecture.
+
+## Validation and numerical behavior (0.1.1)
+
+Fitting detaches model outputs from autograd. Invalid labels, probability values
+and tensor layouts raise errors; integral floating labels remain accepted.
+A failed refit preserves the complete previous fitted state. Non-finite losses
+or learned parameters raise an error rather than producing a fitted object.
+
+Adam considers the initial state and every updated state. It restores the true
+minimum training/validation loss; `min_delta` controls patience, not which
+minimum is saved. ECE/ACE use float64 accumulators and int64 bin counts on the
+predictions' device, avoiding drift on large voxel populations. Generic metrics
+remain voxel-pooled: these fixes do not reproduce or replace paper experiments.

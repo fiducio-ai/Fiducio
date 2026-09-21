@@ -13,7 +13,8 @@ from typing import Any
 
 import torch
 
-from ..utils import class_last_flatten, safe_log, to_tensor
+from ..utils import flatten_valid, safe_log, to_tensor, validate_predictions, validate_targets
+from ..utils.tensors import integer_targets
 
 _EPS = 1e-12
 
@@ -24,18 +25,12 @@ def _flatten_valid(
     mask: Any | None,
     ignore_index: int,
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    p = to_tensor(probs, dtype=torch.float32)
-    y = to_tensor(targets).long()
-    if p.ndim < 2:
-        raise ValueError("probs must have shape (B, C, *spatial)")
-    flat, _ = class_last_flatten(p)
-    y_flat = y.reshape(-1)
-    if y_flat.shape[0] != flat.shape[0]:
-        raise ValueError("probs and targets have incompatible shapes")
-    valid = y_flat != ignore_index
-    if mask is not None:
-        valid = valid & to_tensor(mask).reshape(-1).to(torch.bool)
-    return flat[valid], y_flat[valid]
+    p = to_tensor(probs, dtype=torch.float32).detach()
+    c = validate_predictions(p, input_type="probs")
+    y = integer_targets(targets, device=p.device)
+    m = None if mask is None else to_tensor(mask, device=p.device).bool()
+    validate_targets(p, y, m, num_classes=c, ignore_index=ignore_index)
+    return flatten_valid(p, y, m, ignore_index)
 
 
 def negative_log_likelihood(
@@ -80,7 +75,8 @@ class ReliabilityCurve:
     bin_accuracy:
         ``(n_bins,)`` mean accuracy per bin (0 for empty bins).
     bin_counts:
-        ``(n_bins,)`` number of voxels per bin.
+        ``(n_bins,)`` int64 number of voxels per bin. Other statistics are
+        float64; all tensors reside on the predictions' device.
     ece:
         Expected calibration error (count-weighted mean ``|confidence -
         accuracy|`` over bins).
@@ -112,30 +108,34 @@ def reliability_curve(
     for drawing reliability diagrams (see
     :func:`fiducio.plots.reliability_diagram`).
     """
-    if n_bins < 1:
-        raise ValueError("n_bins must be >= 1")
+    if isinstance(n_bins, bool) or not isinstance(n_bins, int) or n_bins < 1:
+        raise ValueError("n_bins must be an integer >= 1")
     p, y = _flatten_valid(probs, targets, mask, ignore_index)
-    edges = torch.linspace(0.0, 1.0, n_bins + 1)
+    # Construct the same float32 boundaries as before, then accumulate in double.
+    edges = torch.linspace(0.0, 1.0, n_bins + 1, device=p.device).double()
     if p.shape[0] == 0:
-        zeros = torch.zeros(n_bins)
+        zeros = torch.zeros(n_bins, dtype=torch.float64, device=p.device)
         return ReliabilityCurve(
-            edges, zeros, zeros.clone(), zeros.clone(), float("nan"), float("nan")
+            edges, zeros, zeros.clone(), zeros.long(), float("nan"), float("nan")
         )
 
     confidence, prediction = p.max(dim=1)
-    correct = (prediction == y).to(torch.float32)
+    confidence = confidence.double()
+    correct = (prediction == y).double()
     # Bin index in [0, n_bins - 1].
     idx = torch.bucketize(confidence, edges[1:-1].contiguous(), right=False)
 
-    counts = torch.zeros(n_bins).scatter_add_(0, idx, torch.ones_like(confidence))
-    sum_conf = torch.zeros(n_bins).scatter_add_(0, idx, confidence)
-    sum_acc = torch.zeros(n_bins).scatter_add_(0, idx, correct)
+    counts = torch.zeros(n_bins, dtype=torch.int64, device=p.device).scatter_add_(
+        0, idx, torch.ones_like(idx)
+    )
+    sum_conf = torch.zeros(n_bins, dtype=torch.float64, device=p.device).scatter_add_(0, idx, confidence)
+    sum_acc = torch.zeros_like(sum_conf).scatter_add_(0, idx, correct)
     safe_counts = counts.clamp_min(1.0)
     bin_conf = sum_conf / safe_counts
     bin_acc = sum_acc / safe_counts
     total = float(confidence.shape[0])
     gap = (bin_conf - bin_acc).abs()
-    ece = float(((counts / total) * gap).sum().item())
+    ece = float(((counts.double() / total) * gap).sum().item())
     nonempty = counts > 0
     ace = float(gap[nonempty].mean().item()) if bool(nonempty.any()) else float("nan")
     return ReliabilityCurve(edges, bin_conf, bin_acc, counts, ece, ace)

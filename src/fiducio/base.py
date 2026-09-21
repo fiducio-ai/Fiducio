@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from copy import deepcopy
 from typing import Any
 
 import torch
@@ -19,6 +20,7 @@ from .utils import (
     validate_targets,
 )
 from .utils.stopping import StoppingRule, resolve_stopping
+from .utils.tensors import integer_targets, validate_mask
 
 DeviceLike = str | torch.device
 
@@ -142,7 +144,8 @@ class Calibrator(ABC):
         Calling ``fit`` again on an already-fitted instance re-fits from
         scratch: all learned parameters are reinitialised and overwritten, and
         a new ``num_classes`` (which may differ from the previous fit) is
-        recorded. No state from the previous fit is reused.
+        recorded. No state from the previous fit is reused. If fitting fails,
+        the previous state is preserved. Model outputs are detached from autograd.
         """
         preds, tgts, msk = self._prepare(predictions, targets, mask, with_targets=True)
         assert tgts is not None  # guaranteed by with_targets=True
@@ -150,7 +153,6 @@ class Calibrator(ABC):
         validate_targets(
             preds, tgts, msk, num_classes=num_classes, ignore_index=self.ignore_index
         )
-        self._num_classes = num_classes
         canonical = self._to_canonical(preds)
         z_flat, y_flat = flatten_valid(canonical, tgts, msk, self.ignore_index)
         if z_flat.shape[0] == 0:
@@ -161,12 +163,15 @@ class Calibrator(ABC):
         val_data = self._prepare_validation(
             val_predictions, val_targets, val_mask, num_classes=num_classes
         )
-        self._val = val_data
+        candidate = deepcopy(self)
+        candidate._num_classes = num_classes
+        candidate._val = val_data
         try:
-            self._fit_core(z_flat, y_flat, num_classes)
+            candidate._fit_core(z_flat, y_flat, num_classes)
         finally:
-            self._val = None
-        self._fitted = True
+            candidate._val = None
+        candidate._fitted = True
+        self.__dict__.update(candidate.__dict__)
         return self
 
     def transform(self, predictions: Any, mask: Any | None = None) -> torch.Tensor:
@@ -338,12 +343,12 @@ class Calibrator(ABC):
         *,
         with_targets: bool,
     ) -> tuple[torch.Tensor, torch.Tensor | None, torch.Tensor | None]:
-        preds = to_tensor(predictions, dtype=torch.float32, device=self.device)
+        preds = to_tensor(predictions, dtype=torch.float32, device=self.device).detach()
         tgts: torch.Tensor | None = None
         if with_targets:
             if targets is None:
                 raise ValueError("targets are required for fit()")
-            tgts = to_tensor(targets, device=self.device).long()
+            tgts = integer_targets(targets, device=self.device)
         msk: torch.Tensor | None = None
         if mask is not None:
             msk = to_tensor(mask, device=self.device).to(torch.bool)
@@ -368,6 +373,7 @@ class Calibrator(ABC):
         validate_predictions(
             preds, input_type=self.input_type, expected_num_classes=self._num_classes
         )
+        validate_mask(preds, msk)
         with torch.no_grad():
             canonical = self._to_canonical(preds)
             logits = self._map_logits(canonical)

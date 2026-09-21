@@ -738,7 +738,7 @@ wheels = [
 
 [[package]]
 name = "fiducio"
-version = "0.1.0"
+version = "0.1.1"
 source = { editable = "." }
 dependencies = [
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
@@ -812,8 +812,8 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.4.0" },
-    { name = "torch", marker = "sys_platform != 'darwin'", specifier = ">=2.0", index = "https://download.pytorch.org/whl/cpu" },
-    { name = "torch", marker = "sys_platform == 'darwin'", specifier = ">=2.0" },
+    { name = "torch", marker = "sys_platform != 'darwin'", specifier = ">=2.10", index = "https://download.pytorch.org/whl/cpu" },
+    { name = "torch", marker = "sys_platform == 'darwin'", specifier = ">=2.10" },
 ]
 provides-extras = ["plots", "docs", "dev", "all"]
 

@@ -1,47 +1,47 @@
-# PyPI publishing via Trusted Publishing (OpenID Connect, no long-lived tokens).
-#
-# DISABLED BY DEFAULT: this workflow only runs when started manually
-# (workflow_dispatch) AND requires confirmation. Before the first publish you
-# must configure a Trusted Publisher for the `fiducio` project on PyPI and create
-# a protected `pypi` environment in the repository settings. No API token is
-# stored in the repository.
 name: Publish to PyPI (manual)
-
 on:
   workflow_dispatch:
     inputs:
       confirm:
-        description: 'Type "publish" to confirm uploading to PyPI'
+        description: 'Type "publish" to upload the validated release tag'
         required: true
         default: ""
-
 permissions:
   contents: read
-
+concurrency:
+  group: pypi-publish
+  cancel-in-progress: false
 jobs:
+  release-gate:
+    if: inputs.confirm == 'publish'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
+        with:
+          version: "0.12.3"
+          python-version: "3.11"
+      - run: uv run --no-project --python 3.11 python scripts/check_release.py
+  validation:
+    needs: release-gate
+    uses: ./.github/workflows/validate.yml
   publish:
-    if: ${{ github.event.inputs.confirm == 'publish' }}
+    needs: [release-gate, validation]
     runs-on: ubuntu-latest
     environment:
       name: pypi
       url: https://pypi.org/p/fiducio
     permissions:
-      id-token: write  # required for Trusted Publishing
+      id-token: write
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: astral-sh/setup-uv@v7
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
-          version: "0.12.3"
-          enable-cache: true
-          python-version: "3.11"
-
-      - name: Sync locked build tools
-        run: uv sync --locked --only-group build
-
-      - name: Build wheel and sdist
-        run: uv build --no-build-isolation
-
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+          name: distributions
+          path: dist/
+      - name: Publish exactly the tested artifacts with attestations
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # release/v1
+        with:
+          attestations: true

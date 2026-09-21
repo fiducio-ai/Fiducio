@@ -39,7 +39,7 @@ or, in a uv application:
 uv add fiducio
 ```
 
-The core install depends only on `numpy` and `torch`. Optional extras:
+Requires Python ≥ 3.10 and PyTorch ≥ 2.10. The core install depends only on `numpy` and `torch`. Optional extras:
 `fiducio[plots]` (matplotlib reliability diagrams), `fiducio[docs]`,
 `fiducio[dev]`, `fiducio[all]`.
 
@@ -165,6 +165,9 @@ optional reliability-diagram plot (`fiducio.plots.reliability_diagram`, needs
 `fiducio[plots]`).
 
 ## Documentation
+
+The [paper project page](https://fiducio-ai.github.io/Fiducio/paper/) presents the
+methods, interactive illustrations and published results.
 
 The [paper implementation guide](https://github.com/fiducio-ai/Fiducio/blob/main/reproducibility/README.md) records method
 mapping, numerical-reference coverage, fitting limits and the remaining steps

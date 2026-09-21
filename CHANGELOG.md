@@ -7,6 +7,67 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - Unreleased
+
+Patch release. The public API (classes, functions and signatures) is unchanged.
+Some invalid inputs that 0.1.0 accepted silently now raise `ValueError`.
+
+### Changed
+
+- **Minimum PyTorch is now 2.10** (was 2.0). Python support is unchanged (3.10–3.12).
+- `ReliabilityCurve` statistics are float64 and `bin_counts` is int64, all on
+  the predictions' device (previously float32 on CPU). ECE/ACE are still Python floats,
+  the bin convention is unchanged, and metrics without valid voxels still return NaN.
+
+### Fixed
+
+- Adam fitting now records each loss against the state it was computed on, and
+  treats the initial state as a candidate. It restores the true best state. `min_delta`
+  now only drives the early-stopping patience counter.
+- ECE/ACE accumulate in float64 with int64 counts, so they no longer drift on large
+  voxel populations. Labels and masks are moved to the predictions' device.
+- Stricter validation:
+  - masks in `transform` and in the metrics must have the exact expected shape
+    (no implicit broadcasting);
+  - label layouts must be exact;
+  - labels must be finite integers (integral floats are still accepted);
+  - probabilities must be finite, within [0, 1] and sum to 1 (tolerance 1e-3).
+- `fit` detaches model outputs from autograd and is transactional: a failed refit
+  leaves the previously fitted state untouched.
+- The inverse softplus used to initialise TS, ETS and class-conditional parameters
+  is now numerically stable. Non-finite or out-of-range hyperparameters are rejected.
+  Fits that produce a non-finite loss or non-finite parameters raise instead of
+  returning a broken calibrator.
+
+### Security
+
+- `load_calibrator` always uses `torch.load(..., weights_only=True)` and never falls
+  back to unrestricted unpickling. It validates the format version, calibrator id,
+  configuration, class count, parameter shapes and finiteness, and rejects unknown
+  versions and inconsistent files. Files written by the published 0.1.0 wheel
+  (fitted and unfitted), and legacy full-matrix MSc checkpoints, still load; the
+  tests check this against real 0.1.0 files.
+- The PyTorch floor excludes versions affected by CVE-2025-32434 and CVE-2026-24747.
+- Release hardening:
+  - publishing requires a `vX.Y.Z` tag that matches the package version and
+    points to a commit on `main`;
+  - the tested wheel/sdist pair is the one uploaded, via Trusted Publishing with attestations;
+  - workflow actions are pinned by commit SHA;
+  - OIDC permissions are limited to the deploy jobs.
+
+### Documentation and packaging
+
+- Project page at <https://fiducio-ai.github.io/Fiducio/paper/>, linked from the
+  README, the documentation and the PyPI metadata ("Project page"). Its assets and
+  font licenses ship in the sdist, not in the wheel.
+- The quickstart and the reliability-diagram example evaluate on data held out
+  from fitting.
+- CI runs:
+  - the full suite and the examples against the installed wheel, including one
+    run with PyTorch 2.10;
+  - a rebuild of the documentation and the wheel from the sdist.
+- Release procedure and required repository settings: `docs/releasing.md`.
+
 ## [0.1.0] - 2026-09-21
 
 First public beta release. It accompanies the paper *Rethinking Post-Hoc
@@ -57,5 +118,6 @@ Calibration in Semantic Segmentation* (Transactions on Machine Learning Research
   reliability figure (`examples/readme_figure.py`), locked uv development
   environments and a CI matrix for Python 3.10, 3.11 and 3.12.
 
-[Unreleased]: https://github.com/fiducio-ai/Fiducio/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/fiducio-ai/Fiducio/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/fiducio-ai/Fiducio/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/fiducio-ai/Fiducio/releases/tag/v0.1.0

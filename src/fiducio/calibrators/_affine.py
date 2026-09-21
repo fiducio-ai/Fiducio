@@ -9,6 +9,7 @@ import torch.nn.functional as F
 
 from ..base import Calibrator, DeviceLike
 from ..utils import class_last_flatten, restore_class_first
+from ..utils.tensors import positive_finite
 from ._optim import minimize, resolve_optimizer
 
 
@@ -50,8 +51,8 @@ class _AffineCalibrator(Calibrator):
             adam_lr=0.1, lbfgs_lr=1.0, adam_max_iter=200, lbfgs_max_iter=100,
         )
         self._init_stopping(self.optimizer, patience, min_delta, lr_patience, lr_factor)
-        self.lambda_reg = float(lambda_reg)
-        self.mu_reg = float(mu_reg)
+        self.lambda_reg = positive_finite(lambda_reg, "lambda_reg", allow_zero=True)
+        self.mu_reg = positive_finite(mu_reg, "mu_reg", allow_zero=True)
         self._weight: torch.Tensor | None = None  # (C, C) or (C,) for diagonal
         self._bias: torch.Tensor | None = None  # (C,)
         self._row_sum: torch.Tensor | None = None

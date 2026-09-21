@@ -1,0 +1,150 @@
+name: Validation
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build distributions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
+        with:
+          version: "0.12.3"
+          enable-cache: true
+          python-version: "3.11"
+      - run: uv sync --locked --only-group build
+      - run: uv build --no-build-isolation
+      - run: uv run --no-sync twine check dist/*
+      - run: uv run --no-sync python scripts/check_distribution.py
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: distributions
+          path: dist/
+          if-no-files-found: error
+
+  quality:
+    name: Lint and types (${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
+        with:
+          version: "0.12.3"
+          enable-cache: true
+          python-version: ${{ matrix.python }}
+      - run: uv sync --locked
+      - run: uv run --no-sync ruff check .
+      # Each interpreter checks against its own locked dependency stubs.
+      - run: uv run --no-sync mypy --python-version ${{ matrix.python }}
+
+  wheel-tests:
+    name: Wheel tests (${{ matrix.python }}, ${{ matrix.torch }})
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.11", "3.12"]
+        torch: ["locked"]
+        include:
+          - python: "3.10"
+            torch: "minimum"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
+        with:
+          version: "0.12.3"
+          enable-cache: true
+          python-version: ${{ matrix.python }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: distributions
+          path: dist/
+      - run: uv sync --locked --no-install-project
+      - name: Install minimum supported PyTorch
+        if: matrix.torch == 'minimum'
+        run: uv pip install 'torch==2.10.0+cpu' --index https://download.pytorch.org/whl/cpu
+      - run: uv pip install --no-deps dist/*.whl
+      - name: Test the installed wheel outside the source tree
+        env:
+          OMP_NUM_THREADS: "1"
+          MKL_NUM_THREADS: "1"
+          MPLBACKEND: Agg
+        run: |
+          python="$GITHUB_WORKSPACE/.venv/bin/python"
+          cd "$RUNNER_TEMP"
+          "$python" -c 'import fiducio; from pathlib import Path; assert "site-packages" in Path(fiducio.__file__).parts; assert fiducio.__version__ == "0.1.1"'
+          "$python" -m pytest "$GITHUB_WORKSPACE/tests" -c "$GITHUB_WORKSPACE/pyproject.toml" --cov=fiducio --cov-report=term-missing
+          for example in basic_segmentation_calibration pytorch_model_calibration reliability_diagram ensemble_pooling; do
+            "$python" "$GITHUB_WORKSPACE/examples/$example.py"
+          done
+
+  docs:
+    name: Documentation and project page
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
+        with:
+          version: "0.12.3"
+          enable-cache: true
+          python-version: "3.11"
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: distributions
+          path: dist/
+      - run: uv sync --locked --no-dev --extra docs
+      - run: uv run --no-sync mkdocs build --strict
+      - run: uv run --no-sync python scripts/check_site.py
+      - name: Rebuild documentation and wheel from the source distribution
+        run: |
+          uv sync --locked --no-dev --extra docs --group build
+          uv run --no-sync python - <<'PY'
+          import os, pathlib, subprocess, tarfile, sys, zipfile
+          source = next(pathlib.Path('dist').glob('*.tar.gz'))
+          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'sdist-check'
+          root.mkdir()
+          with tarfile.open(source) as archive:
+              archive.extractall(root, filter='data')
+          unpacked = next(root.iterdir())
+          subprocess.run([sys.executable, '-m', 'mkdocs', 'build', '--strict'], cwd=unpacked, check=True)
+          subprocess.run([sys.executable, 'scripts/check_site.py'], cwd=unpacked, check=True)
+          subprocess.run([sys.executable, '-m', 'build', '--wheel', '--no-isolation'], cwd=unpacked, check=True)
+          with zipfile.ZipFile(next(pathlib.Path('dist').glob('*.whl'))) as published, zipfile.ZipFile(next((unpacked / 'dist').glob('*.whl'))) as rebuilt:
+              assert published.namelist() == rebuilt.namelist()
+              assert all(published.read(name) == rebuilt.read(name) for name in published.namelist())
+          PY
+
+  checks:
+    name: Release checks
+    if: always()
+    needs: [build, quality, wheel-tests, docs]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every validation job to succeed
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          python - <<'PY'
+          import json, os
+          results = json.loads(os.environ['RESULTS'])
+          assert all(job['result'] == 'success' for job in results.values()), results
+          PY

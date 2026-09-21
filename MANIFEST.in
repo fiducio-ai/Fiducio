@@ -1,6 +1,8 @@
 include CITATION.cff CHANGELOG.md mkdocs.yml
 include uv.lock .python-version
-recursive-include tests *.py *.json
+recursive-include tests *.py *.json *.pt
 recursive-include reproducibility *.py *.md
-recursive-include docs *.md
+recursive-include docs *.md *.html *.css *.js *.png *.jpg *.woff2 *.txt
 recursive-include examples *.py
+recursive-include scripts *.py
+include SECURITY.md CONTRIBUTING.md

@@ -1,83 +1,9 @@
+# Manual rerun; PRs and main run the same packaging checks through Tests.
 name: Package
-
 on:
-  push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
   workflow_dispatch:
-
 permissions:
   contents: read
-
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: astral-sh/setup-uv@v7
-        with:
-          version: "0.12.3"
-          enable-cache: true
-          python-version: "3.11"
-
-      - name: Sync locked build tools
-        run: uv sync --locked --only-group build
-
-      - name: Build wheel and sdist
-        run: uv build --no-build-isolation
-
-      - name: Check artifacts
-        run: uv run --no-sync twine check dist/*
-
-      - name: Upload distributions
-        uses: actions/upload-artifact@v4
-        with:
-          name: distributions
-          path: dist/
-
-  smoke-install:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: astral-sh/setup-uv@v7
-        with:
-          version: "0.12.3"
-          enable-cache: true
-          python-version: "3.11"
-
-      - name: Download distributions
-        uses: actions/download-artifact@v4
-        with:
-          name: distributions
-          path: dist/
-
-      - name: Sync locked runtime dependencies without the source package
-        run: uv sync --locked --no-dev --no-install-project
-
-      - name: Install the built wheel
-        run: uv pip install --no-deps dist/*.whl
-
-      - name: Smoke test the installed wheel
-        run: |
-          uv run --no-sync python -c "import fiducio; print(fiducio.__version__); print(fiducio.registered_ids())"
-          uv run --no-sync python - <<'PY'
-          from pathlib import Path
-          import fiducio
-          import torch
-          assert "site-packages" in Path(fiducio.__file__).parts
-          from fiducio import TemperatureScaling, load_calibrator
-          logits = torch.randn(4, 3, 8, 8)
-          labels = torch.randint(0, 3, (4, 8, 8))
-          cal = TemperatureScaling(device="cpu").fit(logits, labels)
-          out = cal.transform(logits)
-          assert out.shape == logits.shape
-          cal.save("cal.pt")
-          assert torch.allclose(out, load_calibrator("cal.pt").transform(logits), atol=1e-6)
-          print("wheel smoke test OK")
-          PY
+  validation:
+    uses: ./.github/workflows/validate.yml

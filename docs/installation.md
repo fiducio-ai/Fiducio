@@ -4,23 +4,23 @@ Fiducio requires **Python ≥ 3.10** and **PyTorch ≥ 2.0**.
 
 ## From PyPI
 
-After the first PyPI release, add Fiducio to an existing uv application:
-
-```bash
-uv add fiducio
-```
-
-Standard pip installation remains supported:
+Fiducio is published on [PyPI](https://pypi.org/project/fiducio/):
 
 ```bash
 pip install fiducio
+```
+
+or, in an existing uv application:
+
+```bash
+uv add fiducio
 ```
 
 The core install depends only on `numpy` and `torch`.
 
 ## From GitHub
 
-Until the first PyPI release you can install directly from the repository:
+To install the development version directly from the repository:
 
 ```bash
 uv add "fiducio @ git+https://github.com/fiducio-ai/Fiducio.git"

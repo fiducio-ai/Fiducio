@@ -27,6 +27,28 @@ the architecture.
 
 ## Install
 
+Fiducio is available on [PyPI](https://pypi.org/project/fiducio/):
+
+```bash
+pip install fiducio
+```
+
+or, in a uv application:
+
+```bash
+uv add fiducio
+```
+
+The core install depends only on `numpy` and `torch`. Optional extras:
+`fiducio[plots]` (matplotlib reliability diagrams), `fiducio[docs]`,
+`fiducio[dev]`, `fiducio[all]`.
+
+To install the development version from GitHub:
+
+```bash
+pip install "git+https://github.com/fiducio-ai/Fiducio.git"
+```
+
 For development from a checkout, use the committed uv lockfile:
 
 ```bash
@@ -36,28 +58,6 @@ uv run --no-sync pytest
 
 This uses CPU PyTorch for development. See [CONTRIBUTING.md](https://github.com/fiducio-ai/Fiducio/blob/main/CONTRIBUTING.md)
 for the pinned uv version, documentation and build commands.
-
-For an existing uv application before the first PyPI release:
-
-```bash
-uv add "fiducio @ git+https://github.com/fiducio-ai/Fiducio.git"
-```
-
-Once a PyPI release is available, the standard installation is:
-
-```bash
-pip install fiducio
-```
-
-With pip, before the first PyPI release, install from GitHub:
-
-```bash
-pip install "git+https://github.com/fiducio-ai/Fiducio.git"
-```
-
-The core install depends only on `numpy` and `torch`. Optional extras:
-`fiducio[plots]` (matplotlib reliability diagrams), `fiducio[docs]`,
-`fiducio[dev]`, `fiducio[all]`.
 
 ## Quick start
 

@@ -95,6 +95,47 @@ argument:
 `max_iter=200`; L-BFGS: `lr=1.0`, `max_iter=100`; the class-conditional
 calibrators keep `lr=0.01` for Adam), and can be overridden explicitly.
 
+## Early stopping
+
+With `optimizer="adam"` (the default), every calibrator can stop on a held-out
+validation set instead of running a fixed number of iterations, which is the
+recipe used in the paper (Adam, early stopping on the validation NLL, learning
+rate decayed on plateaus):
+
+```python
+from fiducio import ClassConditionalMatrixScaling
+
+calibrator = ClassConditionalMatrixScaling(
+    max_iter=2000,      # upper bound
+    patience=20,        # stop after 20 steps without validation-NLL improvement
+    min_delta=0.0,      # minimum decrease that counts as an improvement
+    lr_patience=10,     # optional: decay the learning rate on plateaus ...
+    lr_factor=0.1,      # ... by this factor
+)
+calibrator.fit(
+    cal_logits, cal_labels,
+    val_predictions=val_logits, val_targets=val_labels, val_mask=None,
+)
+```
+
+- The monitored quantity is the plain cross-entropy (NLL) on the validation set,
+  without regularization, evaluated after every Adam step. The iterate with the
+  best validation NLL is restored.
+- Either `patience` or `lr_patience` enables monitoring and then requires
+  `val_predictions` and `val_targets` in `fit`; passing validation data without
+  either setting is an error. `optimizer="lbfgs"` cannot be combined with early
+  stopping.
+- The validation set must be disjoint from the calibration set; choose
+  hyperparameters and the final test evaluation on data used by neither.
+- For the class-conditional calibrators the validation NLL is computed over all
+  voxels (joint experts), or per expert on its own routed validation voxels
+  (`independent_experts=True`; an expert that receives none runs to `max_iter`).
+- The settings are stored with the calibrator (`get_config`, `save`).
+
+The default `max_iter` is a short fixed budget and can underfit expressive
+calibrators (for example CDC, CMSap and CMSop with Adam's default `lr=0.01`);
+combine a larger `max_iter` with `patience` for those.
+
 ## Calibrated probabilities vs logits
 
 `transform` (and its alias `predict_proba`) return calibrated **probabilities**.

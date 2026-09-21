@@ -74,7 +74,10 @@ before replacing the checked-in reference. Standard CI needs no research checkou
   follow PyTorch's selection/sorting behavior, and finite precision can collapse
   very small probability differences. Do not promise preservation of all tie sets.
 - The public full-batch optimizer does not reproduce the research case batching,
-  schedules, clipping, class weighting, early stopping or hyperparameter selection.
+  schedules, clipping, class weighting or hyperparameter selection. Validation-based
+  early stopping (Adam, best-validation-NLL restore, optional `ReduceLROnPlateau`)
+  is available through `patience` / `lr_patience` and `fit(val_predictions=...)`;
+  the paper's hyperparameter search and its chosen values are not shipped.
 
 ## Before linking the camera-ready version
 

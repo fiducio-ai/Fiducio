@@ -154,6 +154,11 @@ def expected_calibration_error(
     whether the argmax matches the label. Bins partition ``[0, 1]`` uniformly
     and each bin's gap is weighted by its share of voxels — see
     :func:`average_calibration_error` for the unweighted variant.
+
+    ``n_bins`` defaults to 15. The paper reports ECE with ``n_bins=50`` (ACE with
+    ``n_bins=15``) and averages metrics per image before pooling; pass
+    ``n_bins=50`` and compute per case to follow that convention. Boundary-aware
+    ECE is not included.
     """
     return reliability_curve(probs, targets, mask, ignore_index, n_bins).ece
 
@@ -172,5 +177,7 @@ def average_calibration_error(
     over non-empty bins instead of weighting each bin by its share of voxels.
     A confidence region visited by only a handful of voxels therefore counts as
     much as a densely populated one, which ECE would otherwise drown out.
+    ``n_bins=15`` matches the paper's ACE; the paper computes ACE on the pooled
+    test voxels rather than per image.
     """
     return reliability_curve(probs, targets, mask, ignore_index, n_bins).ace

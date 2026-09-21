@@ -6,24 +6,25 @@ transform is and in what they guarantee.
 
 ## Available calibrators
 
-| Class | Alias | Parameters | Guarantee |
-|-------|-------|------------|-----------|
-| [`TemperatureScaling`](api/calibrators.md#fiducio.TemperatureScaling) | `TS` | one scalar `T` | preserves argmax **and** full order |
-| [`EnsembleTemperatureScaling`](api/calibrators.md#fiducio.EnsembleTemperatureScaling) | `ETS` | `T` + 3 mixture weights | — |
-| [`VectorScaling`](api/calibrators.md#fiducio.VectorScaling) | `VS` | per-class scale + bias | — |
-| [`MatrixScaling`](api/calibrators.md#fiducio.MatrixScaling) | `MS` | full `C × C` matrix + bias | — |
-| [`TranslationInvariantMatrixScaling`](api/calibrators.md#fiducio.TranslationInvariantMatrixScaling) | `MSc` | constrained `C × C` matrix + bias | invariant to logit translation |
-| [`DirichletCalibration`](api/calibrators.md#fiducio.DirichletCalibration) | `DC` | `C × C` matrix on log-probs | — |
-| [`ClassConditionalMatrixScaling`](api/calibrators.md#fiducio.ClassConditionalMatrixScaling) | `CMS` / `CDC` | one affine map per top class | — |
-| [`ArgmaxPreservingMatrixScaling`](api/calibrators.md#fiducio.ArgmaxPreservingMatrixScaling) | `CMSAP` / `CMSap` | per-class margin map | preserves argmax |
-| [`OrderPreservingMatrixScaling`](api/calibrators.md#fiducio.OrderPreservingMatrixScaling) | `CMSOP` / `CMSop` | per-class gap map | preserves full order |
+| Class | Alias | Parameters | Translation-invariant | Decision preservation |
+|-------|-------|------------|:---------------------:|-----------------------|
+| [`TemperatureScaling`](api/calibrators.md#fiducio.TemperatureScaling) | `TS` | one scalar `T` | yes | argmax **and** full order |
+| [`EnsembleTemperatureScaling`](api/calibrators.md#fiducio.EnsembleTemperatureScaling) | `ETS` | `T` + 3 mixture weights | yes | argmax **and** full order |
+| [`VectorScaling`](api/calibrators.md#fiducio.VectorScaling) | `VS` | per-class scale + bias | no | — |
+| [`MatrixScaling`](api/calibrators.md#fiducio.MatrixScaling) | `MS` | full `C × C` matrix + bias | no | — |
+| [`TranslationInvariantMatrixScaling`](api/calibrators.md#fiducio.TranslationInvariantMatrixScaling) | `MSc` | constrained `C × C` matrix + bias | yes | — |
+| [`DirichletCalibration`](api/calibrators.md#fiducio.DirichletCalibration) | `DC` | `C × C` matrix on log-probs | yes | — |
+| [`ClassConditionalMatrixScaling`](api/calibrators.md#fiducio.ClassConditionalMatrixScaling) | `CMS` / `CDC` | one affine map per top class | yes | — |
+| [`ArgmaxPreservingMatrixScaling`](api/calibrators.md#fiducio.ArgmaxPreservingMatrixScaling) | `CMSAP` / `CMSap` | per-class margin map | yes | argmax |
+| [`OrderPreservingMatrixScaling`](api/calibrators.md#fiducio.OrderPreservingMatrixScaling) | `CMSOP` / `CMSop` | per-class gap map | yes | argmax **and** full order |
 
-Short aliases (`TS`, `MS`, `CMS`, ...) are provided for convenience; the explicit
+Translation-invariant means the output is unchanged when the same constant is
+added to every input logit of a voxel. Short aliases (`TS`, `MS`, `CMS`, ...) are provided for convenience; the explicit
 names are recommended in code that others will read.
 
 ## Paper method mapping
 
-The following paper methods are implemented here. LTS is not included in this
+The following methods of [*Rethinking Post-Hoc Calibration in Semantic Segmentation*](https://openreview.net/forum?id=xwNoSNxgxV) (Kirscher et al., Transactions on Machine Learning Research, 2026; preprint [arXiv:2607.01902](https://arxiv.org/abs/2607.01902)) are implemented here. LTS is not included in this
 release; this table is not the complete experimental method inventory.
 
 | Paper method | Class | Alias |

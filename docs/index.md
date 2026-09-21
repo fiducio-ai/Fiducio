@@ -9,6 +9,9 @@ Fiducio does not depend on any particular architecture. If your model produces
 logits, Fiducio can calibrate them — whether it is a PyTorch U-Net, nnU-Net,
 SegFormer or anything else.
 
+Fiducio accompanies the paper [*Rethinking Post-Hoc Calibration in Semantic Segmentation*](https://openreview.net/forum?id=xwNoSNxgxV) (Kirscher et al., Transactions on Machine Learning Research, 2026; preprint [arXiv:2607.01902](https://arxiv.org/abs/2607.01902)), which introduces the translation-invariant
+and class-conditional calibrators (MSc, CDC, CMSap, CMSop) implemented here.
+
 ## Why calibrate?
 
 Modern segmentation networks are usually **over-confident**: a voxel predicted

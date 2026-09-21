@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If you use Fiducio in your research, please cite the paper below."
 title: "Fiducio: Model-agnostic post-hoc calibration for 2D and 3D semantic segmentation"
 version: "0.1.0"
-date-released: "2026-06-24"
+date-released: "2026-09-21"
 authors:
   - name: "Fiducio maintainers (fiducio-ai)"
 repository-code: "https://github.com/fiducio-ai/Fiducio"
@@ -21,7 +21,7 @@ abstract: >
   calibrators that operate on logits or probabilities produced by any segmentation
   model.
 preferred-citation:
-  type: preprint
+  type: article
   title: "Rethinking Post-Hoc Calibration in Semantic Segmentation"
   authors:
     - given-names: "Tristan"
@@ -40,11 +40,12 @@ preferred-citation:
       family-names: "Meyer"
     - given-names: "Sylvain"
       family-names: "Faisan"
+  journal: "Transactions on Machine Learning Research"
+  issn: "2835-8856"
   year: 2026
-  month: 7
-  url: "https://arxiv.org/abs/2607.01902"
-  doi: "10.48550/arXiv.2607.01902"
+  month: 9
+  url: "https://openreview.net/forum?id=xwNoSNxgxV"
   identifiers:
-    - type: other
-      value: "arXiv:2607.01902"
-      description: "arXiv preprint"
+    - type: url
+      value: "https://arxiv.org/abs/2607.01902"
+      description: "arXiv preprint (arXiv:2607.01902)"

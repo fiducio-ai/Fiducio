@@ -1,6 +1,6 @@
 # Installation
 
-Fiducio requires **Python ≥ 3.10** and **PyTorch ≥ 2.0**.
+Fiducio requires **Python ≥ 3.10** and **PyTorch ≥ 2.10**.
 
 ## From PyPI
 

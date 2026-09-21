@@ -34,7 +34,8 @@ def main() -> None:
     labels = signal.argmax(dim=1)
     logits = signal * 4.0 + torch.randn(16, 4, 32, 32) * 0.5
 
-    calibrator = TemperatureScaling().fit(logits, labels)
+    calibrator = TemperatureScaling(device="cpu").fit(logits[:8], labels[:8])
+    logits, labels = logits[8:], labels[8:]
 
     raw_probs = torch.softmax(logits, dim=1)
     cal_probs = calibrator.transform(logits)
@@ -44,7 +45,7 @@ def main() -> None:
     reliability_diagram(cal_probs, labels, ax=ax2, title="After calibration")
     fig.tight_layout()
 
-    out = Path(tempfile.gettempdir()) / "fiducio_reliability.png"
+    out = Path(tempfile.mkdtemp(prefix="fiducio-reliability-")) / "reliability.png"
     fig.savefig(out, dpi=150)
     plt.close(fig)
     print(f"Saved reliability diagram to {out}")

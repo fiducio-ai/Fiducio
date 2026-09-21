@@ -41,11 +41,15 @@ If you need calibrated **logits** instead, use `decision_function(new_logits)`
 ## 4. Measure the effect
 
 ```python
-raw = F.softmax(logits, dim=1)
-print("NLL", negative_log_likelihood(raw, labels), "->",
-      negative_log_likelihood(calibrator.transform(logits), labels))
-print("ECE", expected_calibration_error(raw, labels), "->",
-      expected_calibration_error(calibrator.transform(logits), labels))
+# Separate test data, never used for fitting or model selection:
+test_logits = torch.randn(8, 4, 64, 64)
+test_labels = torch.randint(0, 4, (8, 64, 64))
+raw = F.softmax(test_logits, dim=1)
+calibrated_test = calibrator.transform(test_logits)
+print("NLL", negative_log_likelihood(raw, test_labels), "->",
+      negative_log_likelihood(calibrated_test, test_labels))
+print("ECE", expected_calibration_error(raw, test_labels), "->",
+      expected_calibration_error(calibrated_test, test_labels))
 ```
 
 ## 5. Save and reload

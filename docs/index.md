@@ -58,3 +58,6 @@ Continue with the [Quickstart](quickstart.md).
 
 Fiducio is **beta** (`0.x`). The API is usable and tested, but may still change
 before `1.0`. It is not certified for safety-critical clinical use.
+
+Explore the [paper project page](https://fiducio-ai.github.io/Fiducio/paper/) for
+interactive illustrations and results from the published paper.

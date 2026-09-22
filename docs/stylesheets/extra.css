@@ -1,0 +1,14 @@
+/* Fiducio brand colours (from the fiducio-ai logo) for the Material theme. */
+:root > * {
+  --md-primary-fg-color: #004fc5;
+  --md-primary-fg-color--light: #076ad4;
+  --md-primary-fg-color--dark: #003f9e;
+  --md-accent-fg-color: #076ad4;
+  --md-accent-fg-color--transparent: rgba(7, 106, 212, 0.1);
+}
+
+[data-md-color-scheme="slate"] {
+  --md-typeset-a-color: #6ea8ff;
+  --md-accent-fg-color: #8cbcff;
+  --md-accent-fg-color--transparent: rgba(140, 188, 255, 0.1);
+}

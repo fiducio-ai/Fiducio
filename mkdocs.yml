@@ -6,16 +6,18 @@ repo_name: fiducio-ai/Fiducio
 
 theme:
   name: material
+  logo: assets/fiducio-logo-white.png
+  favicon: assets/favicon.ico
   palette:
     - scheme: default
-      primary: indigo
-      accent: indigo
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - scheme: slate
-      primary: indigo
-      accent: indigo
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
@@ -76,6 +78,9 @@ extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/fiducio-ai/Fiducio
+
+extra_css:
+  - stylesheets/extra.css
 
 extra_javascript:
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js

@@ -32,9 +32,10 @@ def check(dist: Path) -> None:
                 if digest != expected or int(size) != len(content):
                     raise ValueError(f"invalid wheel record: {name}")
         for required in ["docs/paper/index.html", "docs/paper/assets/page.js",
-                         "docs/paper/assets/page.css", "docs/paper/assets/fonts/OFL-Newsreader.txt",
-                         "docs/paper/assets/fonts/OFL-IBMPlexSans.txt",
-                         "docs/paper/assets/fonts/OFL-IBMPlexMono.txt"]:
+                         "docs/paper/assets/page.css", "docs/paper/assets/fonts/OFL-Roboto.txt",
+                         "docs/paper/assets/fonts/OFL-RobotoMono.txt", "docs/assets/favicon.ico",
+                         "docs/assets/fiducio-logo.png", "docs/assets/fiducio-logo-white.png",
+                         "docs/stylesheets/extra.css"]:
             if required not in files:
                 raise ValueError(f"sdist missing {required}")
         for path in Path("docs/paper").rglob("*"):

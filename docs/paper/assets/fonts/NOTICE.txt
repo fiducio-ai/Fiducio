@@ -1,14 +1,12 @@
 # Bundled font notices
 
-Newsreader and IBM Plex Sans / Mono are distributed under the SIL Open Font
-License 1.1. Their copyright notices and full licenses are included alongside
-the WOFF2 files. The Apache-2.0 license for Fiducio code does not replace these
-font licenses.
+The project page uses Roboto and Roboto Mono, the typefaces of the Fiducio
+documentation theme. Both are distributed under the SIL Open Font License 1.1;
+their licenses are included as OFL-Roboto.txt and OFL-RobotoMono.txt. The
+WOFF2 files are the Google Fonts latin, latin-ext and greek subsets.
 
 License sources (Google Fonts mirrors of the font projects):
-- https://github.com/google/fonts/blob/main/ofl/newsreader/OFL.txt
-- https://github.com/google/fonts/blob/main/ofl/ibmplexsans/OFL.txt
-- https://github.com/google/fonts/blob/main/ofl/ibmplexmono/OFL.txt
+- https://github.com/google/fonts/blob/main/ofl/roboto/OFL.txt
+- https://github.com/google/fonts/blob/main/ofl/robotomono/OFL.txt
 
-The WOFF2 files are retained unchanged from the project-page PR. Their embedded
-name tables identify the respective font families and SIL OFL licensing.
+The Apache-2.0 license for Fiducio code does not replace these font licenses.

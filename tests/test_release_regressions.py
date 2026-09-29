@@ -67,19 +67,6 @@ def test_million_voxel_metrics_do_not_drift():
     assert curve.bin_counts.sum().item() == len(y)
 
 
-def test_reliability_accumulators_follow_device_with_fake_tensors():
-    from torch._subclasses.fake_tensor import FakeTensorMode
-    with FakeTensorMode():
-        p = torch.empty(2, 3, device="meta")
-        y = torch.empty(2, dtype=torch.long, device="meta")
-        # Scalar materialization is unsupported for fake tensors. Reaching it
-        # proves that bucketize and scatter_add have consistent device layouts.
-        with patch("fiducio.metrics.calibration._flatten_valid", return_value=(p, y)):
-            from torch._subclasses.fake_tensor import DataDependentOutputException
-            with pytest.raises(DataDependentOutputException):
-                reliability_curve(p, y)
-
-
 @pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not available")
 def test_cuda_metrics_with_cpu_labels_and_masks():
     p = torch.tensor([[.9, .1], [.8, .2]], device="cuda")

@@ -83,12 +83,18 @@ def test_two_channel_from_binary_rejects_bad_shape():
 
 def test_reliability_curve_structure():
     logits, labels = synthetic_logits((4, 3, 8, 8), seed=63)
-    curve = reliability_curve(to_probs(logits), labels, n_bins=12)
+    probs = to_probs(logits)
+    curve = reliability_curve(probs, labels, n_bins=12)
     assert isinstance(curve, ReliabilityCurve)
     assert curve.bin_confidence.shape == (12,)
     assert curve.bin_accuracy.shape == (12,)
     assert int(curve.bin_counts.sum()) == labels.numel()
     assert 0.0 <= curve.ece <= 1.0
+    assert curve.bin_edges.device == probs.device
+    assert curve.bin_counts.device == probs.device
+    assert curve.bin_confidence.dtype == torch.float64
+    assert curve.bin_accuracy.dtype == torch.float64
+    assert curve.bin_counts.dtype == torch.int64
 
 
 def test_load_warns_on_major_version_mismatch(tmp_path, caplog):

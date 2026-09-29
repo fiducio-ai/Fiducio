@@ -46,7 +46,10 @@ jobs:
           enable-cache: true
           python-version: ${{ matrix.python }}
       - run: uv sync --locked
-      - run: uv run --no-sync ruff check .
+      - if: matrix.python == '3.11'
+        run: uv run --no-sync ruff check .
+      - if: matrix.python == '3.11'
+        run: uv run --no-sync ruff format --check .
       # Each interpreter checks against its own locked dependency stubs.
       - run: uv run --no-sync mypy --python-version ${{ matrix.python }}
 

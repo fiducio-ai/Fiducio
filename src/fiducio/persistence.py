@@ -17,6 +17,7 @@ is read with ``weights_only=True`` and onto CPU.
 from __future__ import annotations
 
 import os
+import pickle
 from typing import Any
 
 import torch
@@ -69,7 +70,7 @@ def _validate_state(calibrator: Any, state: dict[str, Any], classes: int | None,
             continue
         if name not in expected and not fitted and template.get(name) is None:
             raise ValueError(f"unexpected parameter {name} on an unfitted calibrator")
-        if not torch.is_tensor(value) or not value.is_floating_point() or not torch.isfinite(value).all():
+        if not torch.is_tensor(value) or not value.is_floating_point() or not torch.isfinite(value.to(torch.float32)).all():
             raise ValueError(f"saved parameter {name} must be a finite floating tensor")
         if name in expected and tuple(value.shape) != expected[name]:
             raise ValueError(f"invalid shape for saved parameter {name}")
@@ -140,7 +141,13 @@ def save_calibrator(calibrator: Any, path: PathLike) -> None:
         "fitted": calibrator.is_fitted,
         "state": _to_cpu(calibrator._get_state()),
     }
-    torch.save(payload, os.fspath(path))
+    tmp_path = f"{os.fspath(path)}.tmp"
+    try:
+        torch.save(payload, tmp_path)
+        os.replace(tmp_path, os.fspath(path))
+    finally:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
 
 
 def load_calibrator(
@@ -167,7 +174,10 @@ def load_calibrator(
         raise FileNotFoundError(f"calibrator file not found: {path}")
 
     location: MapLocation = "cpu" if map_location is None else map_location
-    payload = torch.load(os.fspath(path), map_location=location, weights_only=True)
+    try:
+        payload = torch.load(os.fspath(path), map_location=location, weights_only=True)
+    except (pickle.UnpicklingError, EOFError, IndexError, RuntimeError) as exc:
+        raise ValueError(f"could not read Fiducio calibrator file: {path}") from exc
 
     if not isinstance(payload, dict) or payload.get("format") != FORMAT_NAME:
         raise ValueError(f"{path} is not a Fiducio calibrator file")
@@ -198,7 +208,10 @@ def load_calibrator(
         )
 
     calibrator_id = payload["calibrator_id"]
-    cls = get_calibrator_class(calibrator_id)
+    try:
+        cls = get_calibrator_class(calibrator_id)
+    except KeyError as exc:
+        raise ValueError(f"unsupported calibrator id {calibrator_id!r}") from exc
 
     config = dict(payload["config"])
     if "device" in config:

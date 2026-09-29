@@ -288,8 +288,8 @@ class _ClassConditionalBase(Calibrator):
     def _set_state(self, state: dict[str, Any]) -> None:
         raw_b = state.get("raw_b")
         raw_mu = state.get("raw_mu")
-        self._raw_b = None if raw_b is None else torch.as_tensor(raw_b, device=self.device)
-        self._raw_mu = None if raw_mu is None else torch.as_tensor(raw_mu, device=self.device)
+        self._raw_b = None if raw_b is None else torch.as_tensor(raw_b, device=self.device).float()
+        self._raw_mu = None if raw_mu is None else torch.as_tensor(raw_mu, device=self.device).float()
 
 
 @register_calibrator("class_conditional_matrix_scaling")

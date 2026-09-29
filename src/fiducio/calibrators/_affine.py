@@ -154,7 +154,7 @@ class _AffineCalibrator(Calibrator):
     def _set_state(self, state: dict[str, Any]) -> None:
         weight = state.get("weight")
         bias = state.get("bias")
-        self._weight = None if weight is None else torch.as_tensor(weight, device=self.device)
-        self._bias = None if bias is None else torch.as_tensor(bias, device=self.device)
+        self._weight = None if weight is None else torch.as_tensor(weight, device=self.device).float()
+        self._bias = None if bias is None else torch.as_tensor(bias, device=self.device).float()
         row_sum = state.get("row_sum")
-        self._row_sum = None if row_sum is None else torch.as_tensor(row_sum, device=self.device)
+        self._row_sum = None if row_sum is None else torch.as_tensor(row_sum, device=self.device).float()

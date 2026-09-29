@@ -183,7 +183,7 @@ def test_unfitted_roundtrip(tmp_path, calibrator_id):
     assert not out.is_fitted and out.num_classes is None
 
 
-@pytest.mark.parametrize("change", ["future", "missing", "shape", "nan", "fitted", "config"])
+@pytest.mark.parametrize("change", ["future", "missing", "shape", "nan", "fitted", "config", "unknown_id"])
 def test_corrupt_payload_rejected(tmp_path, change):
     z, y = data()
     path = tmp_path / "bad.pt"
@@ -201,6 +201,8 @@ def test_corrupt_payload_rejected(tmp_path, change):
         payload["fitted"] = "yes"
     elif change == "config":
         payload["config"]["device"] = "cpu"
+    elif change == "unknown_id":
+        payload["calibrator_id"] = "not_real"
     torch.save(payload, path)
     with pytest.raises(ValueError):
         load_calibrator(path)

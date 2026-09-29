@@ -6,7 +6,7 @@ import pytest
 import torch
 
 from conftest import ALL_CALIBRATOR_IDS, make_calibrator, synthetic_logits
-from fiducio import load_calibrator, save_calibrator
+from fiducio import MatrixScaling, load_calibrator, save_calibrator
 from fiducio.persistence import FORMAT_NAME
 
 
@@ -78,3 +78,54 @@ def test_unknown_calibrator_id_raises():
 
     with pytest.raises(KeyError, match="unknown calibrator id"):
         get_calibrator_class("not_a_real_calibrator")
+
+
+def test_unknown_calibrator_id_in_payload_raises_value_error(tmp_path):
+    logits, labels = synthetic_logits((2, 3, 5, 5), seed=34)
+    cal = MatrixScaling(device="cpu").fit(logits, labels)
+    path = tmp_path / "unknown_id.pt"
+    cal.save(path)
+    payload = torch.load(path, weights_only=True)
+    payload["calibrator_id"] = "not_a_real_calibrator"
+    torch.save(payload, path)
+    with pytest.raises(ValueError, match="unsupported calibrator id"):
+        load_calibrator(path)
+
+
+def test_float64_saved_state_is_cast_on_load(tmp_path):
+    logits, labels = synthetic_logits((2, 3, 5, 5), seed=35)
+    cal = MatrixScaling(device="cpu").fit(logits, labels)
+    expected = cal.transform(logits)
+    path = tmp_path / "float64.pt"
+    cal.save(path)
+    payload = torch.load(path, weights_only=True)
+    payload["state"] = {
+        key: value.double() if torch.is_tensor(value) else value
+        for key, value in payload["state"].items()
+    }
+    torch.save(payload, path)
+    loaded = load_calibrator(path)
+    assert torch.allclose(expected, loaded.transform(logits), atol=1e-6)
+
+
+def test_junk_file_raises_value_error(tmp_path):
+    path = tmp_path / "junk.pt"
+    path.write_bytes(b"\x00\x01\x02not a torch file")
+    with pytest.raises(ValueError):
+        load_calibrator(path)
+
+
+def test_failed_save_keeps_existing_file(tmp_path, monkeypatch):
+    logits, labels = synthetic_logits((2, 3, 5, 5), seed=36)
+    cal = MatrixScaling(device="cpu").fit(logits, labels)
+    path = tmp_path / "cal.pt"
+    cal.save(path)
+    before = path.read_bytes()
+
+    def fail_save(*args, **kwargs):
+        raise RuntimeError("simulated write failure")
+
+    monkeypatch.setattr("fiducio.persistence.torch.save", fail_save)
+    with pytest.raises(RuntimeError, match="simulated write failure"):
+        cal.save(path)
+    assert path.read_bytes() == before

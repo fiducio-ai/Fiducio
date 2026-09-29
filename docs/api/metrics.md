@@ -9,6 +9,8 @@ shape `(B, *spatial)`, with optional `mask` and `ignore_index`.
 
 ::: fiducio.average_calibration_error
 
+::: fiducio.unweighted_calibration_error
+
 ::: fiducio.brier_score
 
 ::: fiducio.reliability_curve

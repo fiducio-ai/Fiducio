@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
+import pytest
 import torch
 
-from conftest import synthetic_logits, to_probs
+from conftest import make_calibrator, synthetic_logits, to_probs
 from fiducio import (
     ArgmaxPreservingMatrixScaling,
     OrderPreservingMatrixScaling,
-    TranslationInvariantMatrixScaling,
 )
 
 
@@ -84,9 +84,21 @@ def test_cmsop_preserves_order_on_unrelated_random_inputs():
     assert torch.equal(raw_order, cal_order)
 
 
-def test_translation_invariance():
+@pytest.mark.parametrize(
+    "calibrator_id",
+    [
+        "temperature_scaling",
+        "ensemble_temperature_scaling",
+        "translation_invariant_matrix_scaling",
+        "dirichlet_calibration",
+        "class_conditional_matrix_scaling",
+        "argmax_preserving_matrix_scaling",
+        "order_preserving_matrix_scaling",
+    ],
+)
+def test_translation_invariance(calibrator_id):
     logits, labels = synthetic_logits((3, 4, 6, 6), seed=13)
-    cal = TranslationInvariantMatrixScaling(device="cpu").fit(logits, labels)
+    cal = make_calibrator(calibrator_id).fit(logits, labels)
     base = cal.transform(logits)
     shifted = cal.transform(logits + 5.3)
     assert torch.allclose(base, shifted, atol=1e-4)
@@ -95,9 +107,32 @@ def test_translation_invariance():
 def test_non_invariant_matrix_scaling_is_not_translation_invariant():
     from fiducio import MatrixScaling
 
-    logits, labels = synthetic_logits((3, 4, 6, 6), seed=14)
-    cal = MatrixScaling(device="cpu").fit(logits, labels)
-    base = cal.transform(logits)
-    shifted = cal.transform(logits + 5.3)
+    torch.manual_seed(14)
+    x = torch.randn(3, 2, 6, 6)
+    cal = MatrixScaling(device="cpu")
+    cal._set_state({"weight": torch.tensor([[1., 2.], [3., 4.]]), "bias": torch.zeros(2)})
+    cal._num_classes = 2
+    cal._fitted = True
+    base = cal.transform(x)
+    shifted = cal.transform(x + 5.3)
     # A general matrix is not expected to be translation invariant.
     assert not torch.allclose(base, shifted, atol=1e-3)
+
+
+def test_ets_preserves_argmax_and_order():
+    from fiducio import EnsembleTemperatureScaling
+
+    logits, labels = synthetic_logits((4, 5, 8, 8), seed=18, scale=5.0)
+    cal = EnsembleTemperatureScaling(device="cpu").fit(logits, labels)
+    assert cal.weights[:2].sum() > 0
+    out = cal.transform(logits)
+    assert torch.equal(to_probs(logits).argmax(dim=1), out.argmax(dim=1))
+    c = logits.shape[1]
+    raw = to_probs(logits).movedim(1, -1).reshape(-1, c)
+    calibrated = out.movedim(1, -1).reshape(-1, c)
+    # The mixture cannot invert the raw ordering, but it can tie: the calibrated
+    # probabilities of low-confidence classes sit at the 1e-12 safe_log floor,
+    # where their true ~1e-28 differences are below float32 resolution. Compare
+    # in raw-probability order, requiring non-decreasing (ties allowed).
+    ordered = calibrated.gather(1, raw.argsort(dim=1))
+    assert (ordered.diff(dim=1) >= 0).all()

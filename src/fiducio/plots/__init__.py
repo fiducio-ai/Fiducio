@@ -63,6 +63,8 @@ def reliability_diagram(
     matplotlib.axes.Axes
         The axes the diagram was drawn on.
     """
+    if metric not in (None, "ece", "ace"):
+        raise ValueError(f"metric must be 'ece', 'ace' or None, got {metric!r}")
     plt = _require_matplotlib()
     curve = reliability_curve(probs, targets, mask, ignore_index, n_bins)
 
@@ -106,8 +108,6 @@ def reliability_diagram(
             label, value = "ECE", curve.ece
         elif metric == "ace":
             label, value = "ACE", curve.ace
-        else:
-            raise ValueError(f"metric must be 'ece', 'ace' or None, got {metric!r}")
         ax.text(
             0.05,
             0.95,

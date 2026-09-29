@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 
+import pytest
 import torch
 
 from conftest import synthetic_logits, to_probs
@@ -49,18 +50,17 @@ def test_metrics_respect_mask_and_ignore_index():
     assert math.isclose(masked, partial, rel_tol=1e-5)
 
 
-def test_ece_in_unit_interval():
-    logits, labels = synthetic_logits((4, 3, 8, 8), seed=41)
-    probs = to_probs(logits)
-    ece = expected_calibration_error(probs, labels, n_bins=20)
-    assert 0.0 <= ece <= 1.0
-
-
-def test_ace_in_unit_interval():
-    logits, labels = synthetic_logits((4, 3, 8, 8), seed=42)
-    probs = to_probs(logits)
-    ace = average_calibration_error(probs, labels, n_bins=20)
-    assert 0.0 <= ace <= 1.0
+def test_ece_and_ace_match_hand_computed_values():
+    probs = torch.tensor([[[0.9, 0.8, 0.6, 0.2], [0.05, 0.1, 0.2, 0.7], [0.05, 0.1, 0.2, 0.1]]])
+    labels = torch.tensor([[0, 0, 1, 1]])
+    curve = reliability_curve(probs, labels, n_bins=5)
+    assert curve.bin_counts.tolist() == [0, 0, 1, 2, 1]
+    assert curve.bin_confidence.tolist() == pytest.approx([0.0, 0.0, 0.6, 0.75, 0.9], abs=1e-6)
+    assert curve.bin_accuracy.tolist() == pytest.approx([0.0, 0.0, 0.0, 1.0, 1.0], abs=1e-6)
+    assert curve.ece == pytest.approx(0.3, abs=1e-6)
+    assert curve.ace == pytest.approx((0.6 + 0.25 + 0.1) / 3, abs=1e-6)
+    assert expected_calibration_error(probs, labels, n_bins=5) == pytest.approx(0.3, abs=1e-6)
+    assert average_calibration_error(probs, labels, n_bins=5) == pytest.approx((0.6 + 0.25 + 0.1) / 3, abs=1e-6)
 
 
 def test_ace_gives_sparse_bins_equal_weight_unlike_ece():

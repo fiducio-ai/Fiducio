@@ -149,7 +149,7 @@ class Calibrator(ABC):
         """
         preds, tgts, msk = self._prepare(predictions, targets, mask, with_targets=True)
         assert tgts is not None  # guaranteed by with_targets=True
-        num_classes = validate_predictions(preds, input_type=self.input_type)
+        num_classes = validate_predictions(preds, input_type=self.input_type, mask=msk)
         validate_targets(
             preds, tgts, msk, num_classes=num_classes, ignore_index=self.ignore_index
         )
@@ -324,7 +324,7 @@ class Calibrator(ABC):
             )
         preds, tgts, msk = self._prepare(val_predictions, val_targets, val_mask, with_targets=True)
         assert tgts is not None
-        val_classes = validate_predictions(preds, input_type=self.input_type)
+        val_classes = validate_predictions(preds, input_type=self.input_type, mask=msk)
         if val_classes != num_classes:
             raise ValueError(
                 f"validation predictions have {val_classes} classes, expected {num_classes}"
@@ -371,7 +371,7 @@ class Calibrator(ABC):
         """Validate inputs and return calibrated logits (no autograd graph)."""
         preds, _, msk = self._prepare(predictions, None, mask, with_targets=False)
         validate_predictions(
-            preds, input_type=self.input_type, expected_num_classes=self._num_classes
+            preds, input_type=self.input_type, expected_num_classes=self._num_classes, mask=msk
         )
         validate_mask(preds, msk)
         with torch.no_grad():

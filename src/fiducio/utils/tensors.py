@@ -22,7 +22,6 @@ import torch
 
 ArrayLike = torch.Tensor | np.ndarray
 
-DEFAULT_IGNORE_INDEX = -100
 _PROB_SUM_ATOL = 1e-3
 
 
@@ -102,8 +101,12 @@ def validate_predictions(
     *,
     input_type: str,
     expected_num_classes: int | None = None,
+    mask: torch.Tensor | None = None,
 ) -> int:
     """Validate a predictions tensor and return the number of classes.
+
+    For ``input_type="probs"``, the sum-to-1 check is restricted to positions
+    selected by ``mask`` (all positions when ``mask`` is ``None``).
 
     Raises
     ------
@@ -130,6 +133,8 @@ def validate_predictions(
         )
     if not torch.isfinite(predictions).all():
         raise ValueError("predictions contain non-finite values (nan/inf)")
+    if input_type == "probs":
+        validate_mask(predictions, mask)
     if input_type == "probs" and predictions.numel():
         pmin = float(predictions.min())
         pmax = float(predictions.max())
@@ -139,7 +144,13 @@ def validate_predictions(
                 "pass input_type='logits' for unnormalised scores"
             )
         sums = predictions.sum(dim=1)
-        if not torch.allclose(sums, torch.ones_like(sums), atol=_PROB_SUM_ATOL, rtol=0):
+        if mask is None:
+            checked = sums
+        else:
+            checked = sums[mask.to(torch.bool)]
+        if checked.numel() and not torch.allclose(
+            checked, torch.ones_like(checked), atol=_PROB_SUM_ATOL, rtol=0
+        ):
             raise ValueError(
                 "input_type='probs' but probabilities do not sum to 1 along the "
                 "class axis (dimension 1)"

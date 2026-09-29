@@ -26,9 +26,9 @@ def _flatten_valid(
     ignore_index: int,
 ) -> tuple[torch.Tensor, torch.Tensor]:
     p = to_tensor(probs, dtype=torch.float32).detach()
-    c = validate_predictions(p, input_type="probs")
-    y = integer_targets(targets, device=p.device)
     m = None if mask is None else to_tensor(mask, device=p.device).bool()
+    c = validate_predictions(p, input_type="probs", mask=m)
+    y = integer_targets(targets, device=p.device)
     validate_targets(p, y, m, num_classes=c, ignore_index=ignore_index)
     return flatten_valid(p, y, m, ignore_index)
 

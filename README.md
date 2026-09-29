@@ -134,7 +134,10 @@ calibrator.fit(
 
 The iterate with the best validation NLL is kept. The default fixed budget
 (`max_iter`) is short, so it can underfit expressive calibrators; prefer a larger
-`max_iter` together with `patience` for CDC, CMSap and CMSop.
+`max_iter` together with `patience` for CDC, CMSap and CMSop. This reproduces
+only the Adam + validation-NLL early-stopping recipe; the paper's case batching,
+class weighting, schedules, clipping and hyperparameter search are not part of the
+library (see the [implementation guide](https://github.com/fiducio-ai/Fiducio/blob/main/reproducibility/README.md)).
 
 ### Paper method mapping
 
@@ -163,6 +166,12 @@ Calibration metrics are included: `negative_log_likelihood`,
 drowned out by a large one), `brier_score`, `reliability_curve`, plus an
 optional reliability-diagram plot (`fiducio.plots.reliability_diagram`, needs
 `fiducio[plots]`).
+
+BA-ECE (boundary-aware ECE), per-case metric aggregation, the DSC/flip-rate
+audit and the paper's paired hierarchical-bootstrap tests are not included; the
+shipped metrics are top-1 pooled point estimates. `average_calibration_error` is the
+unweighted mean over non-empty uniform bins (not the adaptive ACE of other work)
+and is also available as `unweighted_calibration_error`.
 
 ## Documentation
 

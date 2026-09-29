@@ -55,7 +55,7 @@ def reliability_diagram(
     metric:
         Which calibration error to annotate the panel with: ``"ece"``
         (population-weighted, the default), ``"ace"`` (unweighted mean over
-        non-empty bins — see :func:`fiducio.average_calibration_error`), or
+        non-empty bins — see :func:`fiducio.unweighted_calibration_error`), or
         ``None`` to omit the annotation.
 
     Returns

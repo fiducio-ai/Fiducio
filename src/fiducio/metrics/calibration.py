@@ -83,7 +83,7 @@ class ReliabilityCurve:
         Expected calibration error (count-weighted mean ``|confidence -
         accuracy|`` over bins).
     ace:
-        Average calibration error (unweighted mean ``|confidence - accuracy|``
+        Unweighted calibration error (unweighted mean ``|confidence - accuracy|``
         over non-empty bins). Unlike ``ece``, a sparsely populated bin counts
         as much as a densely populated one.
     """
@@ -155,7 +155,7 @@ def expected_calibration_error(
     The confidence is the maximum predicted probability and the accuracy is
     whether the argmax matches the label. Bins partition ``[0, 1]`` uniformly
     and each bin's gap is weighted by its share of voxels — see
-    :func:`average_calibration_error` for the unweighted variant.
+    :func:`unweighted_calibration_error` for the unweighted variant.
 
     ``n_bins`` defaults to 15. The paper reports ECE with ``n_bins=50`` (ACE with
     ``n_bins=15``) and averages metrics per image before pooling; pass
@@ -165,21 +165,27 @@ def expected_calibration_error(
     return reliability_curve(probs, targets, mask, ignore_index, n_bins).ece
 
 
-def average_calibration_error(
+def unweighted_calibration_error(
     probs: Any,
     targets: Any,
     mask: Any | None = None,
     ignore_index: int = -100,
     n_bins: int = 15,
 ) -> float:
-    """Top-1 average calibration error (ACE) with uniform binning.
+    """Top-1 unweighted calibration error (ACE) with uniform binning.
+
+    The unweighted mean of the per-bin ``|confidence - accuracy|`` gap over
+    non-empty uniform bins. This is **not** the adaptive calibration error of
+    other work, which uses data-dependent (equal-mass) bins.
 
     Uses the same uniform confidence bins as :func:`expected_calibration_error`,
-    but averages the per-bin ``|confidence - accuracy|`` gap **unweighted**
-    over non-empty bins instead of weighting each bin by its share of voxels.
-    A confidence region visited by only a handful of voxels therefore counts as
-    much as a densely populated one, which ECE would otherwise drown out.
-    ``n_bins=15`` matches the paper's ACE; the paper computes ACE on the pooled
-    test voxels rather than per image.
+    but weights each non-empty bin equally instead of by its share of voxels; a
+    confidence region visited by only a handful of voxels therefore counts as
+    much as a densely populated one. ``n_bins=15`` matches the paper's ACE; the
+    paper computes ACE on the pooled test voxels rather than per image. Kept as
+    ``average_calibration_error`` for backwards compatibility.
     """
     return reliability_curve(probs, targets, mask, ignore_index, n_bins).ace
+
+
+average_calibration_error = unweighted_calibration_error

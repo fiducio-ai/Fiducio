@@ -41,6 +41,7 @@ from .metrics import (
     expected_calibration_error,
     negative_log_likelihood,
     reliability_curve,
+    unweighted_calibration_error,
 )
 from .persistence import load_calibrator, save_calibrator
 from .registry import get_calibrator_class, registered_ids
@@ -88,6 +89,7 @@ __all__ = [
     # metrics
     "negative_log_likelihood",
     "expected_calibration_error",
+    "unweighted_calibration_error",
     "average_calibration_error",
     "brier_score",
     "reliability_curve",

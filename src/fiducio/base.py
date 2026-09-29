@@ -67,8 +67,9 @@ class Calibrator(ABC):
 
     Setting either requires ``val_predictions`` / ``val_targets`` in :meth:`fit`;
     the iterate with the best validation NLL is kept. With ``max_iter`` acting as
-    an upper bound, this reproduces the "Adam + early stopping on validation
-    NLL" recipe used in the paper.
+    an upper bound, this reproduces only the Adam + validation-NLL early-stopping
+    recipe; the paper's case batching, class weighting, schedules, clipping and
+    hyperparameter search are not part of the library.
     """
 
     #: Stable id assigned by :func:`fiducio.registry.register_calibrator`.
@@ -198,9 +199,11 @@ class Calibrator(ABC):
     def decision_function(self, predictions: Any) -> torch.Tensor:
         """Return calibrated **logits** (pre-softmax) of the input shape.
 
-        Unlike :meth:`transform`, no mask is applied — a logit of 0 is a
-        meaningful value, so masking calibrated logits is left to the caller.
-        ``softmax`` of the result along dimension 1 equals :meth:`transform`.
+        The ``mask`` argument of :meth:`transform` is deliberately not accepted
+        here: a masked logit of 0 is a meaningful value, and ``argmax`` over its
+        output at masked voxels is meaningless. Use :meth:`transform` when masks
+        matter. ``softmax`` of the result along dimension 1 equals
+        :meth:`transform` without a mask.
         """
         if not self._fitted:
             raise NotFittedError("call fit() before decision_function()")

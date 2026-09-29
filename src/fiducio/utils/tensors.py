@@ -56,7 +56,13 @@ def to_tensor(
 
 
 def safe_log(probs: torch.Tensor, eps: float = 1e-12) -> torch.Tensor:
-    """Numerically stable log of probabilities."""
+    """Numerically stable log of probabilities.
+
+    Values are floored at ``eps`` (``1e-12``): a zero probability maps to
+    ``log(1e-12) ~ -27.63``, so the NLL is capped at ~27.63 instead of
+    ``inf`` and probability-space calibrators map ``p = 0`` to a small non-zero
+    probability.
+    """
     return torch.log(probs.clamp_min(eps))
 
 

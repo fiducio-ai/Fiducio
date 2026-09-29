@@ -16,8 +16,6 @@ import torch
 from ..utils import flatten_valid, safe_log, to_tensor, validate_predictions, validate_targets
 from ..utils.tensors import integer_targets
 
-_EPS = 1e-12
-
 
 def _flatten_valid(
     probs: Any,
@@ -39,7 +37,11 @@ def negative_log_likelihood(
     mask: Any | None = None,
     ignore_index: int = -100,
 ) -> float:
-    """Mean negative log-likelihood (cross-entropy) over valid voxels."""
+    """Mean negative log-likelihood (cross-entropy) over valid voxels.
+
+    Zero probabilities are floored at ``1e-12`` by :func:`fiducio.utils.safe_log`,
+    capping the NLL at ~27.63 instead of ``inf``.
+    """
     p, y = _flatten_valid(probs, targets, mask, ignore_index)
     if p.shape[0] == 0:
         return float("nan")

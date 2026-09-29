@@ -14,7 +14,7 @@ from ._optim import minimize, resolve_optimizer
 
 
 class _AffineCalibrator(Calibrator):
-    """Affine calibration ``softmax(W z + b)`` on a canonical representation.
+    r"""Affine calibration ``softmax(W z + b)`` on a canonical representation.
 
     Subclasses pick the parameterisation through ``_mode``:
 
@@ -25,6 +25,16 @@ class _AffineCalibrator(Calibrator):
 
     ``z`` is the canonical representation produced by the base class (logits for
     scaling methods, log-probabilities for Dirichlet calibration).
+
+    The regularizer penalizes the off-diagonal entries of the weight matrix and the
+    bias:
+
+    .. math:: \lambda_\mathrm{reg}\,\mathrm{mean}(W_\mathrm{off}^2)
+              + \mu_\mathrm{reg}\,\mathrm{mean}(b^2)
+
+    (for diagonal scaling the squared deviation from one is penalized instead).
+    Both terms are means, not the sums used by Kull et al. (2019), so
+    ``lambda_reg`` / ``mu_reg`` are not on that paper's scale.
     """
 
     _mode: str = "matrix"

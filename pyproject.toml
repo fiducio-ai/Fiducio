@@ -126,3 +126,9 @@ files = ["src/fiducio"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+
+[tool.coverage.run]
+source = ["fiducio"]
+
+[tool.coverage.report]
+fail_under = 95

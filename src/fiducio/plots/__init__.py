@@ -19,8 +19,7 @@ def _require_matplotlib() -> Any:
         import matplotlib.pyplot as plt
     except ImportError as exc:  # pragma: no cover - exercised without the extra
         raise ImportError(
-            "plotting requires matplotlib; install it with "
-            '`pip install "fiducio[plots]"`'
+            'plotting requires matplotlib; install it with `pip install "fiducio[plots]"`'
         ) from exc
     return plt
 

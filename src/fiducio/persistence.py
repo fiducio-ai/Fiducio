@@ -37,8 +37,9 @@ MapLocation = str | torch.device
 _logger = get_logger(__name__)
 
 
-def _validate_state(calibrator: Any, state: dict[str, Any], classes: int | None,
-                    fitted: bool) -> None:
+def _validate_state(
+    calibrator: Any, state: dict[str, Any], classes: int | None, fitted: bool
+) -> None:
     """Validate built-in parameter layouts, including legacy full-matrix MSc."""
     cid = calibrator.calibrator_id
     expected: dict[str, tuple[int, ...]] = {}
@@ -47,15 +48,22 @@ def _validate_state(calibrator: Any, state: dict[str, Any], classes: int | None,
         if cid == "ensemble_temperature_scaling":
             expected["weights"] = (3,)
     elif classes is not None:
-        if cid in {"vector_scaling", "matrix_scaling", "dirichlet_calibration",
-                   "translation_invariant_matrix_scaling"}:
+        if cid in {
+            "vector_scaling",
+            "matrix_scaling",
+            "dirichlet_calibration",
+            "translation_invariant_matrix_scaling",
+        }:
             shape = (classes,) if cid == "vector_scaling" else (classes, classes)
             if cid == "translation_invariant_matrix_scaling" and state.get("row_sum") is not None:
                 shape = (classes, classes - 1)
                 expected["row_sum"] = ()
             expected.update(weight=shape, bias=(classes,))
-        elif cid in {"class_conditional_matrix_scaling", "argmax_preserving_matrix_scaling",
-                     "order_preserving_matrix_scaling"}:
+        elif cid in {
+            "class_conditional_matrix_scaling",
+            "argmax_preserving_matrix_scaling",
+            "order_preserving_matrix_scaling",
+        }:
             k = classes if cid == "class_conditional_matrix_scaling" else classes - 1
             expected.update(raw_b=(classes, k, k), raw_mu=(classes, k))
     template = calibrator._get_state()
@@ -63,8 +71,9 @@ def _validate_state(calibrator: Any, state: dict[str, Any], classes: int | None,
         raise ValueError("unexpected saved state fields")
     for key in template:
         # row_sum was absent in pre-release MSc checkpoints.
-        if key not in state and not (key == "row_sum" and
-                                    cid == "translation_invariant_matrix_scaling"):
+        if key not in state and not (
+            key == "row_sum" and cid == "translation_invariant_matrix_scaling"
+        ):
             raise ValueError(f"missing saved parameter {key}")
     for name, value in state.items():
         if value is None:
@@ -73,14 +82,20 @@ def _validate_state(calibrator: Any, state: dict[str, Any], classes: int | None,
             continue
         if name not in expected and not fitted and template.get(name) is None:
             raise ValueError(f"unexpected parameter {name} on an unfitted calibrator")
-        if not torch.is_tensor(value) or not value.is_floating_point() or not torch.isfinite(value.to(torch.float32)).all():
+        if (
+            not torch.is_tensor(value)
+            or not value.is_floating_point()
+            or not torch.isfinite(value.to(torch.float32)).all()
+        ):
             raise ValueError(f"saved parameter {name} must be a finite floating tensor")
         if name in expected and tuple(value.shape) != expected[name]:
             raise ValueError(f"invalid shape for saved parameter {name}")
         if name == "temperature" and value <= 0:
             raise ValueError("saved temperature must be positive")
-        if name == "weights" and ((value < 0).any() or
-                                  not torch.isclose(value.sum(), value.new_tensor(1.), atol=1e-6, rtol=0)):
+        if name == "weights" and (
+            (value < 0).any()
+            or not torch.isclose(value.sum(), value.new_tensor(1.0), atol=1e-6, rtol=0)
+        ):
             raise ValueError("saved mixture weights must be a probability distribution")
 
 
@@ -127,8 +142,7 @@ def save_calibrator(calibrator: Calibrator, path: PathLike) -> None:
     """
     if not getattr(calibrator, "calibrator_id", ""):
         raise ValueError(
-            f"{type(calibrator).__name__} has no registered calibrator_id and "
-            "cannot be saved"
+            f"{type(calibrator).__name__} has no registered calibrator_id and cannot be saved"
         )
     directory = os.path.dirname(os.fspath(path))
     if directory:
@@ -185,12 +199,17 @@ def load_calibrator(
     if not isinstance(payload, dict) or payload.get("format") != FORMAT_NAME:
         raise ValueError(f"{path} is not a Fiducio calibrator file")
 
-    if type(payload.get("format_version")) is not int or payload["format_version"] != FORMAT_VERSION:
+    if (
+        type(payload.get("format_version")) is not int
+        or payload["format_version"] != FORMAT_VERSION
+    ):
         raise ValueError("unsupported or missing Fiducio format_version")
     required = {"fiducio_version", "calibrator_id", "config", "num_classes", "fitted", "state"}
     if not required <= payload.keys():
         raise ValueError("missing required Fiducio payload fields")
-    if not isinstance(payload["calibrator_id"], str) or not isinstance(payload["fiducio_version"], str):
+    if not isinstance(payload["calibrator_id"], str) or not isinstance(
+        payload["fiducio_version"], str
+    ):
         raise ValueError("invalid calibrator id or package version")
     if not isinstance(payload["config"], dict) or not isinstance(payload["state"], dict):
         raise ValueError("config and state must be dictionaries")

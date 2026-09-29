@@ -52,7 +52,9 @@ def resolve_stopping(
     if not 0.0 < float(lr_factor) < 1.0:
         raise ValueError("lr_factor must be in (0, 1)")
     for name, value in (("patience", patience), ("lr_patience", lr_patience)):
-        if value is not None and (isinstance(value, bool) or not isinstance(value, int) or value <= 0):
+        if value is not None and (
+            isinstance(value, bool) or not isinstance(value, int) or value <= 0
+        ):
             raise ValueError(f"{name} must be > 0 and an integer")
     if patience is None and lr_patience is None:
         return None

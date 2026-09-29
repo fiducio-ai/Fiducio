@@ -89,8 +89,9 @@ def integer_targets(targets: ArrayLike, *, device: torch.device) -> torch.Tensor
     y = to_tensor(targets, device=device)
     if y.is_complex() or not torch.isfinite(y).all():
         raise ValueError("targets must contain finite integer labels")
-    if y.is_floating_point() and (not torch.equal(y, y.trunc()) or
-                                 (y >= 2**63).any() or (y < -(2**63)).any()):
+    if y.is_floating_point() and (
+        not torch.equal(y, y.trunc()) or (y >= 2**63).any() or (y < -(2**63)).any()
+    ):
         raise ValueError("targets must contain integer labels representable in int64")
     return y.long()
 
@@ -190,9 +191,7 @@ def validate_targets(
         lo = int(valid_labels.min())
         hi = int(valid_labels.max())
         if lo < 0 or hi >= num_classes:
-            raise ValueError(
-                f"valid labels must lie in [0, {num_classes - 1}]; got [{lo}, {hi}]"
-            )
+            raise ValueError(f"valid labels must lie in [0, {num_classes - 1}]; got [{lo}, {hi}]")
 
 
 def class_last_flatten(z: torch.Tensor) -> tuple[torch.Tensor, tuple[int, ...]]:
@@ -235,9 +234,7 @@ def flatten_valid(
     return flat[valid], targets_flat[valid].long()
 
 
-def apply_mask_to_probabilities(
-    probs: torch.Tensor, mask: torch.Tensor | None
-) -> torch.Tensor:
+def apply_mask_to_probabilities(probs: torch.Tensor, mask: torch.Tensor | None) -> torch.Tensor:
     """Zero out probabilities at masked-out (``False``) positions.
 
     ``mask`` has shape ``(B, *spatial)`` and is broadcast across the class axis.
@@ -251,9 +248,7 @@ def apply_mask_to_probabilities(
     return probs * mask_b
 
 
-def two_channel_from_binary(
-    scores: ArrayLike, *, input_type: str = "logits"
-) -> torch.Tensor:
+def two_channel_from_binary(scores: ArrayLike, *, input_type: str = "logits") -> torch.Tensor:
     """Convert single-channel binary outputs to the two-channel form Fiducio uses.
 
     Fiducio represents binary segmentation as two channels (``C = 2``). Use this

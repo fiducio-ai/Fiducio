@@ -88,7 +88,9 @@ def main():
                             p.copy_(torch.randn(p.shape, generator=g) * 0.3)
 
                     def evaluate(ref=ref, x=x):
-                        return ref._logits_from_log_probs_flat(x.log_softmax(1)), ref._regularization()
+                        return ref._logits_from_log_probs_flat(
+                            x.log_softmax(1)
+                        ), ref._regularization()
 
                 initial = [p.detach().tolist() for p in params]
                 logits, reg = evaluate()
@@ -99,15 +101,24 @@ def main():
                     p.grad = grad
                 optimizer.step()
                 updated_logits, updated_reg = evaluate()
-                cases.append({
-                    "method": method, "classes": classes, "seed": seed,
-                    "inputs": x.tolist(), "targets": y.tolist(), "params": initial,
-                    "lambda_reg": lam, "mu_reg": mu, "logits": logits.detach().tolist(),
-                    "regularization": reg.item(), "loss": loss.item(),
-                    "gradients": [p.tolist() for p in gradients],
-                    "updated_logits": updated_logits.detach().tolist(),
-                    "updated_regularization": updated_reg.item(),
-                })
+                cases.append(
+                    {
+                        "method": method,
+                        "classes": classes,
+                        "seed": seed,
+                        "inputs": x.tolist(),
+                        "targets": y.tolist(),
+                        "params": initial,
+                        "lambda_reg": lam,
+                        "mu_reg": mu,
+                        "logits": logits.detach().tolist(),
+                        "regularization": reg.item(),
+                        "loss": loss.item(),
+                        "gradients": [p.tolist() for p in gradients],
+                        "updated_logits": updated_logits.detach().tolist(),
+                        "updated_regularization": updated_reg.item(),
+                    }
+                )
     sources = {}
     for name, module in tuple(sys.modules.items()):
         file = getattr(module, "__file__", None)
@@ -117,7 +128,9 @@ def main():
     payload = {
         "schema_version": 1,
         "scope": "Synthetic fixed-parameter maps, ODIR penalties, joint CE gradients and one Adam step; not paper training reproduction.",
-        "research_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip(),
+        "research_commit": subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=root, text=True
+        ).strip(),
         "research_dirty": bool(subprocess.check_output(["git", "status", "--porcelain"], cwd=root)),
         "source_sha256": sources,
         "torch_version": torch.__version__,

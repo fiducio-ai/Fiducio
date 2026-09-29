@@ -66,8 +66,8 @@ import torch
 from fiducio import TemperatureScaling, load_calibrator
 
 # From a held-out, labelled calibration set:
-logits = torch.randn(8, 4, 64, 64)          # (B, C, H, W) model logits
-labels = torch.randint(0, 4, (8, 64, 64))   # (B, H, W) labels
+logits = torch.randn(8, 4, 64, 64)  # (B, C, H, W) model logits
+labels = torch.randint(0, 4, (8, 64, 64))  # (B, H, W) labels
 
 calibrator = TemperatureScaling(input_type="logits").fit(logits, labels)
 
@@ -127,8 +127,10 @@ from fiducio import OrderPreservingMatrixScaling
 
 calibrator = OrderPreservingMatrixScaling(max_iter=2000, patience=20, lr_patience=10)
 calibrator.fit(
-    logits, labels,
-    val_predictions=val_logits, val_targets=val_labels,  # held out from both
+    logits,
+    labels,
+    val_predictions=val_logits,
+    val_targets=val_labels,  # held out from both
 )
 ```
 

@@ -78,7 +78,12 @@ def test_minimize_min_delta_stops_on_marginal_gains():
 
     # A huge min_delta means no step ever counts as an improvement after the first.
     minimize(
-        "adam", [x], loss_fn, lr=0.1, max_iter=200, val_fn=val_fn,
+        "adam",
+        [x],
+        loss_fn,
+        lr=0.1,
+        max_iter=200,
+        val_fn=val_fn,
         stopping=StoppingRule(patience=3, min_delta=1e6),
     )
     assert calls["n"] == 4  # initial validation plus 3 stale steps
@@ -151,7 +156,10 @@ def test_validation_without_valid_voxels_rejected():
     cal = make_calibrator("temperature_scaling", patience=5)
     with pytest.raises(ValueError, match="no valid validation voxels"):
         cal.fit(
-            logits, labels, val_predictions=val_logits, val_targets=val_labels,
+            logits,
+            labels,
+            val_predictions=val_logits,
+            val_targets=val_labels,
             val_mask=torch.zeros_like(val_labels, dtype=torch.bool),
         )
 
@@ -234,20 +242,28 @@ def test_validation_supports_probs_input_and_mask():
     mask[:, :2] = False
     cal = make_calibrator("temperature_scaling", patience=4, input_type="probs")
     cal.fit(
-        torch.softmax(logits, dim=1), labels,
-        val_predictions=torch.softmax(val_logits, dim=1), val_targets=val_labels, val_mask=mask,
+        torch.softmax(logits, dim=1),
+        labels,
+        val_predictions=torch.softmax(val_logits, dim=1),
+        val_targets=val_labels,
+        val_mask=mask,
     )
     assert cal.is_fitted
 
 
 def test_stopping_settings_persist_in_roundtrip(tmp_path):
     logits, labels, val_logits, val_labels = _splits()
-    cal = make_calibrator("matrix_scaling", patience=7, min_delta=1e-4, lr_patience=3, lr_factor=0.5)
+    cal = make_calibrator(
+        "matrix_scaling", patience=7, min_delta=1e-4, lr_patience=3, lr_factor=0.5
+    )
     cal.fit(logits, labels, val_predictions=val_logits, val_targets=val_labels)
     path = tmp_path / "cal.pt"
     cal.save(path)
     loaded = load_calibrator(path)
     assert (loaded.patience, loaded.min_delta, loaded.lr_patience, loaded.lr_factor) == (
-        7, 1e-4, 3, 0.5,
+        7,
+        1e-4,
+        3,
+        0.5,
     )
     assert torch.allclose(cal.transform(val_logits), loaded.transform(val_logits), atol=1e-6)

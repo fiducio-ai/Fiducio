@@ -72,6 +72,7 @@ plotting helpers.
 
 ```python
 import fiducio
+
 print(fiducio.__version__)
 print(fiducio.registered_ids())
 ```

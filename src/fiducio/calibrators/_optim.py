@@ -47,9 +47,7 @@ def resolve_optimizer(
         raise ValueError("max_iter must be an integer")
     resolved_lr = (adam_lr if name == "adam" else lbfgs_lr) if lr is None else float(lr)
     resolved_iter = (
-        (adam_max_iter if name == "adam" else lbfgs_max_iter)
-        if max_iter is None
-        else int(max_iter)
+        (adam_max_iter if name == "adam" else lbfgs_max_iter) if max_iter is None else int(max_iter)
     )
     positive_finite(resolved_lr, "lr")
     if resolved_iter <= 0:
@@ -82,6 +80,7 @@ def minimize(
     ``stopping.patience`` consecutive iterations, and the learning rate is
     decayed on plateaus when ``stopping.lr_patience`` is set.
     """
+
     def check_params(*, gradients: bool = False) -> None:
         for p in params:
             value = p.grad if gradients else p
@@ -96,9 +95,7 @@ def minimize(
 
     check_params()
     if optimizer == "lbfgs":
-        lbfgs = torch.optim.LBFGS(
-            params, lr=lr, max_iter=max_iter, line_search_fn="strong_wolfe"
-        )
+        lbfgs = torch.optim.LBFGS(params, lr=lr, max_iter=max_iter, line_search_fn="strong_wolfe")
 
         def closure() -> torch.Tensor:
             lbfgs.zero_grad()
@@ -120,6 +117,7 @@ def minimize(
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
             adam, mode="min", factor=rule.lr_factor, patience=rule.lr_patience
         )
+
     def monitor() -> float:
         with torch.no_grad():
             value = float(val_fn() if rule is not None and val_fn is not None else checked_loss())

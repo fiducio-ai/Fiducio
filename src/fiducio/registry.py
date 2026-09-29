@@ -44,8 +44,7 @@ def get_calibrator_class(calibrator_id: str) -> type[Calibrator]:
         return _REGISTRY[calibrator_id]
     except KeyError:
         raise KeyError(
-            f"unknown calibrator id {calibrator_id!r}; known ids: "
-            f"{sorted(_REGISTRY)}"
+            f"unknown calibrator id {calibrator_id!r}; known ids: {sorted(_REGISTRY)}"
         ) from None
 
 

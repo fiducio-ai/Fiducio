@@ -1,4 +1,5 @@
 """Regression cases found in the 0.1.0 source and published-wheel audit."""
+
 from __future__ import annotations
 
 import math
@@ -31,37 +32,44 @@ def data():
 
 
 def test_adam_keeps_initial_state_when_steps_are_worse():
-    x = torch.tensor(0., requires_grad=True)
-    minimize("adam", [x], lambda: (x - .1).square(), lr=1., max_iter=2)
-    assert x.detach().item() == 0.
+    x = torch.tensor(0.0, requires_grad=True)
+    minimize("adam", [x], lambda: (x - 0.1).square(), lr=1.0, max_iter=2)
+    assert x.detach().item() == 0.0
 
 
 def test_adam_considers_final_step():
-    x = torch.tensor(0., requires_grad=True)
-    minimize("adam", [x], lambda: (x - 1.).square(), lr=.1, max_iter=1)
-    assert x.detach().item() == pytest.approx(.1)
+    x = torch.tensor(0.0, requires_grad=True)
+    minimize("adam", [x], lambda: (x - 1.0).square(), lr=0.1, max_iter=1)
+    assert x.detach().item() == pytest.approx(0.1)
 
 
 def test_min_delta_does_not_discard_actual_validation_minimum():
-    x = torch.tensor(0., requires_grad=True)
-    minimize("adam", [x], lambda: (x - 1.).square(), lr=.1, max_iter=2,
-             val_fn=lambda: (x - 1.).square(), stopping=StoppingRule(patience=2, min_delta=100.))
-    assert x.detach().item() > .19
+    x = torch.tensor(0.0, requires_grad=True)
+    minimize(
+        "adam",
+        [x],
+        lambda: (x - 1.0).square(),
+        lr=0.1,
+        max_iter=2,
+        val_fn=lambda: (x - 1.0).square(),
+        stopping=StoppingRule(patience=2, min_delta=100.0),
+    )
+    assert x.detach().item() > 0.19
 
 
 @pytest.mark.parametrize("optimizer", ["adam", "lbfgs"])
 def test_nonfinite_optimization_is_reported(optimizer):
-    x = torch.tensor(1., requires_grad=True)
+    x = torch.tensor(1.0, requires_grad=True)
     with pytest.raises(ValueError, match="non-finite"):
-        minimize(optimizer, [x], lambda: x * float("inf"), lr=.1, max_iter=2)
+        minimize(optimizer, [x], lambda: x * float("inf"), lr=0.1, max_iter=2)
 
 
 def test_million_voxel_metrics_do_not_drift():
-    p = torch.tensor([.9, .1]).repeat(1_000_000, 1)
+    p = torch.tensor([0.9, 0.1]).repeat(1_000_000, 1)
     y = torch.zeros(1_000_000, dtype=torch.long)
     curve = reliability_curve(p, y)
-    assert curve.ece == pytest.approx(.1, abs=1e-6)
-    assert curve.ace == pytest.approx(.1, abs=1e-6)
+    assert curve.ece == pytest.approx(0.1, abs=1e-6)
+    assert curve.ace == pytest.approx(0.1, abs=1e-6)
     assert curve.bin_counts.dtype == torch.int64
     assert curve.bin_confidence.dtype == torch.float64
     assert curve.bin_counts.sum().item() == len(y)
@@ -69,11 +77,11 @@ def test_million_voxel_metrics_do_not_drift():
 
 @pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not available")
 def test_cuda_metrics_with_cpu_labels_and_masks():
-    p = torch.tensor([[.9, .1], [.8, .2]], device="cuda")
+    p = torch.tensor([[0.9, 0.1], [0.8, 0.2]], device="cuda")
     y = torch.zeros(2, dtype=torch.long)
     mask = torch.ones(2, dtype=torch.bool)
     curve = reliability_curve(p, y, mask)
-    assert curve.ece == pytest.approx(.15, abs=1e-6)
+    assert curve.ece == pytest.approx(0.15, abs=1e-6)
     assert curve.bin_counts.device.type == "cuda"
     assert negative_log_likelihood(p, y, mask) > 0
     assert brier_score(p, y, mask) > 0
@@ -114,17 +122,19 @@ def test_transform_rejects_broadcastable_masks(mask_shape):
         cal.transform(torch.zeros(2, 3, 2, 2), torch.ones(mask_shape))
 
 
-@pytest.mark.parametrize("fn", [negative_log_likelihood, brier_score,
-                                expected_calibration_error, average_calibration_error])
-@pytest.mark.parametrize("probs", [[[2., -1.]], [[.2, .2]], [[float("nan"), .5]]])
+@pytest.mark.parametrize(
+    "fn",
+    [negative_log_likelihood, brier_score, expected_calibration_error, average_calibration_error],
+)
+@pytest.mark.parametrize("probs", [[[2.0, -1.0]], [[0.2, 0.2]], [[float("nan"), 0.5]]])
 def test_metrics_reject_invalid_probabilities(fn, probs):
     with pytest.raises(ValueError):
         fn(torch.tensor(probs), torch.tensor([0]))
 
 
-@pytest.mark.parametrize("labels", [[.9, 1.9], [float("nan"), 1.], [float("inf"), 1.]])
+@pytest.mark.parametrize("labels", [[0.9, 1.9], [float("nan"), 1.0], [float("inf"), 1.0]])
 def test_fractional_and_nonfinite_labels_rejected(labels):
-    z = torch.tensor([[2., 1.], [1., 2.]])
+    z = torch.tensor([[2.0, 1.0], [1.0, 2.0]])
     y = torch.tensor(labels)
     with pytest.raises(ValueError, match="integer"):
         TemperatureScaling(device="cpu").fit(z, y)
@@ -134,7 +144,9 @@ def test_fractional_and_nonfinite_labels_rejected(labels):
 
 def test_integral_float_labels_supported():
     z, y = data()
-    assert negative_log_likelihood(z.softmax(1), y.float()) == negative_log_likelihood(z.softmax(1), y)
+    assert negative_log_likelihood(z.softmax(1), y.float()) == negative_log_likelihood(
+        z.softmax(1), y
+    )
 
 
 def test_metrics_reject_reshaped_labels_and_masks():
@@ -148,14 +160,22 @@ def test_metrics_reject_reshaped_labels_and_masks():
 @pytest.mark.parametrize("cls", [TemperatureScaling, EnsembleTemperatureScaling])
 def test_large_initial_temperature_stays_finite(cls):
     z, y = data()
-    cal = cls(device="cpu", init_temperature=100., max_iter=3).fit(z, y)
+    cal = cls(device="cpu", init_temperature=100.0, max_iter=3).fit(z, y)
     assert math.isfinite(cal.temperature)
     assert torch.isfinite(cal.transform(z)).all()
 
 
-@pytest.mark.parametrize("kwargs", [{"lr": float("nan")}, {"lr": float("inf")},
-                                   {"max_iter": 1.5}, {"lambda_reg": -1.},
-                                   {"mu_reg": float("nan")}, {"min_delta": float("nan")}])
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        {"lr": float("nan")},
+        {"lr": float("inf")},
+        {"max_iter": 1.5},
+        {"lambda_reg": -1.0},
+        {"mu_reg": float("nan")},
+        {"min_delta": float("nan")},
+    ],
+)
 def test_invalid_hyperparameters_rejected(kwargs):
     with pytest.raises(ValueError):
         MatrixScaling(device="cpu", **kwargs)
@@ -170,7 +190,9 @@ def test_unfitted_roundtrip(tmp_path, calibrator_id):
     assert not out.is_fitted and out.num_classes is None
 
 
-@pytest.mark.parametrize("change", ["future", "missing", "shape", "nan", "fitted", "config", "unknown_id"])
+@pytest.mark.parametrize(
+    "change", ["future", "missing", "shape", "nan", "fitted", "config", "unknown_id"]
+)
 def test_corrupt_payload_rejected(tmp_path, change):
     z, y = data()
     path = tmp_path / "bad.pt"
@@ -206,6 +228,7 @@ def test_loader_never_retries_without_weights_only(tmp_path):
 
 def test_legacy_full_matrix_msc_loads(tmp_path):
     from fiducio import TranslationInvariantMatrixScaling
+
     z, y = data()
     cal = TranslationInvariantMatrixScaling(device="cpu", max_iter=2).fit(z, y)
     path = tmp_path / "legacy.pt"

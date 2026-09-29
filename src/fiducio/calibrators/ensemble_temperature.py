@@ -77,8 +77,13 @@ class EnsembleTemperatureScaling(Calibrator):
         super().__init__(input_type=input_type, ignore_index=ignore_index, device=device)
         self.init_temperature = positive_finite(init_temperature, "init_temperature")
         self.optimizer, self.lr, self.max_iter = resolve_optimizer(
-            optimizer, lr, max_iter,
-            adam_lr=0.1, lbfgs_lr=1.0, adam_max_iter=200, lbfgs_max_iter=100,
+            optimizer,
+            lr,
+            max_iter,
+            adam_lr=0.1,
+            lbfgs_lr=1.0,
+            adam_max_iter=200,
+            lbfgs_max_iter=100,
         )
         self._init_stopping(self.optimizer, patience, min_delta, lr_patience, lr_factor)
         self.temperature: float = float(init_temperature)
@@ -101,8 +106,13 @@ class EnsembleTemperatureScaling(Calibrator):
                 return F.cross_entropy(z_val / (F.softplus(raw_t) + _T_EPS), y_val)
 
         minimize(
-            self.optimizer, [raw_t], loss_fn, lr=self.lr, max_iter=self.max_iter,
-            val_fn=val_fn, stopping=self._stopping,
+            self.optimizer,
+            [raw_t],
+            loss_fn,
+            lr=self.lr,
+            max_iter=self.max_iter,
+            val_fn=val_fn,
+            stopping=self._stopping,
         )
         self.temperature = float((F.softplus(raw_t) + _T_EPS).detach().cpu().item())
 
@@ -131,8 +141,13 @@ class EnsembleTemperatureScaling(Calibrator):
                 return F.nll_loss(torch.log(p), y_val)
 
         minimize(
-            self.optimizer, [raw_w], loss_fn, lr=self.lr, max_iter=self.max_iter,
-            val_fn=val_fn, stopping=self._stopping,
+            self.optimizer,
+            [raw_w],
+            loss_fn,
+            lr=self.lr,
+            max_iter=self.max_iter,
+            val_fn=val_fn,
+            stopping=self._stopping,
         )
         self.weights = F.softmax(raw_w, dim=0).detach()
 

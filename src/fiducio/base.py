@@ -151,15 +151,12 @@ class Calibrator(ABC):
         preds, tgts, msk = self._prepare(predictions, targets, mask, with_targets=True)
         assert tgts is not None  # guaranteed by with_targets=True
         num_classes = validate_predictions(preds, input_type=self.input_type, mask=msk)
-        validate_targets(
-            preds, tgts, msk, num_classes=num_classes, ignore_index=self.ignore_index
-        )
+        validate_targets(preds, tgts, msk, num_classes=num_classes, ignore_index=self.ignore_index)
         canonical = self._to_canonical(preds)
         z_flat, y_flat = flatten_valid(canonical, tgts, msk, self.ignore_index)
         if z_flat.shape[0] == 0:
             raise ValueError(
-                "no valid voxels to fit on (all positions are masked out or equal "
-                "ignore_index)"
+                "no valid voxels to fit on (all positions are masked out or equal ignore_index)"
             )
         val_data = self._prepare_validation(
             val_predictions, val_targets, val_mask, num_classes=num_classes
@@ -256,8 +253,7 @@ class Calibrator(ABC):
     def __repr__(self) -> str:
         status = "fitted" if self._fitted else "unfitted"
         return (
-            f"{type(self).__name__}(input_type={self.input_type!r}, "
-            f"{status}, device={self.device})"
+            f"{type(self).__name__}(input_type={self.input_type!r}, {status}, device={self.device})"
         )
 
     # ------------------------------------------------------------- subclass API

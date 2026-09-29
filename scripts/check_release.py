@@ -1,4 +1,5 @@
 """Reject publishing from branches, version-mismatched tags or commits outside main."""
+
 from __future__ import annotations
 
 import os
@@ -12,9 +13,7 @@ except ModuleNotFoundError:  # Python 3.10
     try:
         import tomli as tomllib  # type: ignore[no-redef]
     except ModuleNotFoundError as exc:
-        raise SystemExit(
-            "check_release.py requires Python 3.11+ or the 'tomli' package"
-        ) from exc
+        raise SystemExit("check_release.py requires Python 3.11+ or the 'tomli' package") from exc
 
 
 def check(ref: str) -> None:

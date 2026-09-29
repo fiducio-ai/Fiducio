@@ -63,8 +63,12 @@ def main(out: Path) -> None:
     probs_cal.save(out / "dirichlet_calibration_probs_fitted.pt")
     expected["dirichlet_calibration_probs"] = probs_cal.transform(eval_z.softmax(1))
     torch.save(
-        {"fiducio_version": fiducio.__version__, "torch_version": str(torch.__version__),
-         "eval_logits": eval_z, "expected": expected},
+        {
+            "fiducio_version": fiducio.__version__,
+            "torch_version": str(torch.__version__),
+            "eval_logits": eval_z,
+            "expected": expected,
+        },
         out / "reference.pt",
     )
 

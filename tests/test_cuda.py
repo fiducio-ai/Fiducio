@@ -7,9 +7,7 @@ import torch
 
 from conftest import ALL_CALIBRATOR_IDS, make_calibrator, synthetic_logits
 
-pytestmark = pytest.mark.skipif(
-    not torch.cuda.is_available(), reason="CUDA not available"
-)
+pytestmark = pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not available")
 
 
 @pytest.mark.parametrize("calibrator_id", ALL_CALIBRATOR_IDS)

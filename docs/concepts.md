@@ -60,6 +60,7 @@ single-channel sigmoid output, convert it first with
 
 ```python
 from fiducio import two_channel_from_binary
+
 two_channel = two_channel_from_binary(sigmoid_logits, input_type="logits")  # (B, 2, *)
 ```
 
@@ -108,15 +109,18 @@ rate decayed on plateaus):
 from fiducio import ClassConditionalMatrixScaling
 
 calibrator = ClassConditionalMatrixScaling(
-    max_iter=2000,      # upper bound
-    patience=20,        # stop after 20 steps without validation-NLL improvement
-    min_delta=0.0,      # minimum decrease that counts as an improvement
-    lr_patience=10,     # optional: decay the learning rate on plateaus ...
-    lr_factor=0.1,      # ... by this factor
+    max_iter=2000,  # upper bound
+    patience=20,  # stop after 20 steps without validation-NLL improvement
+    min_delta=0.0,  # minimum decrease that counts as an improvement
+    lr_patience=10,  # optional: decay the learning rate on plateaus ...
+    lr_factor=0.1,  # ... by this factor
 )
 calibrator.fit(
-    cal_logits, cal_labels,
-    val_predictions=val_logits, val_targets=val_labels, val_mask=None,
+    cal_logits,
+    cal_labels,
+    val_predictions=val_logits,
+    val_targets=val_labels,
+    val_mask=None,
 )
 ```
 

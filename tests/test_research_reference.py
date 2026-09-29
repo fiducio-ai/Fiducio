@@ -14,7 +14,9 @@ import fiducio
 REFERENCE = json.loads((Path(__file__).parent / "fixtures/research_reference.json").read_text())
 
 
-@pytest.mark.parametrize("case", REFERENCE["cases"], ids=lambda c: f"{c['method']}-{c['classes']}-{c['seed']}")
+@pytest.mark.parametrize(
+    "case", REFERENCE["cases"], ids=lambda c: f"{c['method']}-{c['classes']}-{c['seed']}"
+)
 def test_research_numerical_reference(case, monkeypatch):
     c = case["classes"]
     method = case["method"]
@@ -38,18 +40,28 @@ def test_research_numerical_reference(case, monkeypatch):
         cal._raw_b, cal._raw_mu = params
 
         def evaluate():
-            reg = torch.stack([
-                cal._ms_regularization(
-                    *cal._logit_affine(c, k, cal._positive(params[0][k]), cal._positive(params[1][k])),
-                    cal.lambda_reg, cal.mu_reg,
-                ) for k in range(c)
-            ]).mean()
+            reg = torch.stack(
+                [
+                    cal._ms_regularization(
+                        *cal._logit_affine(
+                            c, k, cal._positive(params[0][k]), cal._positive(params[1][k])
+                        ),
+                        cal.lambda_reg,
+                        cal.mu_reg,
+                    )
+                    for k in range(c)
+                ]
+            ).mean()
             return cal._route(x.log_softmax(1), c), reg
 
     logits, reg = evaluate()
     loss = F.cross_entropy(logits, y) + reg
     gradients = torch.autograd.grad(loss, params)
-    for actual, expected in [(logits, case["logits"]), (reg, case["regularization"]), (loss, case["loss"])]:
+    for actual, expected in [
+        (logits, case["logits"]),
+        (reg, case["regularization"]),
+        (loss, case["loss"]),
+    ]:
         torch.testing.assert_close(actual, torch.tensor(expected), rtol=1e-5, atol=2e-6)
     for actual, expected in zip(gradients, case["gradients"], strict=True):
         torch.testing.assert_close(actual, torch.tensor(expected), rtol=1e-5, atol=2e-6)
@@ -59,7 +71,9 @@ def test_research_numerical_reference(case, monkeypatch):
     optimizer.step()
     logits, reg = evaluate()
     torch.testing.assert_close(logits, torch.tensor(case["updated_logits"]), rtol=1e-5, atol=2e-6)
-    torch.testing.assert_close(reg, torch.tensor(case["updated_regularization"]), rtol=1e-5, atol=2e-6)
+    torch.testing.assert_close(
+        reg, torch.tensor(case["updated_regularization"]), rtol=1e-5, atol=2e-6
+    )
 
     # Exercise the production fit objective and optimizer as well as the map.
     initial = [torch.tensor(p) for p in case["params"]]

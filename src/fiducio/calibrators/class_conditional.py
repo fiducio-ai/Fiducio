@@ -73,8 +73,13 @@ class _ClassConditionalBase(Calibrator):
     ) -> None:
         super().__init__(input_type=input_type, ignore_index=ignore_index, device=device)
         self.optimizer, self.lr, self.max_iter = resolve_optimizer(
-            optimizer, lr, max_iter,
-            adam_lr=1e-2, lbfgs_lr=1.0, adam_max_iter=200, lbfgs_max_iter=100,
+            optimizer,
+            lr,
+            max_iter,
+            adam_lr=1e-2,
+            lbfgs_lr=1.0,
+            adam_max_iter=200,
+            lbfgs_max_iter=100,
         )
         self._init_stopping(self.optimizer, patience, min_delta, lr_patience, lr_factor)
         self.lambda_reg = positive_finite(lambda_reg, "lambda_reg", allow_zero=True)
@@ -180,14 +185,21 @@ class _ClassConditionalBase(Calibrator):
                 return F.cross_entropy(val_logits, y_val)
 
         minimize(
-            self.optimizer, [raw_b, raw_mu], loss_fn, lr=self.lr, max_iter=self.max_iter,
-            val_fn=val_fn, stopping=self._stopping,
+            self.optimizer,
+            [raw_b, raw_mu],
+            loss_fn,
+            lr=self.lr,
+            max_iter=self.max_iter,
+            val_fn=val_fn,
+            stopping=self._stopping,
         )
         with torch.no_grad():
             self._raw_b = raw_b.detach()
             self._raw_mu = raw_mu.detach()
 
-    def _fit_independent(self, z_flat: torch.Tensor, y_flat: torch.Tensor, num_classes: int) -> None:
+    def _fit_independent(
+        self, z_flat: torch.Tensor, y_flat: torch.Tensor, num_classes: int
+    ) -> None:
         """Optimize each expert in its own loop, on only the voxels routed to it."""
         assert self._raw_b is not None and self._raw_mu is not None
         top = torch.argmax(z_flat, dim=1)
@@ -235,8 +247,13 @@ class _ClassConditionalBase(Calibrator):
                         return F.cross_entropy(val_logits, val_targets)
 
             minimize(
-                self.optimizer, [b_c, mu_c], loss_fn, lr=self.lr, max_iter=self.max_iter,
-                val_fn=val_fn, stopping=self._stopping,
+                self.optimizer,
+                [b_c, mu_c],
+                loss_fn,
+                lr=self.lr,
+                max_iter=self.max_iter,
+                val_fn=val_fn,
+                stopping=self._stopping,
             )
             with torch.no_grad():
                 self._raw_b[c] = b_c.detach()
@@ -292,7 +309,9 @@ class _ClassConditionalBase(Calibrator):
         raw_b = state.get("raw_b")
         raw_mu = state.get("raw_mu")
         self._raw_b = None if raw_b is None else torch.as_tensor(raw_b, device=self.device).float()
-        self._raw_mu = None if raw_mu is None else torch.as_tensor(raw_mu, device=self.device).float()
+        self._raw_mu = (
+            None if raw_mu is None else torch.as_tensor(raw_mu, device=self.device).float()
+        )
 
 
 @register_calibrator("class_conditional_matrix_scaling")
@@ -342,9 +361,9 @@ class ArgmaxPreservingMatrixScaling(_ClassConditionalBase):
     ) -> torch.Tensor:
         c = int(logp_rows.shape[1])
         comp = self._competitor_indices(c, logp_rows.device)[expert]
-        margins = (
-            logp_rows[:, expert : expert + 1] - logp_rows.index_select(1, comp)
-        ).clamp_min(0.0)
+        margins = (logp_rows[:, expert : expert + 1] - logp_rows.index_select(1, comp)).clamp_min(
+            0.0
+        )
         tilde = margins.matmul(b_c.t()) + mu_c
         out = torch.zeros_like(logp_rows)
         out[:, comp] = -tilde

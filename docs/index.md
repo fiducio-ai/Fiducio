@@ -45,11 +45,11 @@ See [Installation](installation.md) for extras and the GitHub install.
 import torch
 from fiducio import TemperatureScaling
 
-logits = torch.randn(8, 4, 64, 64)          # (B, C, H, W) from your model
-labels = torch.randint(0, 4, (8, 64, 64))   # (B, H, W) calibration labels
+logits = torch.randn(8, 4, 64, 64)  # (B, C, H, W) from your model
+labels = torch.randint(0, 4, (8, 64, 64))  # (B, H, W) calibration labels
 
 calibrator = TemperatureScaling().fit(logits, labels)
-probs = calibrator.transform(logits)        # calibrated probabilities
+probs = calibrator.transform(logits)  # calibrated probabilities
 ```
 
 Continue with the [Quickstart](quickstart.md).

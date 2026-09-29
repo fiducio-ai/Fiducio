@@ -78,6 +78,19 @@ def test_research_numerical_reference(case, monkeypatch):
     torch.testing.assert_close(actual, torch.tensor(case["updated_logits"]), rtol=1e-5, atol=2e-6)
 
 
+@pytest.mark.parametrize("method", ["MS", "MSc", "CDC", "CMSap", "CMSop"])
+def test_production_fit_reduces_nll(method):
+    from fiducio import negative_log_likelihood
+
+    g = torch.Generator().manual_seed(3)
+    x = torch.randn(40, 3, generator=g) * 2
+    y = x.argmax(1)
+    cal = getattr(fiducio, method)(device="cpu", lambda_reg=0.13, mu_reg=0.07, max_iter=200)
+    out = cal.fit(x, y).transform(x)
+    assert torch.isfinite(out).all()
+    assert negative_log_likelihood(out, y) < negative_log_likelihood(x.softmax(1), y)
+
+
 def test_msc_identity_initialization_has_zero_odir_penalty():
     cal = fiducio.MSc(device="cpu", lambda_reg=1, mu_reg=1)
     cal._init_params(4)

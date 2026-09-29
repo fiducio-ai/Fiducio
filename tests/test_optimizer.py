@@ -56,6 +56,11 @@ def test_non_positive_max_iter_rejected(calibrator_id, max_iter):
         make_calibrator(calibrator_id, max_iter=max_iter)
 
 
+def test_float_max_iter_rejected():
+    with pytest.raises(ValueError, match="max_iter must be an integer"):
+        make_calibrator("temperature_scaling", max_iter=200.0)
+
+
 @pytest.mark.parametrize("optimizer", ["adam", "lbfgs"])
 def test_optimizer_persisted_in_roundtrip(tmp_path, optimizer):
     logits, labels = synthetic_logits((3, 3, 6, 6), seed=51)

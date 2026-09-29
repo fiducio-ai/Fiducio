@@ -37,12 +37,14 @@ def resolve_optimizer(
     Raises
     ------
     ValueError
-        If ``optimizer`` is unknown or the resolved ``max_iter`` is not
-        strictly positive.
+        If ``optimizer`` is unknown, ``max_iter`` is not an integer, or the
+        resolved ``max_iter`` is not strictly positive.
     """
     name = str(optimizer).lower()
     if name not in VALID_OPTIMIZERS:
         raise ValueError(f"optimizer must be one of {VALID_OPTIMIZERS}, got {optimizer!r}")
+    if max_iter is not None and (isinstance(max_iter, bool) or not isinstance(max_iter, int)):
+        raise ValueError("max_iter must be an integer")
     resolved_lr = (adam_lr if name == "adam" else lbfgs_lr) if lr is None else float(lr)
     resolved_iter = (
         (adam_max_iter if name == "adam" else lbfgs_max_iter)
@@ -50,8 +52,6 @@ def resolve_optimizer(
         else int(max_iter)
     )
     positive_finite(resolved_lr, "lr")
-    if max_iter is not None and (isinstance(max_iter, bool) or resolved_iter != max_iter):
-        raise ValueError("max_iter must be an integer")
     if resolved_iter <= 0:
         raise ValueError(f"max_iter must be > 0, got {resolved_iter}")
     return name, resolved_lr, resolved_iter

@@ -50,8 +50,11 @@ class EnsembleTemperatureScaling(Calibrator):
 
     References
     ----------
-    Zhang et al. (2020), *Mix-n-Match: Ensemble and Compositional Methods for
-    Uncertainty Calibration in Deep Learning*, ICML.
+    Adapted from Zhang et al. (2020), *Mix-n-Match: Ensemble and Compositional
+    Methods for Uncertainty Calibration in Deep Learning*, ICML. Unlike the cited
+    method, fitting here is sequential: stage 1 minimizes the NLL over ``T`` with
+    Adam, stage 2 minimizes the cross-entropy over ``w`` with ``T`` fixed; the
+    paper fits all parameters jointly.
     """
 
     _input_space = "logits"
@@ -108,7 +111,7 @@ class EnsembleTemperatureScaling(Calibrator):
         p0 = F.softmax(z_flat / temperature, dim=1).detach()
         p1 = F.softmax(z_flat, dim=1).detach()
         p2 = torch.full_like(p0, 1.0 / float(num_classes))
-        raw_w = torch.tensor([1.0, 0.0, 0.0], device=self.device).requires_grad_(True)
+        raw_w = torch.log(torch.tensor([1.0, _EPS, _EPS], device=self.device)).requires_grad_(True)
 
         def loss_fn() -> torch.Tensor:
             w = F.softmax(raw_w, dim=0)

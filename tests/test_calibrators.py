@@ -138,6 +138,28 @@ def test_reduces_nll_on_overconfident_data(calibrator_id):
     assert negative_log_likelihood(out, labels) <= negative_log_likelihood(raw, labels) + 1e-3
 
 
+def test_ets_stage2_starts_from_documented_weights(monkeypatch):
+    import fiducio.calibrators.ensemble_temperature as ets_module
+    logits, labels = synthetic_logits((4, 3, 8, 8), seed=80, scale=5.0)
+    cal = make_calibrator("ensemble_temperature_scaling")
+    captured = {}
+    def fake_minimize(optimizer, params, loss_fn, **kwargs):
+        captured["raw_w"] = params[0].detach().clone()
+    monkeypatch.setattr(ets_module, "minimize", fake_minimize)
+    cal._fit_weights(logits.movedim(1, -1).reshape(-1, 3), labels.reshape(-1), 3)
+    weights = torch.softmax(captured["raw_w"], dim=0)
+    assert weights[0] > 1 - 1e-6
+    assert weights[1] < 1e-6 and weights[2] < 1e-6
+
+
+def test_ets_one_step_is_not_worse_than_uncalibrated():
+    from fiducio import negative_log_likelihood
+    logits, labels = synthetic_logits((6, 3, 12, 12), seed=9, scale=5.0)
+    raw = to_probs(logits)
+    out = make_calibrator("ensemble_temperature_scaling", max_iter=1).fit_transform(logits, labels)
+    assert negative_log_likelihood(out, labels) <= negative_log_likelihood(raw, labels) + 1e-3
+
+
 @pytest.mark.parametrize("calibrator_id", REGULARIZED_CALIBRATOR_IDS)
 def test_regularization_has_a_measurable_effect(calibrator_id):
     # lambda_reg/mu_reg are documented on every affine-family calibrator but were

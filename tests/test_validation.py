@@ -9,6 +9,7 @@ import torch
 
 from conftest import synthetic_logits, to_probs
 from fiducio import (
+    ArgmaxPreservingMatrixScaling,
     MatrixScaling,
     NotFittedError,
     TemperatureScaling,
@@ -143,3 +144,21 @@ def test_invalid_n_bins_rejected():
 def test_two_channel_from_binary_rejects_bad_input_type():
     with pytest.raises(ValueError, match="input_type"):
         two_channel_from_binary(torch.randn(2, 1, 4, 4), input_type="scores")
+
+
+def test_unrepresentable_initial_temperature_rejected():
+    logits, labels = synthetic_logits((2, 3, 4, 4), seed=29)
+    with pytest.raises(ValueError, match="representable in float32"):
+        ArgmaxPreservingMatrixScaling(device="cpu", init_floor=1e-46, max_iter=1).fit(
+            logits, labels
+        )
+
+
+def test_duplicate_registry_id_rejected():
+    from fiducio.registry import register_calibrator
+
+    class Other(TemperatureScaling):
+        pass
+
+    with pytest.raises(ValueError, match="already registered"):
+        register_calibrator("temperature_scaling")(Other)

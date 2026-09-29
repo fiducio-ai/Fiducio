@@ -91,3 +91,4 @@ def test_empty_valid_returns_nan():
     assert math.isnan(negative_log_likelihood(probs, labels))
     assert math.isnan(expected_calibration_error(probs, labels))
     assert math.isnan(average_calibration_error(probs, labels))
+    assert math.isnan(brier_score(probs, labels))

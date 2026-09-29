@@ -38,10 +38,6 @@ from ..utils.tensors import inverse_softplus, positive_finite
 from ._optim import minimize, resolve_optimizer
 
 
-def _inv_softplus(value: float, device: torch.device) -> torch.Tensor:
-    return inverse_softplus(value, device)
-
-
 class _ClassConditionalBase(Calibrator):
     """Shared implementation for class-conditional matrix scaling calibrators.
 
@@ -99,8 +95,8 @@ class _ClassConditionalBase(Calibrator):
         c = int(num_classes)
         k = self._matrix_dim(c)
         if self._positive_params:
-            raw_floor = _inv_softplus(self.init_floor, self.device).item()
-            raw_alpha = _inv_softplus(max(self.init_alpha, self.init_floor), self.device).item()
+            raw_floor = inverse_softplus(self.init_floor, self.device).item()
+            raw_alpha = inverse_softplus(max(self.init_alpha, self.init_floor), self.device).item()
             raw_mu = torch.full((c, k), raw_floor, device=self.device)
             raw_b = torch.full((c, k, k), raw_floor, device=self.device)
             eye = torch.eye(k, dtype=torch.bool, device=self.device)

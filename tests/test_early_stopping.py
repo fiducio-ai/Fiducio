@@ -53,7 +53,7 @@ def test_minimize_without_stopping_follows_training_loss():
     x, calls, loss_fn, val_fn = _quadratic(3.0, 1.0)
     minimize("adam", [x], loss_fn, lr=0.05, max_iter=300, val_fn=val_fn, stopping=None)
     assert calls["val"] == 0
-    assert float(x) > 2.0
+    assert float(x.detach()) > 2.0
 
 
 def test_minimize_lr_patience_alone_runs_to_max_iter():

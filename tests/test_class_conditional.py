@@ -31,7 +31,7 @@ def test_independent_experts_fits_and_reduces_nll(calibrator_id):
     sums = out.sum(dim=1)
     assert torch.allclose(sums, torch.ones_like(sums), atol=1e-4)
     assert torch.isfinite(out).all()
-    assert negative_log_likelihood(out, labels) <= negative_log_likelihood(raw, labels) + 1e-3
+    assert negative_log_likelihood(out, labels) < negative_log_likelihood(raw, labels) - 1e-3
 
 
 @pytest.mark.parametrize("calibrator_id", CLASS_CONDITIONAL_IDS)

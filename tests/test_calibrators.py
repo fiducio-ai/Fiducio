@@ -133,9 +133,8 @@ def test_reduces_nll_on_overconfident_data(calibrator_id):
     raw = to_probs(logits)
     cal = make_calibrator(calibrator_id)
     out = cal.fit_transform(logits, labels)
-    # Overconfident inputs: a sane calibrator should not increase NLL much and
-    # generally reduces it.
-    assert negative_log_likelihood(out, labels) <= negative_log_likelihood(raw, labels) + 1e-3
+    # Overconfident inputs: a sane calibrator must clearly reduce NLL.
+    assert negative_log_likelihood(out, labels) < negative_log_likelihood(raw, labels) - 1e-3
 
 
 def test_ets_stage2_starts_from_documented_weights(monkeypatch):

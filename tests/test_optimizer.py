@@ -26,7 +26,7 @@ def test_both_optimizers_reduce_nll(calibrator_id, optimizer):
     sums = out.sum(dim=1)
     assert torch.allclose(sums, torch.ones_like(sums), atol=1e-4)
     assert torch.isfinite(out).all()
-    assert negative_log_likelihood(out, labels) <= negative_log_likelihood(raw, labels) + 1e-3
+    assert negative_log_likelihood(out, labels) < negative_log_likelihood(raw, labels) - 1e-3
 
 
 def test_invalid_optimizer_rejected():

@@ -80,6 +80,10 @@ jobs:
         if: matrix.torch == 'minimum'
         run: uv pip install 'torch==2.10.0+cpu' --index https://download.pytorch.org/whl/cpu
       - run: uv pip install --no-deps dist/*.whl
+      - name: Read the expected version from pyproject.toml
+        run: |
+          expected=$(sed -n 's/^version = "\(.*\)"/\1/p' pyproject.toml)
+          echo "EXPECTED_VERSION=$expected" >> "$GITHUB_ENV"
       - name: Test the installed wheel outside the source tree
         env:
           OMP_NUM_THREADS: "1"
@@ -88,7 +92,7 @@ jobs:
         run: |
           python="$GITHUB_WORKSPACE/.venv/bin/python"
           cd "$RUNNER_TEMP"
-          "$python" -c 'import fiducio; from pathlib import Path; assert "site-packages" in Path(fiducio.__file__).parts; assert fiducio.__version__ == "0.1.1"'
+          "$python" -c 'import os, fiducio; from pathlib import Path; assert "site-packages" in Path(fiducio.__file__).parts; assert fiducio.__version__ == os.environ["EXPECTED_VERSION"], (fiducio.__version__, os.environ["EXPECTED_VERSION"])'
           "$python" -m pytest "$GITHUB_WORKSPACE/tests" -c "$GITHUB_WORKSPACE/pyproject.toml" --cov=fiducio --cov-report=term-missing
           for example in basic_segmentation_calibration pytorch_model_calibration reliability_diagram ensemble_pooling; do
             "$python" "$GITHUB_WORKSPACE/examples/$example.py"

@@ -132,7 +132,7 @@ def reliability_curve(
     )
     sum_conf = torch.zeros(n_bins, dtype=torch.float64, device=p.device).scatter_add_(0, idx, confidence)
     sum_acc = torch.zeros_like(sum_conf).scatter_add_(0, idx, correct)
-    safe_counts = counts.clamp_min(1.0)
+    safe_counts = counts.clamp_min(1)
     bin_conf = sum_conf / safe_counts
     bin_acc = sum_acc / safe_counts
     total = float(confidence.shape[0])

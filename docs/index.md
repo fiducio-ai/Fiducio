@@ -29,7 +29,7 @@ changing the segmentation itself.
   inputs, with logits **or** probabilities, masks and `ignore_index`.
 - A family of calibrators from simple temperature scaling to class-conditional
   matrix scaling with argmax- and order-preserving guarantees.
-- Calibration metrics (NLL, ECE, Brier) and safe, registry-backed persistence.
+- Calibration metrics (NLL, ECE, ACE as `unweighted_calibration_error`, Brier) and safe, registry-backed persistence.
 
 ## Install
 

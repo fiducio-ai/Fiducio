@@ -28,7 +28,8 @@ Releases are manual and gated. No workflow uploads to PyPI on its own.
 ## Procedure
 
 1. Merge the release PR once `Tests` is green. Update `CHANGELOG.md`, the version
-   in `pyproject.toml` and `uv.lock` (`uv lock`) in that PR.
+   in `pyproject.toml`, `CITATION.cff` and `uv.lock` (`uv lock`) in that PR. CI
+   derives the expected version from `pyproject.toml`.
 2. From an up-to-date `main`, create and push an annotated tag:
    `git tag -a vX.Y.Z -m "Fiducio X.Y.Z" && git push origin vX.Y.Z`.
 3. Actions → *Publish to PyPI (manual)* → *Run workflow*. Pick the **tag** as the

@@ -18,17 +18,20 @@ from __future__ import annotations
 
 import os
 import pickle
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import torch
 
 from .registry import get_calibrator_class
 from .utils import get_logger
 
+if TYPE_CHECKING:  # pragma: no cover - typing only
+    from .base import Calibrator
+
 FORMAT_NAME = "fiducio-calibrator"
 FORMAT_VERSION = 1
 
-PathLike = str | os.PathLike
+PathLike = str | os.PathLike[str]
 MapLocation = str | torch.device
 
 _logger = get_logger(__name__)
@@ -112,7 +115,7 @@ def _to_cpu(obj: Any) -> Any:
     return obj
 
 
-def save_calibrator(calibrator: Any, path: PathLike) -> None:
+def save_calibrator(calibrator: Calibrator, path: PathLike) -> None:
     """Serialize ``calibrator`` to ``path``.
 
     Parameters
@@ -153,7 +156,7 @@ def save_calibrator(calibrator: Any, path: PathLike) -> None:
 def load_calibrator(
     path: PathLike,
     map_location: MapLocation | None = "cpu",
-) -> Any:
+) -> Calibrator:
     """Load a calibrator previously written by :func:`save_calibrator`.
 
     Parameters

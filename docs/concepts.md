@@ -24,7 +24,9 @@ because the model is already over-confident there. The usual recipe:
 4. `fit` a Fiducio calibrator on them.
 5. Evaluate calibration on a separate **test split**.
 
-A few dozen labelled volumes are often enough for the simpler calibrators.
+A few dozen labelled volumes are often enough for the simpler calibrators;
+the paper fitted 50 held-out cases, and the expressive class-conditional
+calibrators (CDC, CMSap, CMSop) need a reasonably sized calibration set.
 
 ## Logits versus probabilities
 
@@ -118,6 +120,11 @@ calibrator.fit(
 )
 ```
 
+This reproduces only the Adam + validation-NLL early-stopping recipe; the
+paper's case batching, class weighting, schedules, clipping and hyperparameter
+search are not part of the library (see the
+[implementation guide](https://github.com/fiducio-ai/Fiducio/blob/main/reproducibility/README.md)).
+
 - The monitored quantity is the plain cross-entropy (NLL) on the validation set,
   without regularization, evaluated after every Adam step. The iterate with the
   best validation NLL is restored.
@@ -142,7 +149,9 @@ combine a larger `max_iter` with `patience` for those.
 If you need the calibrated **logits** instead — for example to feed another loss
 — use `decision_function`, which returns pre-softmax scores of the same shape;
 `softmax(decision_function(x), dim=1)` equals `transform(x)`. Both run under
-`torch.no_grad()` and never build an autograd graph.
+`torch.no_grad()` and never build an autograd graph. `decision_function` does not
+accept a mask (a logit of 0 is meaningful), so argmax over its output at masked
+voxels is meaningless; use `transform` when masks matter.
 
 ## Memory and large volumes
 

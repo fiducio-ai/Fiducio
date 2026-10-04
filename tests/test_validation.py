@@ -13,6 +13,7 @@ from fiducio import (
     MatrixScaling,
     NotFittedError,
     TemperatureScaling,
+    expected_calibration_error,
     negative_log_likelihood,
     reliability_curve,
     two_channel_from_binary,
@@ -162,3 +163,31 @@ def test_duplicate_registry_id_rejected():
 
     with pytest.raises(ValueError, match="already registered"):
         register_calibrator("temperature_scaling")(Other)
+
+
+def test_half_precision_probabilities_accepted():
+    logits, labels = synthetic_logits((2, 5, 64, 64), seed=3)
+    for dtype in (torch.float16, torch.bfloat16):
+        probs = torch.softmax(logits.to(dtype), dim=1)
+        assert math.isfinite(expected_calibration_error(probs, labels))
+        TemperatureScaling(input_type="probs", max_iter=5, device="cpu").fit(probs, labels)
+
+
+def test_masked_out_padding_is_not_validated():
+    logits, labels = synthetic_logits((2, 3, 6, 6), seed=5)
+    probs = to_probs(logits)
+    mask = torch.ones(2, 6, 6, dtype=torch.bool)
+    mask[:, :2] = False
+    padded_logits = logits.clone()
+    padded_logits[:, :, :2] = float("nan")
+    padded_probs = probs.clone()
+    padded_probs[:, :, :2] = float("nan")
+    expected = expected_calibration_error(probs, labels, mask=mask)
+    assert expected_calibration_error(padded_probs, labels, mask=mask) == expected
+    for input_type, inputs in (("logits", padded_logits), ("probs", padded_probs)):
+        cal = TemperatureScaling(input_type=input_type, max_iter=5, device="cpu")
+        out = cal.fit(inputs, labels, mask=mask).transform(inputs, mask=mask)
+        assert torch.equal(out[:, :, :2], torch.zeros_like(out[:, :, :2]))
+        assert torch.isfinite(out).all()
+    with pytest.raises(ValueError, match="non-finite"):
+        expected_calibration_error(padded_probs, labels)

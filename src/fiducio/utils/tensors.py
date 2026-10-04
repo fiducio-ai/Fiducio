@@ -112,8 +112,10 @@ def validate_predictions(
 ) -> int:
     """Validate a predictions tensor and return the number of classes.
 
-    For ``input_type="probs"``, the sum-to-1 check is restricted to positions
-    selected by ``mask`` (all positions when ``mask`` is ``None``).
+    When ``mask`` is given, values are only checked at valid (``True``)
+    positions, so masked-out padding may hold anything, including NaN. For
+    ``input_type="probs"`` the sum-to-1 tolerance is ``1e-3``, widened for
+    half-precision inputs to cover their rounding error.
 
     Raises
     ------
@@ -138,26 +140,26 @@ def validate_predictions(
             f"this calibrator was fitted for C={expected_num_classes} classes, "
             f"but received C={num_classes}"
         )
-    if not torch.isfinite(predictions).all():
+    validate_mask(predictions, mask)
+    if mask is None:
+        values, class_dim = predictions, 1
+    else:
+        values, class_dim = predictions.movedim(1, -1)[mask.to(torch.bool)], -1
+    # A finite sum proves every value finite without an elementwise copy; on
+    # overflow the exact check decides.
+    if not torch.isfinite(values.sum()) and not torch.isfinite(values).all():
         raise ValueError("predictions contain non-finite values (nan/inf)")
-    if input_type == "probs":
-        validate_mask(predictions, mask)
-    if input_type == "probs" and predictions.numel():
-        pmin = float(predictions.min())
-        pmax = float(predictions.max())
+    if input_type == "probs" and values.numel():
+        pmin = float(values.min())
+        pmax = float(values.max())
         if pmin < 0.0 or pmax > 1.0:
             raise ValueError(
                 "input_type='probs' but values fall outside [0, 1]; "
                 "pass input_type='logits' for unnormalised scores"
             )
-        sums = predictions.sum(dim=1)
-        if mask is None:
-            checked = sums
-        else:
-            checked = sums[mask.to(torch.bool)]
-        if checked.numel() and not torch.allclose(
-            checked, torch.ones_like(checked), atol=_PROB_SUM_ATOL, rtol=0
-        ):
+        atol = max(_PROB_SUM_ATOL, 2 * torch.finfo(values.dtype).eps)
+        deviation = values.sum(dim=class_dim, dtype=torch.float32).sub_(1.0).abs_().max()
+        if float(deviation) > atol:
             raise ValueError(
                 "input_type='probs' but probabilities do not sum to 1 along the "
                 "class axis (dimension 1)"
@@ -187,9 +189,8 @@ def validate_targets(
     if mask is not None:
         valid = valid & mask.to(torch.bool)
     if valid.any():
-        valid_labels = targets[valid]
-        lo = int(valid_labels.min())
-        hi = int(valid_labels.max())
+        valid_labels = targets if valid.all() else targets[valid]
+        lo, hi = (int(v) for v in torch.aminmax(valid_labels))
         if lo < 0 or hi >= num_classes:
             raise ValueError(f"valid labels must lie in [0, {num_classes - 1}]; got [{lo}, {hi}]")
 
@@ -244,8 +245,7 @@ def apply_mask_to_probabilities(probs: torch.Tensor, mask: torch.Tensor | None) 
     if mask is None:
         return probs
     validate_mask(probs, mask)
-    mask_b = mask.to(dtype=probs.dtype).unsqueeze(1)
-    return probs * mask_b
+    return probs.masked_fill(~mask.to(torch.bool).unsqueeze(1), 0.0)
 
 
 def two_channel_from_binary(scores: ArrayLike, *, input_type: str = "logits") -> torch.Tensor:

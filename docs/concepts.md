@@ -193,6 +193,10 @@ needs to know the architecture.
 
 Fitting detaches model outputs from autograd. Invalid labels, probability values
 and tensor layouts raise errors; integral floating labels remain accepted.
+With a `mask`, values are only checked at valid positions, so masked-out padding
+may hold anything (including NaN) and comes out of `transform` as 0. The
+sum-to-1 tolerance for probabilities is `1e-3`, widened to twice the machine
+epsilon for float16/bfloat16 inputs.
 A failed refit preserves the complete previous fitted state. Non-finite losses
 or learned parameters raise an error rather than producing a fitted object.
 

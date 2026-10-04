@@ -20,7 +20,7 @@ from .utils import (
     validate_targets,
 )
 from .utils.stopping import StoppingRule, resolve_stopping
-from .utils.tensors import integer_targets, validate_mask
+from .utils.tensors import integer_targets
 
 DeviceLike = str | torch.device
 
@@ -342,7 +342,10 @@ class Calibrator(ABC):
         *,
         with_targets: bool,
     ) -> tuple[torch.Tensor, torch.Tensor | None, torch.Tensor | None]:
-        preds = to_tensor(predictions, dtype=torch.float32, device=self.device).detach()
+        # Validation runs on the input dtype; _to_canonical casts to float32.
+        preds = to_tensor(predictions, device=self.device).detach()
+        if not preds.is_floating_point():
+            preds = preds.float()
         tgts: torch.Tensor | None = None
         if with_targets:
             if targets is None:
@@ -355,6 +358,7 @@ class Calibrator(ABC):
 
     def _to_canonical(self, predictions: torch.Tensor) -> torch.Tensor:
         """Convert validated predictions to the calibrator's canonical space."""
+        predictions = predictions.float()
         if self._input_space == "logits":
             if self.input_type == "logits":
                 return predictions
@@ -372,7 +376,6 @@ class Calibrator(ABC):
         validate_predictions(
             preds, input_type=self.input_type, expected_num_classes=self._num_classes, mask=msk
         )
-        validate_mask(preds, msk)
         with torch.no_grad():
             canonical = self._to_canonical(preds)
             logits = self._map_logits(canonical)

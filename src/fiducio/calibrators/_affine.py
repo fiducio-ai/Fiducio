@@ -33,8 +33,9 @@ class _AffineCalibrator(Calibrator):
               + \mu_\mathrm{reg}\,\mathrm{mean}(b^2)
 
     (for diagonal scaling the squared deviation from one is penalized instead).
-    Both terms are means, not the sums used by Kull et al. (2019), so
-    ``lambda_reg`` / ``mu_reg`` are not on that paper's scale.
+    Both terms are means, matching Kull et al.'s (2019) normalized ODIR
+    (their code with ``reg_norm=True``); values from un-normalized settings are
+    not transferable.
     """
 
     _mode: str = "matrix"

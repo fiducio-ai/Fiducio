@@ -52,10 +52,12 @@ class EnsembleTemperatureScaling(Calibrator):
     References
     ----------
     Adapted from Zhang et al. (2020), *Mix-n-Match: Ensemble and Compositional
-    Methods for Uncertainty Calibration in Deep Learning*, ICML. Unlike the cited
-    method, fitting here is sequential: stage 1 minimizes the NLL over ``T`` with
-    Adam, stage 2 minimizes the cross-entropy over ``w`` with ``T`` fixed; the
-    paper fits all parameters jointly.
+    Methods for Uncertainty Calibration in Deep Learning*, ICML. Like the
+    authors' reference code, fitting is sequential (``T``, then ``w`` with ``T``
+    fixed). Unlike it, both stages minimize the NLL rather than squared error,
+    ``w`` is parameterized by a softmax instead of a constrained SLSQP solve, and
+    stage 2 starts at ``w = [0.998, 0.001, 0.001]`` because a softmax cannot start
+    at a one-hot.
     """
 
     _input_space = "logits"

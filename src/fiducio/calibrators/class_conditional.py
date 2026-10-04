@@ -44,8 +44,8 @@ class _ClassConditionalBase(Calibrator):
     Regularization is the mean, over experts, of the matrix-scaling penalty on
     each expert's induced affine map:
     ``lambda_reg * mean(off-diagonal W^2) + mu_reg * mean(bias^2)``. Both terms
-    are means, not the sums used by Kull et al. (2019), so ``lambda_reg`` /
-    ``mu_reg`` are not on that paper's scale.
+    are means, matching Kull et al.'s (2019) normalized ODIR (their code with
+    ``reg_norm=True``); values from un-normalized settings are not transferable.
     """
 
     _input_space = "logprobs"

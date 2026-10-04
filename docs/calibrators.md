@@ -73,8 +73,10 @@ A practical decision guide:
 - **Probability-space transform?** `DirichletCalibration` applies an affine map
   to log-probabilities (log-linear in probability space).
 - **Calibration must not change the predicted labels?** Use
-  `ArgmaxPreservingMatrixScaling`, which guarantees the calibrated argmax equals
-  the uncalibrated one for every voxel — so Dice/IoU are unchanged.
+  `ArgmaxPreservingMatrixScaling`: the calibrated argmax equals the uncalibrated
+  one at every valid voxel up to floating-point ties, so an argmax segmentation,
+  and Dice/IoU computed from it, is unchanged. Thresholded or post-processed
+  segmentations are not covered.
 - **Calibration must not change the class ranking at all?** Use
   `OrderPreservingMatrixScaling`, which preserves the full per-voxel ordering.
 - **Want a flexible per-region map with no constraints?**
@@ -99,9 +101,9 @@ the class-conditional calibrators accept:
 - `mu_reg` — L2 penalty on the bias.
 
 The penalty is `lambda_reg * mean(off-diagonal W^2) + mu_reg * mean(b^2)` (the
-mean is taken over experts for the class-conditional family). `lambda_reg` and
-`mu_reg` are therefore not on Kull et al.'s sum scale, and their values are not
-transferable.
+mean is taken over experts for the class-conditional family). Both terms are
+means, matching Kull et al.'s (2019) normalized ODIR (their code with
+`reg_norm=True`); values from un-normalized settings are not transferable.
 
 `VectorScaling`'s `lambda_reg` pulls the scale vector towards 1. Start at `0` and
 increase if the calibrator overfits a small calibration set.

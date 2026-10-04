@@ -9,8 +9,9 @@ all voxels predicted with confidence 0.9, are about 90% actually correct?
 *Post-hoc* calibration leaves the trained model untouched. It fits a small
 transform `g` on top of the frozen model so that `g(model output)` is
 better-calibrated. Because the segmentation map (the argmax) is often unchanged —
-and is *guaranteed* unchanged by some calibrators — you can calibrate a deployed
-model without affecting its Dice/IoU.
+and is unchanged by some calibrators up to floating-point ties — you can
+calibrate a deployed model without affecting the Dice/IoU of its argmax
+segmentation.
 
 ## You need a separate, labelled calibration set
 

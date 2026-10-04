@@ -39,7 +39,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   return a map worse than the uncalibrated model after short fits; a one-hot
   start would freeze the weights, since their gradient scales with the weights.
   Stage 2 runs in float64 on the true-class probabilities only, so L-BFGS does
-  not stall on some platforms and the stage needs C times less memory.
+  not stall on some platforms and the stage needs C times less memory. The
+  objective is unchanged and, at default budgets, so are the fitted weights.
+  The start is within −log(0.998) ≈ 2e-3 nats of the stage-1 fit, so short fits
+  are no longer materially worse than the uncalibrated model (≤1e-4 nats in our
+  tests); this is not a guarantee. When the optimum is far from temperature
+  scaling, very short fits (`max_iter` ≲ 20) converge more slowly than in 0.1.1.
 - `load_calibrator`:
   - casts parameters saved in float64 to float32 instead of failing at
     transform time;

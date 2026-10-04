@@ -15,6 +15,7 @@ from ._optim import minimize, resolve_optimizer
 
 _EPS = 1e-12
 _T_EPS = 1e-6
+_W_INIT = 1e-3
 
 
 @register_calibrator("ensemble_temperature_scaling")
@@ -121,7 +122,11 @@ class EnsembleTemperatureScaling(Calibrator):
         p0 = F.softmax(z_flat / temperature, dim=1).detach()
         p1 = F.softmax(z_flat, dim=1).detach()
         p2 = torch.full_like(p0, 1.0 / float(num_classes))
-        raw_w = torch.log(torch.tensor([1.0, _EPS, _EPS], device=self.device)).requires_grad_(True)
+        # Start next to the temperature-scaled distribution. The softmax gradient of
+        # each weight scales with the weight itself, so the other weights must not
+        # start at ~0 or the optimizer can never move them.
+        init_w = torch.tensor([1.0 - 2 * _W_INIT, _W_INIT, _W_INIT], device=self.device)
+        raw_w = torch.log(init_w).requires_grad_(True)
 
         def loss_fn() -> torch.Tensor:
             w = F.softmax(raw_w, dim=0)

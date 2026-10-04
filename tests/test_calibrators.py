@@ -137,7 +137,7 @@ def test_reduces_nll_on_overconfident_data(calibrator_id):
     assert negative_log_likelihood(out, labels) < negative_log_likelihood(raw, labels) - 1e-3
 
 
-def test_ets_stage2_starts_from_documented_weights(monkeypatch):
+def test_ets_stage2_starts_next_to_temperature_scaling(monkeypatch):
     import fiducio.calibrators.ensemble_temperature as ets_module
 
     logits, labels = synthetic_logits((4, 3, 8, 8), seed=80, scale=5.0)
@@ -150,8 +150,29 @@ def test_ets_stage2_starts_from_documented_weights(monkeypatch):
     monkeypatch.setattr(ets_module, "minimize", fake_minimize)
     cal._fit_weights(logits.movedim(1, -1).reshape(-1, 3), labels.reshape(-1), 3)
     weights = torch.softmax(captured["raw_w"], dim=0)
-    assert weights[0] > 1 - 1e-6
-    assert weights[1] < 1e-6 and weights[2] < 1e-6
+    assert weights[0] > 0.99
+    # Weights must stay far enough from 0 for the softmax gradient to move them.
+    assert weights[1] > 1e-4 and weights[2] > 1e-4
+
+
+@pytest.mark.parametrize("optimizer", ["adam", "lbfgs"])
+def test_ets_learns_mixture_weights(optimizer):
+    # Sharp, mostly correct logits with 10% confidently wrong voxels: mixing in
+    # the original or uniform distribution beats temperature scaling alone.
+    torch.manual_seed(0)
+    n, c = 20000, 4
+    labels = torch.randint(0, c, (n,))
+    logits = torch.randn(n, c)
+    logits[torch.arange(n), labels] += 8
+    wrong = torch.rand(n) < 0.1
+    logits[wrong] = torch.roll(logits[wrong], 1, dims=1)
+    cal = make_calibrator("ensemble_temperature_scaling", optimizer=optimizer).fit(logits, labels)
+    assert cal.weights[0] < 0.5
+    ts = make_calibrator("temperature_scaling", optimizer=optimizer).fit(logits, labels)
+    nll = torch.nn.functional.nll_loss
+    ets_nll = nll(torch.log(cal.transform(logits)), labels)
+    ts_nll = nll(torch.log(ts.transform(logits)), labels)
+    assert ets_nll < ts_nll - 0.01
 
 
 def test_ets_one_step_is_not_worse_than_uncalibrated():

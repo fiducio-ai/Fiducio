@@ -122,7 +122,8 @@ def test_failed_save_keeps_existing_file(tmp_path, monkeypatch):
     cal.save(path)
     before = path.read_bytes()
 
-    def fail_save(*args, **kwargs):
+    def fail_save(payload, handle):
+        handle.write(b"partial")  # fail mid-write, after touching the output
         raise RuntimeError("simulated write failure")
 
     monkeypatch.setattr("fiducio.persistence.torch.save", fail_save)
@@ -132,10 +133,10 @@ def test_failed_save_keeps_existing_file(tmp_path, monkeypatch):
     assert [f.name for f in tmp_path.iterdir()] == ["cal.pt"]
 
 
-def test_save_ignores_a_stale_fixed_name_temporary(tmp_path):
+def test_save_ignores_a_stale_temporary(tmp_path):
     cal = MatrixScaling(device="cpu")
     path = tmp_path / "cal.pt"
-    (tmp_path / "cal.pt.tmp").mkdir()  # 0.1.1 always wrote <path>.tmp
+    (tmp_path / "cal.pt.tmp").mkdir()  # a fixed temporary name would collide
     cal.save(path)
     assert load_calibrator(path).calibrator_id == "matrix_scaling"
 

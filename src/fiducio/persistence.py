@@ -165,6 +165,8 @@ def save_calibrator(calibrator: Calibrator, path: PathLike) -> None:
     try:
         with open(tmp_path, "xb") as handle:
             torch.save(payload, handle)
+            handle.flush()
+            os.fsync(handle.fileno())
         os.replace(tmp_path, os.fspath(path))
     finally:
         if os.path.exists(tmp_path):

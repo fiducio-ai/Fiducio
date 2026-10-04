@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import os
 import pickle
+import uuid
 from typing import TYPE_CHECKING, Any
 
 import torch
@@ -84,6 +85,7 @@ def _validate_state(
             raise ValueError(f"unexpected parameter {name} on an unfitted calibrator")
         if (
             not torch.is_tensor(value)
+            or value.layout != torch.strided
             or not value.is_floating_point()
             or not torch.isfinite(value.to(torch.float32)).all()
         ):
@@ -158,9 +160,11 @@ def save_calibrator(calibrator: Calibrator, path: PathLike) -> None:
         "fitted": calibrator.is_fitted,
         "state": _to_cpu(calibrator._get_state()),
     }
-    tmp_path = f"{os.fspath(path)}.tmp"
+    # A unique, exclusively created name keeps concurrent saves from colliding.
+    tmp_path = f"{os.fspath(path)}.{os.getpid()}.{uuid.uuid4().hex}.tmp"
     try:
-        torch.save(payload, tmp_path)
+        with open(tmp_path, "xb") as handle:
+            torch.save(payload, handle)
         os.replace(tmp_path, os.fspath(path))
     finally:
         if os.path.exists(tmp_path):
@@ -191,6 +195,11 @@ def load_calibrator(
         raise FileNotFoundError(f"calibrator file not found: {path}")
 
     location: MapLocation = "cpu" if map_location is None else map_location
+    if not isinstance(location, (str, torch.device)):
+        raise TypeError("map_location must be a device string or torch.device")
+    device = torch.device(location)
+    if device.type == "cuda" and not torch.cuda.is_available():
+        raise RuntimeError(f"map_location={location!r} but CUDA is not available")
     try:
         payload = torch.load(os.fspath(path), map_location=location, weights_only=True)
     except (pickle.UnpicklingError, EOFError, IndexError, RuntimeError) as exc:
@@ -238,7 +247,6 @@ def load_calibrator(
     config = dict(payload["config"])
     if "device" in config:
         raise ValueError("saved config must not override map_location")
-    device = torch.device(location) if isinstance(location, (str, torch.device)) else None
     try:
         calibrator = cls(device=device, **config)
     except (TypeError, ValueError, OverflowError) as exc:

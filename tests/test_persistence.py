@@ -129,3 +129,34 @@ def test_failed_save_keeps_existing_file(tmp_path, monkeypatch):
     with pytest.raises(RuntimeError, match="simulated write failure"):
         cal.save(path)
     assert path.read_bytes() == before
+    assert [f.name for f in tmp_path.iterdir()] == ["cal.pt"]
+
+
+def test_save_ignores_a_stale_fixed_name_temporary(tmp_path):
+    cal = MatrixScaling(device="cpu")
+    path = tmp_path / "cal.pt"
+    (tmp_path / "cal.pt.tmp").mkdir()  # 0.1.1 always wrote <path>.tmp
+    cal.save(path)
+    assert load_calibrator(path).calibrator_id == "matrix_scaling"
+
+
+@pytest.mark.filterwarnings("ignore:Validating sparse tensor invariants:UserWarning")
+def test_sparse_saved_state_raises_value_error(tmp_path):
+    logits, labels = synthetic_logits((2, 3, 5, 5), seed=37)
+    path = tmp_path / "sparse.pt"
+    MatrixScaling(device="cpu").fit(logits, labels).save(path)
+    payload = torch.load(path, weights_only=True)
+    payload["state"]["weight"] = payload["state"]["weight"].to_sparse()
+    torch.save(payload, path)
+    with pytest.raises(ValueError, match="finite floating tensor"):
+        load_calibrator(path)
+
+
+def test_invalid_map_location_rejected(tmp_path):
+    path = tmp_path / "cal.pt"
+    MatrixScaling(device="cpu").save(path)
+    with pytest.raises(TypeError, match="map_location"):
+        load_calibrator(path, map_location={"cuda:0": "cpu"})
+    if not torch.cuda.is_available():
+        with pytest.raises(RuntimeError, match="CUDA is not available"):
+            load_calibrator(path, map_location="cuda")

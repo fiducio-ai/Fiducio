@@ -157,7 +157,10 @@ def reliability_curve(
     idx = torch.bucketize(confidence, edges[1:-1].contiguous(), out_int32=True)
 
     counts = torch.bincount(idx, minlength=n_bins)
-    sum_conf = torch.bincount(idx, weights=confidence, minlength=n_bins)
+    # Weighted bincount has no deterministic CUDA kernel; scatter_add_ does.
+    sum_conf = torch.zeros(n_bins, dtype=torch.float64, device=p.device).scatter_add_(
+        0, idx.long(), confidence
+    )
     sum_acc = torch.bincount(idx[correct], minlength=n_bins).double()
     safe_counts = counts.clamp_min(1)
     bin_conf = sum_conf / safe_counts

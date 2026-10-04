@@ -22,8 +22,9 @@ import torch
 from fiducio import TemperatureScaling
 from fiducio.plots import reliability_diagram
 
-logits = torch.randn(8, 4, 64, 64) * 4
-labels = logits.argmax(dim=1)
+signal = torch.randn(8, 4, 64, 64)
+labels = signal.argmax(dim=1)
+logits = (signal + torch.randn(8, 4, 64, 64)) * 4  # over-confident
 
 calibrator = TemperatureScaling().fit(logits, labels)
 

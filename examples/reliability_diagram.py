@@ -29,10 +29,11 @@ from fiducio.plots import reliability_diagram
 
 def main() -> None:
     torch.manual_seed(0)
-    # Over-confident synthetic logits and matching labels.
+    # Over-confident synthetic logits: scaled-up scores from a noisy copy of the
+    # signal that defines the labels.
     signal = torch.randn(16, 4, 32, 32)
     labels = signal.argmax(dim=1)
-    logits = signal * 4.0 + torch.randn(16, 4, 32, 32) * 0.5
+    logits = (signal + torch.randn(16, 4, 32, 32)) * 4.0
 
     calibrator = TemperatureScaling(device="cpu").fit(logits[:8], labels[:8])
     logits, labels = logits[8:], labels[8:]

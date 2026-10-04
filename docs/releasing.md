@@ -11,7 +11,8 @@ Releases are manual and gated. No workflow uploads to PyPI on its own.
       in the sdist and absent from the wheel;
     - ruff on Python 3.11 and mypy on Python 3.10–3.14;
     - the full test suite and the examples against the *installed wheel*, on
-      Python 3.10–3.14 with the locked PyTorch, plus one run with the minimum
+      Python 3.10–3.14 with the locked PyTorch (Linux, plus macOS and Windows on
+      3.12), plus one run with the minimum
       supported PyTorch 2.10;
     - `mkdocs build --strict` from the checkout and from the unpacked sdist,
       the project-page check (`scripts/check_site.py`), and a wheel rebuilt from

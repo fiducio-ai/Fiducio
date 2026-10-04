@@ -209,3 +209,12 @@ def test_default_ignore_index_is_exported():
     from fiducio.utils import DEFAULT_IGNORE_INDEX
 
     assert DEFAULT_IGNORE_INDEX == -100
+
+
+def test_max_iter_accepts_numpy_integers_only():
+    assert TemperatureScaling(max_iter=np.int64(5)).max_iter == 5
+    for bad in (True, 5.0, "5"):
+        with pytest.raises(ValueError, match="must be an integer"):
+            TemperatureScaling(max_iter=bad)
+    with pytest.raises(ValueError, match="> 0"):
+        TemperatureScaling(max_iter=-1)

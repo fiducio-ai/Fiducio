@@ -9,6 +9,7 @@ default to sensible per-optimizer values when left as ``None``.
 from __future__ import annotations
 
 import math
+import operator
 from collections.abc import Callable
 
 import torch
@@ -43,8 +44,13 @@ def resolve_optimizer(
     name = str(optimizer).lower()
     if name not in VALID_OPTIMIZERS:
         raise ValueError(f"optimizer must be one of {VALID_OPTIMIZERS}, got {optimizer!r}")
-    if max_iter is not None and (isinstance(max_iter, bool) or not isinstance(max_iter, int)):
-        raise ValueError("max_iter must be an integer")
+    if max_iter is not None:
+        try:  # operator.index accepts numpy integers
+            if isinstance(max_iter, bool):
+                raise TypeError
+            max_iter = operator.index(max_iter)
+        except TypeError:
+            raise ValueError("max_iter must be an integer") from None
     resolved_lr = (adam_lr if name == "adam" else lbfgs_lr) if lr is None else float(lr)
     resolved_iter = (
         (adam_max_iter if name == "adam" else lbfgs_max_iter) if max_iter is None else int(max_iter)

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fiducio"
-version = "0.1.1"
+version = "0.2.0"
 description = "Model-agnostic post-hoc calibration for 2D and 3D semantic segmentation"
 readme = "README.md"
 requires-python = ">=3.10"

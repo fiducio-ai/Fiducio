@@ -1,8 +1,8 @@
 cff-version: 1.2.0
 message: "If you use Fiducio in your research, please cite the paper below."
 title: "Fiducio: Model-agnostic post-hoc calibration for 2D and 3D semantic segmentation"
-version: "0.1.1"
-date-released: "2026-09-21"
+version: "0.2.0"
+date-released: "2026-10-04"
 authors:
   - name: "Fiducio maintainers (fiducio-ai)"
 repository-code: "https://github.com/fiducio-ai/Fiducio"

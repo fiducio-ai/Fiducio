@@ -13,22 +13,46 @@ from typing import Any
 
 import torch
 
-from ..utils import flatten_valid, safe_log, to_tensor, validate_predictions, validate_targets
+from ..utils import safe_log, to_tensor, validate_predictions, validate_targets
 from ..utils.tensors import integer_targets
 
 
-def _flatten_valid(
+def _voxels(
     probs: Any,
     targets: Any,
     mask: Any | None,
     ignore_index: int,
-) -> tuple[torch.Tensor, torch.Tensor]:
-    p = to_tensor(probs, dtype=torch.float32).detach()
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor | None]:
+    """Validate inputs and return ``(probs, labels, valid)`` in their spatial layout.
+
+    Metrics reduce over the class axis before selecting valid voxels, so large
+    volumes are never copied into ``(N, C)`` rows. Labels at invalid voxels are
+    replaced by 0 so they can be used as gather indices; ``valid`` is ``None``
+    when every voxel is valid.
+    """
+    p = to_tensor(probs).detach()
+    if not p.is_floating_point():
+        p = p.float()
     m = None if mask is None else to_tensor(mask, device=p.device).bool()
     c = validate_predictions(p, input_type="probs", mask=m)
     y = integer_targets(targets, device=p.device)
     validate_targets(p, y, m, num_classes=c, ignore_index=ignore_index)
-    return flatten_valid(p, y, m, ignore_index)
+    if p.dtype not in (torch.float32, torch.float64):
+        p = p.float()
+    valid = y != ignore_index
+    if m is not None:
+        valid &= m
+    if bool(valid.all()):
+        return p, y, None
+    return p, y.masked_fill(~valid, 0), valid
+
+
+def _select(x: torch.Tensor, valid: torch.Tensor | None) -> torch.Tensor:
+    return x.reshape(-1) if valid is None else x[valid]
+
+
+def _true_class_probs(p: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+    return p.gather(1, y.unsqueeze(1)).squeeze(1)
 
 
 def negative_log_likelihood(
@@ -42,10 +66,10 @@ def negative_log_likelihood(
     Zero probabilities are floored at ``1e-12`` by :func:`fiducio.utils.safe_log`,
     capping the NLL at ~27.63 instead of ``inf``.
     """
-    p, y = _flatten_valid(probs, targets, mask, ignore_index)
-    if p.shape[0] == 0:
+    p, y, valid = _voxels(probs, targets, mask, ignore_index)
+    true_p = _select(_true_class_probs(p, y), valid).double()
+    if true_p.numel() == 0:
         return float("nan")
-    true_p = p.gather(1, y.unsqueeze(1)).squeeze(1)
     return float((-safe_log(true_p)).mean().item())
 
 
@@ -56,12 +80,13 @@ def brier_score(
     ignore_index: int = -100,
 ) -> float:
     """Mean multiclass Brier score over valid voxels."""
-    p, y = _flatten_valid(probs, targets, mask, ignore_index)
-    if p.shape[0] == 0:
+    p, y, valid = _voxels(probs, targets, mask, ignore_index)
+    if valid is not None and not bool(valid.any()):
         return float("nan")
-    one_hot = torch.zeros_like(p)
-    one_hot.scatter_(1, y.unsqueeze(1), 1.0)
-    return float((p - one_hot).square().sum(dim=1).mean().item())
+    # sum_c (p_c - onehot_c)^2 = ||p||^2 - 2 p_y + 1, without a one-hot copy of p.
+    sq_norm = _select(torch.linalg.vector_norm(p, dim=1), valid).double().square()
+    true_p = _select(_true_class_probs(p, y), valid).double()
+    return float((sq_norm - 2 * true_p + 1).mean().item())
 
 
 @dataclass
@@ -112,28 +137,23 @@ def reliability_curve(
     """
     if isinstance(n_bins, bool) or not isinstance(n_bins, int) or n_bins < 1:
         raise ValueError("n_bins must be an integer >= 1")
-    p, y = _flatten_valid(probs, targets, mask, ignore_index)
+    p, y, valid = _voxels(probs, targets, mask, ignore_index)
     # Construct the same float32 boundaries as before, then accumulate in double.
     edges = torch.linspace(0.0, 1.0, n_bins + 1, device=p.device).double()
-    if p.shape[0] == 0:
+    confidence, prediction = p.max(dim=1)
+    correct = _select(prediction == y, valid)
+    confidence = _select(confidence, valid).double()
+    if confidence.numel() == 0:
         zeros = torch.zeros(n_bins, dtype=torch.float64, device=p.device)
         return ReliabilityCurve(
             edges, zeros, zeros.clone(), zeros.long(), float("nan"), float("nan")
         )
-
-    confidence, prediction = p.max(dim=1)
-    confidence = confidence.double()
-    correct = (prediction == y).double()
     # Bin index in [0, n_bins - 1].
-    idx = torch.bucketize(confidence, edges[1:-1].contiguous(), right=False)
+    idx = torch.bucketize(confidence, edges[1:-1].contiguous(), out_int32=True)
 
-    counts = torch.zeros(n_bins, dtype=torch.int64, device=p.device).scatter_add_(
-        0, idx, torch.ones_like(idx)
-    )
-    sum_conf = torch.zeros(n_bins, dtype=torch.float64, device=p.device).scatter_add_(
-        0, idx, confidence
-    )
-    sum_acc = torch.zeros_like(sum_conf).scatter_add_(0, idx, correct)
+    counts = torch.bincount(idx, minlength=n_bins)
+    sum_conf = torch.bincount(idx, weights=confidence, minlength=n_bins)
+    sum_acc = torch.bincount(idx[correct], minlength=n_bins).double()
     safe_counts = counts.clamp_min(1)
     bin_conf = sum_conf / safe_counts
     bin_acc = sum_acc / safe_counts

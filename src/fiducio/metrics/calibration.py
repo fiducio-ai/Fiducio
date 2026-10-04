@@ -8,6 +8,7 @@ dimension 1) and integer labels of shape ``(B, *spatial)``, with optional
 
 from __future__ import annotations
 
+import operator
 from dataclasses import dataclass
 from typing import Any
 
@@ -135,7 +136,11 @@ def reliability_curve(
     for drawing reliability diagrams (see
     :func:`fiducio.plots.reliability_diagram`).
     """
-    if isinstance(n_bins, bool) or not isinstance(n_bins, int) or n_bins < 1:
+    try:  # operator.index accepts numpy integers
+        n_bins = -1 if isinstance(n_bins, bool) else operator.index(n_bins)
+    except TypeError:
+        n_bins = -1
+    if n_bins < 1:
         raise ValueError("n_bins must be an integer >= 1")
     p, y, valid = _voxels(probs, targets, mask, ignore_index)
     # Construct the same float32 boundaries as before, then accumulate in double.

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 
+import numpy as np
 import pytest
 import torch
 
@@ -138,8 +139,10 @@ def test_non_tensor_predictions_and_targets_rejected():
 def test_invalid_n_bins_rejected():
     probs = to_probs(synthetic_logits((2, 3, 4, 4), seed=28)[0])
     labels = torch.zeros(2, 4, 4, dtype=torch.long)
-    with pytest.raises(ValueError, match="n_bins"):
-        reliability_curve(probs, labels, n_bins=0)
+    for n_bins in (0, True, 2.0, "3"):
+        with pytest.raises(ValueError, match="n_bins"):
+            reliability_curve(probs, labels, n_bins=n_bins)
+    assert len(reliability_curve(probs, labels, n_bins=np.int64(4)).bin_counts) == 4
 
 
 def test_two_channel_from_binary_rejects_bad_input_type():

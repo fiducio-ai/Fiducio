@@ -12,7 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `unweighted_calibration_error`, the precise name of `average_calibration_error`
   (kept as an alias): the unweighted mean over non-empty uniform bins, not the
   adaptive ACE of other work.
-- Python 3.13 and 3.14 are declared and tested in CI.
+- Python 3.13 and 3.14 are declared and tested in CI, and the wheel is also
+  tested on macOS and Windows.
 
 ### Changed
 
@@ -41,6 +42,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ids are rejected.
 - The examples' synthetic data is now actually over-confident (it was
   under-confident, so temperature scaling sharpened it).
+- `save_calibrator` uses a unique temporary file, so concurrent saves to the
+  same path no longer collide.
+- `load_calibrator` rejects a non-device `map_location` with `TypeError` and a
+  CUDA `map_location` without CUDA with a clear `RuntimeError` (previously a
+  misleading "could not read" error); sparse saved tensors raise `ValueError`.
+- `n_bins` accepts numpy integers.
+- Order-preserving matrix scaling sorts stably, so tied classes are ranked the
+  same way on every device.
 
 ## [0.1.1] - 2026-09-21
 

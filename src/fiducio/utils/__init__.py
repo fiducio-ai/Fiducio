@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from .logging import get_logger
 from .tensors import (
+    DEFAULT_IGNORE_INDEX,
     apply_mask_to_probabilities,
     class_last_flatten,
     flatten_valid,
@@ -17,6 +18,7 @@ from .tensors import (
 )
 
 __all__ = [
+    "DEFAULT_IGNORE_INDEX",
     "apply_mask_to_probabilities",
     "class_last_flatten",
     "flatten_valid",

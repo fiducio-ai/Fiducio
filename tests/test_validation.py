@@ -194,3 +194,18 @@ def test_masked_out_padding_is_not_validated():
         assert torch.isfinite(out).all()
     with pytest.raises(ValueError, match="non-finite"):
         expected_calibration_error(padded_probs, labels)
+
+
+def test_float64_beyond_float32_range_rejected():
+    logits, labels = synthetic_logits((1, 3, 4, 4), seed=6)
+    logits = logits.double()
+    cal = TemperatureScaling(max_iter=5, device="cpu").fit(logits, labels)
+    logits[0, 0, 0, 0] = 1e39
+    with pytest.raises(ValueError, match="float32 range"):
+        cal.transform(logits)
+
+
+def test_default_ignore_index_is_exported():
+    from fiducio.utils import DEFAULT_IGNORE_INDEX
+
+    assert DEFAULT_IGNORE_INDEX == -100

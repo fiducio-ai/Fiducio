@@ -22,6 +22,7 @@ import torch
 
 ArrayLike = torch.Tensor | np.ndarray
 
+DEFAULT_IGNORE_INDEX = -100
 _PROB_SUM_ATOL = 1e-3
 
 
@@ -149,6 +150,11 @@ def validate_predictions(
     # overflow the exact check decides.
     if not torch.isfinite(values.sum()) and not torch.isfinite(values).all():
         raise ValueError("predictions contain non-finite values (nan/inf)")
+    if values.dtype == torch.float64 and values.numel():
+        # Calibrators compute in float32, where these values would overflow.
+        lo, hi = (float(v) for v in torch.aminmax(values))
+        if max(-lo, hi) > torch.finfo(torch.float32).max:
+            raise ValueError("predictions exceed the float32 range")
     if input_type == "probs" and values.numel():
         pmin = float(values.min())
         pmax = float(values.max())

@@ -119,31 +119,39 @@ class EnsembleTemperatureScaling(Calibrator):
 
     def _fit_weights(self, z_flat: torch.Tensor, y_flat: torch.Tensor, num_classes: int) -> None:
         temperature = max(self.temperature, _T_EPS)
-        p0 = F.softmax(z_flat / temperature, dim=1).detach()
-        p1 = F.softmax(z_flat, dim=1).detach()
-        p2 = torch.full_like(p0, 1.0 / float(num_classes))
+        uniform = 1.0 / float(num_classes)
+
+        def true_class_probs(z: torch.Tensor, y: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+            # The NLL only needs each component's probability of the true class.
+            # float64 keeps the small stage-2 loss changes above rounding noise, so
+            # L-BFGS line searches do not stall on some platforms.
+            index = y.unsqueeze(1)
+            scaled = F.softmax(z / temperature, dim=1).gather(1, index).squeeze(1)
+            original = F.softmax(z, dim=1).gather(1, index).squeeze(1)
+            return scaled.double(), original.double()
+
+        q0, q1 = true_class_probs(z_flat.detach(), y_flat)
         # Start next to the temperature-scaled distribution. The softmax gradient of
         # each weight scales with the weight itself, so the other weights must not
         # start at ~0 or the optimizer can never move them.
-        init_w = torch.tensor([1.0 - 2 * _W_INIT, _W_INIT, _W_INIT], device=self.device)
+        init_w = torch.tensor(
+            [1.0 - 2 * _W_INIT, _W_INIT, _W_INIT], dtype=torch.float64, device=self.device
+        )
         raw_w = torch.log(init_w).requires_grad_(True)
 
-        def loss_fn() -> torch.Tensor:
+        def mixture_nll(t0: torch.Tensor, t1: torch.Tensor) -> torch.Tensor:
             w = F.softmax(raw_w, dim=0)
-            p = (w[0] * p0 + w[1] * p1 + w[2] * p2).clamp_min(_EPS)
-            return F.nll_loss(torch.log(p), y_flat)
+            return -torch.log((w[0] * t0 + w[1] * t1 + w[2] * uniform).clamp_min(_EPS)).mean()
+
+        def loss_fn() -> torch.Tensor:
+            return mixture_nll(q0, q1)
 
         val_fn = None
         if self._val is not None:
-            z_val, y_val = self._val
-            v0 = F.softmax(z_val / temperature, dim=1)
-            v1 = F.softmax(z_val, dim=1)
-            v2 = torch.full_like(v0, 1.0 / float(num_classes))
+            v0, v1 = true_class_probs(*self._val)
 
             def val_fn() -> torch.Tensor:
-                w = F.softmax(raw_w, dim=0)
-                p = (w[0] * v0 + w[1] * v1 + w[2] * v2).clamp_min(_EPS)
-                return F.nll_loss(torch.log(p), y_val)
+                return mixture_nll(v0, v1)
 
         minimize(
             self.optimizer,
@@ -154,7 +162,7 @@ class EnsembleTemperatureScaling(Calibrator):
             val_fn=val_fn,
             stopping=self._stopping,
         )
-        self.weights = F.softmax(raw_w, dim=0).detach()
+        self.weights = F.softmax(raw_w, dim=0).detach().float()
 
     def _fit_core(self, z_flat: torch.Tensor, y_flat: torch.Tensor, num_classes: int) -> None:
         self._fit_temperature(z_flat, y_flat)

@@ -28,9 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   float32; float64 predictions beyond the float32 range are rejected.
 - Metrics no longer downcast float64 inputs to float32, and NLL and Brier
   accumulate in float64; values can differ from 0.1.1 by about 1e-6.
-- Metrics reduce over the class axis before selecting valid voxels, so ECE, ACE,
-  NLL and Brier use about 2–3.5× less peak memory on large unmasked volumes
-  (less with a mask).
+- Metrics and validation reduce over the class axis before selecting valid
+  voxels. On large volumes, peak extra memory drops by about 2–3× without a mask
+  (NLL 1.9×, ECE 2.4×, Brier 3.2× in our measurements) and by 1.1–2.5× with one.
 
 ### Fixed
 
@@ -51,7 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   target, so a failed save leaves an existing file intact and concurrent saves
   to the same path do not collide.
 - `max_iter=200.0` is rejected with "max_iter must be an integer".
-- `n_bins` accepts numpy integers.
+- `n_bins` and `max_iter` accept numpy integers.
 - Order-preserving matrix scaling sorts stably, so tied classes are ranked the
   same way on every device.
 - The examples' synthetic data is now actually over-confident (it was

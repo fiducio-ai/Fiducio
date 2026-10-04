@@ -189,7 +189,7 @@ For **SegFormer** they are the segmentation head logits, upsampled to the label
 resolution. In every case Fiducio only sees `(B, C, *spatial)` tensors and never
 needs to know the architecture.
 
-## Validation and numerical behavior (0.1.1)
+## Validation and numerical behavior
 
 Fitting detaches model outputs from autograd. Invalid labels, probability values
 and tensor layouts raise errors; integral floating labels remain accepted.

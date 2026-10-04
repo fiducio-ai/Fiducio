@@ -2,7 +2,7 @@
 
 [![Tests](https://github.com/fiducio-ai/Fiducio/actions/workflows/tests.yml/badge.svg)](https://github.com/fiducio-ai/Fiducio/actions/workflows/tests.yml)
 [![Docs](https://github.com/fiducio-ai/Fiducio/actions/workflows/docs.yml/badge.svg)](https://fiducio-ai.github.io/Fiducio/)
-[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/python-3.10%E2%80%933.14-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green)](https://github.com/fiducio-ai/Fiducio/blob/main/LICENSE)
 
 **Fiducio** is a model-agnostic Python library of **post-hoc calibrators for 2D

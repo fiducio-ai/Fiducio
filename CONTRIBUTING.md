@@ -7,8 +7,8 @@ up a development environment and the conventions we follow.
 
 Install [uv](https://docs.astral.sh/uv/getting-started/installation/) `0.12.3` or
 newer, matching `tool.uv.required-version`. CI pins `0.12.3` for lock
-reproducibility. The checkout defaults to Python 3.12; CI also checks Python 3.10
-and 3.11.
+reproducibility. The checkout defaults to Python 3.12; CI also checks Python 3.10,
+3.11, 3.13 and 3.14.
 
 ```bash
 git clone https://github.com/fiducio-ai/Fiducio.git

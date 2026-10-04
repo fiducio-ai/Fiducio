@@ -9,9 +9,9 @@ Releases are manual and gated. No workflow uploads to PyPI on its own.
     - Twine and a content check (`scripts/check_distribution.py`): license,
       `py.typed`, identical sources in the wheel and sdist, the project page shipped
       in the sdist and absent from the wheel;
-    - ruff and mypy on Python 3.10, 3.11 and 3.12;
+    - ruff on Python 3.11 and mypy on Python 3.10–3.14;
     - the full test suite and the examples against the *installed wheel*, on
-      Python 3.10–3.12 with the locked PyTorch, plus one run with the minimum
+      Python 3.10–3.14 with the locked PyTorch, plus one run with the minimum
       supported PyTorch 2.10;
     - `mkdocs build --strict` from the checkout and from the unpacked sdist,
       the project-page check (`scripts/check_site.py`), and a wheel rebuilt from

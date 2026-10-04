@@ -5,6 +5,43 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- `unweighted_calibration_error`, the precise name of `average_calibration_error`
+  (kept as an alias): the unweighted mean over non-empty uniform bins, not the
+  adaptive ACE of other work.
+- Python 3.13 and 3.14 are declared and tested in CI.
+
+### Changed
+
+- With a `mask`, prediction values are only validated at valid positions:
+  masked-out padding may hold anything (including NaN) and `transform` outputs 0
+  there.
+- The sum-to-1 tolerance for probabilities is widened to twice the machine
+  epsilon for float16/bfloat16 inputs, so half-precision softmax outputs are
+  accepted. Validation runs on the input dtype; computation is still float32.
+- Metrics reduce over the class axis before selecting valid voxels: ECE, ACE,
+  NLL and Brier use about 2–3.5× less peak memory on large volumes.
+
+### Fixed
+
+- ETS stage 2 starts next to the temperature-scaled distribution
+  (`w = [0.998, 0.001, 0.001]`). The 0.1.1 start (`softmax([1, 0, 0])`) could
+  return a map worse than the uncalibrated model after short fits; a one-hot
+  start would freeze the weights, since their gradient scales with the weights.
+- Loading a calibrator saved with float64 parameters now casts them to float32
+  instead of failing at transform time; unreadable/corrupt files and unknown
+  calibrator ids raise `ValueError` as documented.
+- `save_calibrator` writes atomically (temporary file then replace), so a crash
+  mid-save cannot corrupt an existing calibrator file.
+- `max_iter=200.0` is rejected with "max_iter must be an integer".
+- Initial values that are not representable in float32 and duplicate registry
+  ids are rejected.
+- The examples' synthetic data is now actually over-confident (it was
+  under-confident, so temperature scaling sharpened it).
+
 ## [0.1.1] - 2026-09-21
 
 Patch release. The public API (classes, functions and signatures) is unchanged.
@@ -16,9 +53,6 @@ Some invalid inputs that 0.1.0 accepted silently now raise `ValueError`.
 - `ReliabilityCurve` statistics are float64 and `bin_counts` is int64, all on
   the predictions' device (previously float32 on CPU). ECE/ACE are still Python floats,
   the bin convention is unchanged, and metrics without valid voxels still return NaN.
-- `average_calibration_error` is also available under its precise name
-  `unweighted_calibration_error`; it is the unweighted mean over non-empty
-  uniform bins, not the adaptive ACE of other work.
 
 ### Fixed
 
@@ -39,16 +73,6 @@ Some invalid inputs that 0.1.0 accepted silently now raise `ValueError`.
   is now numerically stable. Non-finite or out-of-range hyperparameters are rejected.
   Fits that produce a non-finite loss or non-finite parameters raise instead of
   returning a broken calibrator.
-- ETS stage 2 starts from the documented one-hot mixture weights; short fits no
-  longer return a map worse than the uncalibrated model.
-- Loading a calibrator saved with float64 parameters now casts them to float32
-  instead of failing at transform time; unreadable/corrupt files and unknown
-  calibrator ids raise `ValueError` as documented.
-- `save_calibrator` writes atomically (temporary file then replace), so a crash
-  mid-save cannot corrupt an existing calibrator file.
-- `max_iter=200.0` is rejected with "max_iter must be an integer".
-- Masked `transform` outputs are accepted as `input_type='probs'` inputs: masked
-  voxels are ignored in the sum check.
 
 ### Security
 

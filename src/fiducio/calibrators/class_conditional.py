@@ -407,7 +407,7 @@ class OrderPreservingMatrixScaling(_ClassConditionalBase):
     def _expert_logits(
         self, logp_rows: torch.Tensor, expert: int, b_c: torch.Tensor, mu_c: torch.Tensor
     ) -> torch.Tensor:
-        sorted_logp, perm = torch.sort(logp_rows, dim=1, descending=True)
+        sorted_logp, perm = torch.sort(logp_rows, dim=1, descending=True, stable=True)
         margins = (sorted_logp[:, :-1] - sorted_logp[:, 1:]).clamp_min(0.0)
         tilde = margins.matmul(b_c.t()) + mu_c
         h_sorted = torch.zeros_like(logp_rows)

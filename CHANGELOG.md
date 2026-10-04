@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `unweighted_calibration_error`, the precise name of `average_calibration_error`
   (kept as an alias): the unweighted mean over non-empty uniform bins, not the
   adaptive ACE of other work.
+- `validate_predictions` takes an optional `mask=`.
 - Python 3.13 and 3.14 are declared and tested in CI, and the wheel is also
   tested on macOS and Windows.
 
@@ -19,12 +20,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - With a `mask`, prediction values are only validated at valid positions:
   masked-out padding may hold anything (including NaN) and `transform` outputs 0
-  there.
+  there (`apply_mask_to_probabilities` fills rather than multiplies). Positions
+  excluded only through `ignore_index` are still validated.
 - The sum-to-1 tolerance for probabilities is widened to twice the machine
   epsilon for float16/bfloat16 inputs, so half-precision softmax outputs are
-  accepted. Validation runs on the input dtype; computation is still float32.
-- Metrics reduce over the class axis before selecting valid voxels: ECE, ACE,
-  NLL and Brier use about 2–3.5× less peak memory on large volumes.
+  accepted. Validation runs on the input dtype and calibrators still compute in
+  float32; float64 predictions beyond the float32 range are rejected.
+- Metrics no longer downcast float64 inputs to float32, and NLL and Brier
+  accumulate in float64; values can differ from 0.1.1 by about 1e-6.
+- Metrics reduce over the class axis before selecting valid voxels, so ECE, ACE,
+  NLL and Brier use about 2–3.5× less peak memory on large unmasked volumes
+  (less with a mask).
 
 ### Fixed
 
@@ -32,26 +38,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`w = [0.998, 0.001, 0.001]`). The 0.1.1 start (`softmax([1, 0, 0])`) could
   return a map worse than the uncalibrated model after short fits; a one-hot
   start would freeze the weights, since their gradient scales with the weights.
-  Stage 2 runs in float64 on the true-class probabilities only, so L-BFGS no
-  longer stalls on some platforms and the stage needs C times less memory.
-- Loading a calibrator saved with float64 parameters now casts them to float32
-  instead of failing at transform time; unreadable/corrupt files and unknown
-  calibrator ids raise `ValueError` as documented.
-- `save_calibrator` writes atomically (temporary file then replace), so a crash
-  mid-save cannot corrupt an existing calibrator file.
+  Stage 2 runs in float64 on the true-class probabilities only, so L-BFGS does
+  not stall on some platforms and the stage needs C times less memory.
+- `load_calibrator`:
+  - casts parameters saved in float64 to float32 instead of failing at
+    transform time;
+  - raises `ValueError` for unreadable/corrupt files, unknown calibrator ids and
+    sparse saved tensors;
+  - raises `TypeError` for a `map_location` that is not a device, and a clear
+    `RuntimeError` for a CUDA `map_location` when CUDA is unavailable.
+- `save_calibrator` writes to a unique temporary file, syncs it and replaces the
+  target, so a failed save leaves an existing file intact and concurrent saves
+  to the same path do not collide.
 - `max_iter=200.0` is rejected with "max_iter must be an integer".
-- Initial values that are not representable in float32 and duplicate registry
-  ids are rejected.
-- The examples' synthetic data is now actually over-confident (it was
-  under-confident, so temperature scaling sharpened it).
-- `save_calibrator` uses a unique temporary file, so concurrent saves to the
-  same path no longer collide.
-- `load_calibrator` rejects a non-device `map_location` with `TypeError` and a
-  CUDA `map_location` without CUDA with a clear `RuntimeError` (previously a
-  misleading "could not read" error); sparse saved tensors raise `ValueError`.
 - `n_bins` accepts numpy integers.
 - Order-preserving matrix scaling sorts stably, so tied classes are ranked the
   same way on every device.
+- The examples' synthetic data is now actually over-confident (it was
+  under-confident, so temperature scaling sharpened it).
 
 ## [0.1.1] - 2026-09-21
 

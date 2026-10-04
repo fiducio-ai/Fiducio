@@ -32,6 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`w = [0.998, 0.001, 0.001]`). The 0.1.1 start (`softmax([1, 0, 0])`) could
   return a map worse than the uncalibrated model after short fits; a one-hot
   start would freeze the weights, since their gradient scales with the weights.
+  Stage 2 runs in float64 on the true-class probabilities only, so L-BFGS no
+  longer stalls on some platforms and the stage needs C times less memory.
 - Loading a calibrator saved with float64 parameters now casts them to float32
   instead of failing at transform time; unreadable/corrupt files and unknown
   calibrator ids raise `ValueError` as documented.

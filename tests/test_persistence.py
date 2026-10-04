@@ -6,7 +6,7 @@ import pytest
 import torch
 
 from conftest import ALL_CALIBRATOR_IDS, make_calibrator, synthetic_logits
-from fiducio import load_calibrator, save_calibrator
+from fiducio import MatrixScaling, load_calibrator, save_calibrator
 from fiducio.persistence import FORMAT_NAME
 
 
@@ -78,3 +78,86 @@ def test_unknown_calibrator_id_raises():
 
     with pytest.raises(KeyError, match="unknown calibrator id"):
         get_calibrator_class("not_a_real_calibrator")
+
+
+def test_unknown_calibrator_id_in_payload_raises_value_error(tmp_path):
+    logits, labels = synthetic_logits((2, 3, 5, 5), seed=34)
+    cal = MatrixScaling(device="cpu").fit(logits, labels)
+    path = tmp_path / "unknown_id.pt"
+    cal.save(path)
+    payload = torch.load(path, weights_only=True)
+    payload["calibrator_id"] = "not_a_real_calibrator"
+    torch.save(payload, path)
+    with pytest.raises(ValueError, match="unsupported calibrator id"):
+        load_calibrator(path)
+
+
+def test_float64_saved_state_is_cast_on_load(tmp_path):
+    logits, labels = synthetic_logits((2, 3, 5, 5), seed=35)
+    cal = MatrixScaling(device="cpu").fit(logits, labels)
+    expected = cal.transform(logits)
+    path = tmp_path / "float64.pt"
+    cal.save(path)
+    payload = torch.load(path, weights_only=True)
+    payload["state"] = {
+        key: value.double() if torch.is_tensor(value) else value
+        for key, value in payload["state"].items()
+    }
+    torch.save(payload, path)
+    loaded = load_calibrator(path)
+    assert torch.allclose(expected, loaded.transform(logits), atol=1e-6)
+
+
+def test_junk_file_raises_value_error(tmp_path):
+    path = tmp_path / "junk.pt"
+    path.write_bytes(b"\x00\x01\x02not a torch file")
+    with pytest.raises(ValueError):
+        load_calibrator(path)
+
+
+def test_failed_save_keeps_existing_file(tmp_path, monkeypatch):
+    logits, labels = synthetic_logits((2, 3, 5, 5), seed=36)
+    cal = MatrixScaling(device="cpu").fit(logits, labels)
+    path = tmp_path / "cal.pt"
+    cal.save(path)
+    before = path.read_bytes()
+
+    def fail_save(payload, handle):
+        handle.write(b"partial")  # fail mid-write, after touching the output
+        raise RuntimeError("simulated write failure")
+
+    monkeypatch.setattr("fiducio.persistence.torch.save", fail_save)
+    with pytest.raises(RuntimeError, match="simulated write failure"):
+        cal.save(path)
+    assert path.read_bytes() == before
+    assert [f.name for f in tmp_path.iterdir()] == ["cal.pt"]
+
+
+def test_save_ignores_a_stale_temporary(tmp_path):
+    cal = MatrixScaling(device="cpu")
+    path = tmp_path / "cal.pt"
+    (tmp_path / "cal.pt.tmp").mkdir()  # a fixed temporary name would collide
+    cal.save(path)
+    assert load_calibrator(path).calibrator_id == "matrix_scaling"
+
+
+@pytest.mark.filterwarnings("ignore:Validating sparse tensor invariants:UserWarning")
+def test_sparse_saved_state_raises_value_error(tmp_path):
+    logits, labels = synthetic_logits((2, 3, 5, 5), seed=37)
+    path = tmp_path / "sparse.pt"
+    MatrixScaling(device="cpu").fit(logits, labels).save(path)
+    payload = torch.load(path, weights_only=True)
+    payload["state"]["weight"] = payload["state"]["weight"].to_sparse()
+    torch.save(payload, path)
+    with pytest.raises(ValueError, match="finite floating tensor"):
+        load_calibrator(path)
+
+
+def test_invalid_map_location_rejected(tmp_path):
+    path = tmp_path / "cal.pt"
+    MatrixScaling(device="cpu").save(path)
+    with pytest.raises(TypeError, match="map_location"):
+        load_calibrator(path, map_location={"cuda:0": "cpu"})
+    if not torch.cuda.is_available():
+        with pytest.raises(RuntimeError, match="CUDA is not available"):
+            load_calibrator(path, map_location="cuda")

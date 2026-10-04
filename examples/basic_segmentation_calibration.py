@@ -34,13 +34,14 @@ def make_overconfident_logits(
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """Return ``(B, C, H, W)`` logits and ``(B, H, W)`` labels.
 
-    The logits are deliberately over-confident (scaled up) so calibration has
-    something to correct.
+    The logits only see a noisy copy of the signal that defines the labels, and
+    are scaled up, so they are over-confident and calibration has something to
+    correct.
     """
     g = torch.Generator().manual_seed(seed)
     signal = torch.randn(n, num_classes, size, size, generator=g)
     labels = signal.argmax(dim=1)
-    logits = signal * 4.0 + torch.randn(n, num_classes, size, size, generator=g) * 0.5
+    logits = (signal + torch.randn(n, num_classes, size, size, generator=g)) * 4.0
     return logits, labels
 
 

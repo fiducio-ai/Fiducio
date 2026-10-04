@@ -19,8 +19,7 @@ def _require_matplotlib() -> Any:
         import matplotlib.pyplot as plt
     except ImportError as exc:  # pragma: no cover - exercised without the extra
         raise ImportError(
-            "plotting requires matplotlib; install it with "
-            '`pip install "fiducio[plots]"`'
+            'plotting requires matplotlib; install it with `pip install "fiducio[plots]"`'
         ) from exc
     return plt
 
@@ -55,7 +54,7 @@ def reliability_diagram(
     metric:
         Which calibration error to annotate the panel with: ``"ece"``
         (population-weighted, the default), ``"ace"`` (unweighted mean over
-        non-empty bins — see :func:`fiducio.average_calibration_error`), or
+        non-empty bins — see :func:`fiducio.unweighted_calibration_error`), or
         ``None`` to omit the annotation.
 
     Returns
@@ -63,6 +62,8 @@ def reliability_diagram(
     matplotlib.axes.Axes
         The axes the diagram was drawn on.
     """
+    if metric not in (None, "ece", "ace"):
+        raise ValueError(f"metric must be 'ece', 'ace' or None, got {metric!r}")
     plt = _require_matplotlib()
     curve = reliability_curve(probs, targets, mask, ignore_index, n_bins)
 
@@ -106,8 +107,6 @@ def reliability_diagram(
             label, value = "ECE", curve.ece
         elif metric == "ace":
             label, value = "ACE", curve.ace
-        else:
-            raise ValueError(f"metric must be 'ece', 'ace' or None, got {metric!r}")
         ax.text(
             0.05,
             0.95,

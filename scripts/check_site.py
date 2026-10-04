@@ -1,4 +1,5 @@
 """Check the built paper page, its relative assets and byte-for-byte copy."""
+
 from __future__ import annotations
 
 import argparse

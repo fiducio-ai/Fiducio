@@ -9,8 +9,9 @@ all voxels predicted with confidence 0.9, are about 90% actually correct?
 *Post-hoc* calibration leaves the trained model untouched. It fits a small
 transform `g` on top of the frozen model so that `g(model output)` is
 better-calibrated. Because the segmentation map (the argmax) is often unchanged —
-and is *guaranteed* unchanged by some calibrators — you can calibrate a deployed
-model without affecting its Dice/IoU.
+and is unchanged by some calibrators up to floating-point ties — you can
+calibrate a deployed model without affecting the Dice/IoU of its argmax
+segmentation.
 
 ## You need a separate, labelled calibration set
 
@@ -24,7 +25,9 @@ because the model is already over-confident there. The usual recipe:
 4. `fit` a Fiducio calibrator on them.
 5. Evaluate calibration on a separate **test split**.
 
-A few dozen labelled volumes are often enough for the simpler calibrators.
+A few dozen labelled volumes are often enough for the simpler calibrators;
+the paper fitted 50 held-out cases, and the expressive class-conditional
+calibrators (CDC, CMSap, CMSop) need a reasonably sized calibration set.
 
 ## Logits versus probabilities
 
@@ -58,6 +61,7 @@ single-channel sigmoid output, convert it first with
 
 ```python
 from fiducio import two_channel_from_binary
+
 two_channel = two_channel_from_binary(sigmoid_logits, input_type="logits")  # (B, 2, *)
 ```
 
@@ -106,17 +110,25 @@ rate decayed on plateaus):
 from fiducio import ClassConditionalMatrixScaling
 
 calibrator = ClassConditionalMatrixScaling(
-    max_iter=2000,      # upper bound
-    patience=20,        # stop after 20 steps without validation-NLL improvement
-    min_delta=0.0,      # minimum decrease that counts as an improvement
-    lr_patience=10,     # optional: decay the learning rate on plateaus ...
-    lr_factor=0.1,      # ... by this factor
+    max_iter=2000,  # upper bound
+    patience=20,  # stop after 20 steps without validation-NLL improvement
+    min_delta=0.0,  # minimum decrease that counts as an improvement
+    lr_patience=10,  # optional: decay the learning rate on plateaus ...
+    lr_factor=0.1,  # ... by this factor
 )
 calibrator.fit(
-    cal_logits, cal_labels,
-    val_predictions=val_logits, val_targets=val_labels, val_mask=None,
+    cal_logits,
+    cal_labels,
+    val_predictions=val_logits,
+    val_targets=val_labels,
+    val_mask=None,
 )
 ```
+
+This reproduces only the Adam + validation-NLL early-stopping recipe; the
+paper's case batching, class weighting, schedules, clipping and hyperparameter
+search are not part of the library (see the
+[implementation guide](https://github.com/fiducio-ai/Fiducio/blob/main/reproducibility/README.md)).
 
 - The monitored quantity is the plain cross-entropy (NLL) on the validation set,
   without regularization, evaluated after every Adam step. The iterate with the
@@ -142,7 +154,9 @@ combine a larger `max_iter` with `patience` for those.
 If you need the calibrated **logits** instead — for example to feed another loss
 — use `decision_function`, which returns pre-softmax scores of the same shape;
 `softmax(decision_function(x), dim=1)` equals `transform(x)`. Both run under
-`torch.no_grad()` and never build an autograd graph.
+`torch.no_grad()` and never build an autograd graph. `decision_function` does not
+accept a mask (a logit of 0 is meaningful), so argmax over its output at masked
+voxels is meaningless; use `transform` when masks matter.
 
 ## Memory and large volumes
 
@@ -176,10 +190,14 @@ For **SegFormer** they are the segmentation head logits, upsampled to the label
 resolution. In every case Fiducio only sees `(B, C, *spatial)` tensors and never
 needs to know the architecture.
 
-## Validation and numerical behavior (0.1.1)
+## Validation and numerical behavior
 
 Fitting detaches model outputs from autograd. Invalid labels, probability values
 and tensor layouts raise errors; integral floating labels remain accepted.
+With a `mask`, values are only checked at valid positions, so masked-out padding
+may hold anything (including NaN) and comes out of `transform` as 0. The
+sum-to-1 tolerance for probabilities is `1e-3`, widened to twice the machine
+epsilon for float16/bfloat16 inputs.
 A failed refit preserves the complete previous fitted state. Non-finite losses
 or learned parameters raise an error rather than producing a fitted object.
 

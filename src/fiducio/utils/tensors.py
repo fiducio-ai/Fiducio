@@ -57,7 +57,13 @@ def to_tensor(
 
 
 def safe_log(probs: torch.Tensor, eps: float = 1e-12) -> torch.Tensor:
-    """Numerically stable log of probabilities."""
+    """Numerically stable log of probabilities.
+
+    Values are floored at ``eps`` (``1e-12``): a zero probability maps to
+    ``log(1e-12) ~ -27.63``, so the NLL is capped at ~27.63 instead of
+    ``inf`` and probability-space calibrators map ``p = 0`` to a small non-zero
+    probability.
+    """
     return torch.log(probs.clamp_min(eps))
 
 
@@ -84,8 +90,9 @@ def integer_targets(targets: ArrayLike, *, device: torch.device) -> torch.Tensor
     y = to_tensor(targets, device=device)
     if y.is_complex() or not torch.isfinite(y).all():
         raise ValueError("targets must contain finite integer labels")
-    if y.is_floating_point() and (not torch.equal(y, y.trunc()) or
-                                 (y >= 2**63).any() or (y < -(2**63)).any()):
+    if y.is_floating_point() and (
+        not torch.equal(y, y.trunc()) or (y >= 2**63).any() or (y < -(2**63)).any()
+    ):
         raise ValueError("targets must contain integer labels representable in int64")
     return y.long()
 
@@ -102,8 +109,14 @@ def validate_predictions(
     *,
     input_type: str,
     expected_num_classes: int | None = None,
+    mask: torch.Tensor | None = None,
 ) -> int:
     """Validate a predictions tensor and return the number of classes.
+
+    When ``mask`` is given, values are only checked at valid (``True``)
+    positions, so masked-out padding may hold anything, including NaN. For
+    ``input_type="probs"`` the sum-to-1 tolerance is ``1e-3``, widened for
+    half-precision inputs to cover their rounding error.
 
     Raises
     ------
@@ -128,18 +141,37 @@ def validate_predictions(
             f"this calibrator was fitted for C={expected_num_classes} classes, "
             f"but received C={num_classes}"
         )
-    if not torch.isfinite(predictions).all():
+    validate_mask(predictions, mask)
+    valid = None if mask is None else mask.to(torch.bool)
+
+    def at_valid(per_voxel: torch.Tensor) -> torch.Tensor:
+        # Reduce over the class axis first, so masks never copy (N, C) rows.
+        return per_voxel if valid is None else per_voxel[valid]
+
+    acc = torch.float64 if predictions.dtype == torch.float64 else torch.float32
+    sums = at_valid(predictions.sum(dim=1, dtype=acc))
+    # A finite per-voxel sum proves that voxel finite; on overflow the exact
+    # check decides.
+    if (
+        not torch.isfinite(sums).all()
+        and not at_valid(torch.isfinite(predictions).all(dim=1)).all()
+    ):
         raise ValueError("predictions contain non-finite values (nan/inf)")
-    if input_type == "probs" and predictions.numel():
-        pmin = float(predictions.min())
-        pmax = float(predictions.max())
-        if pmin < 0.0 or pmax > 1.0:
+    if not sums.numel():
+        return num_classes
+    lo = float(at_valid(predictions.amin(dim=1)).min())
+    hi = float(at_valid(predictions.amax(dim=1)).max())
+    if predictions.dtype == torch.float64 and max(-lo, hi) > torch.finfo(torch.float32).max:
+        # Calibrators compute in float32, where these values would overflow.
+        raise ValueError("predictions exceed the float32 range")
+    if input_type == "probs":
+        if lo < 0.0 or hi > 1.0:
             raise ValueError(
                 "input_type='probs' but values fall outside [0, 1]; "
                 "pass input_type='logits' for unnormalised scores"
             )
-        sums = predictions.sum(dim=1)
-        if not torch.allclose(sums, torch.ones_like(sums), atol=_PROB_SUM_ATOL, rtol=0):
+        atol = max(_PROB_SUM_ATOL, 2 * torch.finfo(predictions.dtype).eps)
+        if float(sums.sub_(1.0).abs_().max()) > atol:
             raise ValueError(
                 "input_type='probs' but probabilities do not sum to 1 along the "
                 "class axis (dimension 1)"
@@ -169,13 +201,10 @@ def validate_targets(
     if mask is not None:
         valid = valid & mask.to(torch.bool)
     if valid.any():
-        valid_labels = targets[valid]
-        lo = int(valid_labels.min())
-        hi = int(valid_labels.max())
+        valid_labels = targets if valid.all() else targets[valid]
+        lo, hi = (int(v) for v in torch.aminmax(valid_labels))
         if lo < 0 or hi >= num_classes:
-            raise ValueError(
-                f"valid labels must lie in [0, {num_classes - 1}]; got [{lo}, {hi}]"
-            )
+            raise ValueError(f"valid labels must lie in [0, {num_classes - 1}]; got [{lo}, {hi}]")
 
 
 def class_last_flatten(z: torch.Tensor) -> tuple[torch.Tensor, tuple[int, ...]]:
@@ -218,9 +247,7 @@ def flatten_valid(
     return flat[valid], targets_flat[valid].long()
 
 
-def apply_mask_to_probabilities(
-    probs: torch.Tensor, mask: torch.Tensor | None
-) -> torch.Tensor:
+def apply_mask_to_probabilities(probs: torch.Tensor, mask: torch.Tensor | None) -> torch.Tensor:
     """Zero out probabilities at masked-out (``False``) positions.
 
     ``mask`` has shape ``(B, *spatial)`` and is broadcast across the class axis.
@@ -230,13 +257,10 @@ def apply_mask_to_probabilities(
     if mask is None:
         return probs
     validate_mask(probs, mask)
-    mask_b = mask.to(dtype=probs.dtype).unsqueeze(1)
-    return probs * mask_b
+    return probs.masked_fill(~mask.to(torch.bool).unsqueeze(1), 0.0)
 
 
-def two_channel_from_binary(
-    scores: ArrayLike, *, input_type: str = "logits"
-) -> torch.Tensor:
+def two_channel_from_binary(scores: ArrayLike, *, input_type: str = "logits") -> torch.Tensor:
     """Convert single-channel binary outputs to the two-channel form Fiducio uses.
 
     Fiducio represents binary segmentation as two channels (``C = 2``). Use this

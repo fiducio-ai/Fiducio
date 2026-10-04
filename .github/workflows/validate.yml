@@ -35,7 +35,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ["3.10", "3.11", "3.12"]
+        python: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -46,22 +46,36 @@ jobs:
           enable-cache: true
           python-version: ${{ matrix.python }}
       - run: uv sync --locked
-      - run: uv run --no-sync ruff check .
+      - if: matrix.python == '3.11'
+        run: uv run --no-sync ruff check .
+      - if: matrix.python == '3.11'
+        run: uv run --no-sync ruff format --check .
       # Each interpreter checks against its own locked dependency stubs.
       - run: uv run --no-sync mypy --python-version ${{ matrix.python }}
 
   wheel-tests:
-    name: Wheel tests (${{ matrix.python }}, ${{ matrix.torch }})
+    name: Wheel tests (${{ matrix.os }}, ${{ matrix.python }}, ${{ matrix.torch }})
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     strategy:
       fail-fast: false
       matrix:
-        python: ["3.10", "3.11", "3.12"]
+        os: [ubuntu-latest]
+        python: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         torch: ["locked"]
         include:
-          - python: "3.10"
+          - os: ubuntu-latest
+            python: "3.10"
             torch: "minimum"
+          - os: macos-latest
+            python: "3.12"
+            torch: "locked"
+          - os: windows-latest
+            python: "3.12"
+            torch: "locked"
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -80,6 +94,10 @@ jobs:
         if: matrix.torch == 'minimum'
         run: uv pip install 'torch==2.10.0+cpu' --index https://download.pytorch.org/whl/cpu
       - run: uv pip install --no-deps dist/*.whl
+      - name: Read the expected version from pyproject.toml
+        run: |
+          expected=$(sed -n 's/^version = "\(.*\)"/\1/p' pyproject.toml)
+          echo "EXPECTED_VERSION=$expected" >> "$GITHUB_ENV"
       - name: Test the installed wheel outside the source tree
         env:
           OMP_NUM_THREADS: "1"
@@ -87,8 +105,9 @@ jobs:
           MPLBACKEND: Agg
         run: |
           python="$GITHUB_WORKSPACE/.venv/bin/python"
+          if [ "$RUNNER_OS" = "Windows" ]; then python="$GITHUB_WORKSPACE/.venv/Scripts/python.exe"; fi
           cd "$RUNNER_TEMP"
-          "$python" -c 'import fiducio; from pathlib import Path; assert "site-packages" in Path(fiducio.__file__).parts; assert fiducio.__version__ == "0.1.1"'
+          "$python" -c 'import os, fiducio; from pathlib import Path; assert "site-packages" in Path(fiducio.__file__).parts; assert fiducio.__version__ == os.environ["EXPECTED_VERSION"], (fiducio.__version__, os.environ["EXPECTED_VERSION"])'
           "$python" -m pytest "$GITHUB_WORKSPACE/tests" -c "$GITHUB_WORKSPACE/pyproject.toml" --cov=fiducio --cov-report=term-missing
           for example in basic_segmentation_calibration pytorch_model_calibration reliability_diagram ensemble_pooling; do
             "$python" "$GITHUB_WORKSPACE/examples/$example.py"

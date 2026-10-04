@@ -36,8 +36,8 @@ def collect_logits(model, loader):
     model.eval()
     logits, labels = [], []
     for images, targets in loader:
-        logits.append(model(images))   # (B, C, H, W)
-        labels.append(targets)         # (B, H, W)
+        logits.append(model(images))  # (B, C, H, W)
+        labels.append(targets)  # (B, H, W)
     return torch.cat(logits), torch.cat(labels)
 ```
 

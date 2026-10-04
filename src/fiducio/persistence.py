@@ -17,24 +17,30 @@ is read with ``weights_only=True`` and onto CPU.
 from __future__ import annotations
 
 import os
-from typing import Any
+import pickle
+import uuid
+from typing import TYPE_CHECKING, Any
 
 import torch
 
 from .registry import get_calibrator_class
 from .utils import get_logger
 
+if TYPE_CHECKING:  # pragma: no cover - typing only
+    from .base import Calibrator
+
 FORMAT_NAME = "fiducio-calibrator"
 FORMAT_VERSION = 1
 
-PathLike = str | os.PathLike
+PathLike = str | os.PathLike[str]
 MapLocation = str | torch.device
 
 _logger = get_logger(__name__)
 
 
-def _validate_state(calibrator: Any, state: dict[str, Any], classes: int | None,
-                    fitted: bool) -> None:
+def _validate_state(
+    calibrator: Any, state: dict[str, Any], classes: int | None, fitted: bool
+) -> None:
     """Validate built-in parameter layouts, including legacy full-matrix MSc."""
     cid = calibrator.calibrator_id
     expected: dict[str, tuple[int, ...]] = {}
@@ -43,15 +49,22 @@ def _validate_state(calibrator: Any, state: dict[str, Any], classes: int | None,
         if cid == "ensemble_temperature_scaling":
             expected["weights"] = (3,)
     elif classes is not None:
-        if cid in {"vector_scaling", "matrix_scaling", "dirichlet_calibration",
-                   "translation_invariant_matrix_scaling"}:
+        if cid in {
+            "vector_scaling",
+            "matrix_scaling",
+            "dirichlet_calibration",
+            "translation_invariant_matrix_scaling",
+        }:
             shape = (classes,) if cid == "vector_scaling" else (classes, classes)
             if cid == "translation_invariant_matrix_scaling" and state.get("row_sum") is not None:
                 shape = (classes, classes - 1)
                 expected["row_sum"] = ()
             expected.update(weight=shape, bias=(classes,))
-        elif cid in {"class_conditional_matrix_scaling", "argmax_preserving_matrix_scaling",
-                     "order_preserving_matrix_scaling"}:
+        elif cid in {
+            "class_conditional_matrix_scaling",
+            "argmax_preserving_matrix_scaling",
+            "order_preserving_matrix_scaling",
+        }:
             k = classes if cid == "class_conditional_matrix_scaling" else classes - 1
             expected.update(raw_b=(classes, k, k), raw_mu=(classes, k))
     template = calibrator._get_state()
@@ -59,8 +72,9 @@ def _validate_state(calibrator: Any, state: dict[str, Any], classes: int | None,
         raise ValueError("unexpected saved state fields")
     for key in template:
         # row_sum was absent in pre-release MSc checkpoints.
-        if key not in state and not (key == "row_sum" and
-                                    cid == "translation_invariant_matrix_scaling"):
+        if key not in state and not (
+            key == "row_sum" and cid == "translation_invariant_matrix_scaling"
+        ):
             raise ValueError(f"missing saved parameter {key}")
     for name, value in state.items():
         if value is None:
@@ -69,14 +83,21 @@ def _validate_state(calibrator: Any, state: dict[str, Any], classes: int | None,
             continue
         if name not in expected and not fitted and template.get(name) is None:
             raise ValueError(f"unexpected parameter {name} on an unfitted calibrator")
-        if not torch.is_tensor(value) or not value.is_floating_point() or not torch.isfinite(value).all():
+        if (
+            not torch.is_tensor(value)
+            or value.layout != torch.strided
+            or not value.is_floating_point()
+            or not torch.isfinite(value.to(torch.float32)).all()
+        ):
             raise ValueError(f"saved parameter {name} must be a finite floating tensor")
         if name in expected and tuple(value.shape) != expected[name]:
             raise ValueError(f"invalid shape for saved parameter {name}")
         if name == "temperature" and value <= 0:
             raise ValueError("saved temperature must be positive")
-        if name == "weights" and ((value < 0).any() or
-                                  not torch.isclose(value.sum(), value.new_tensor(1.), atol=1e-6, rtol=0)):
+        if name == "weights" and (
+            (value < 0).any()
+            or not torch.isclose(value.sum(), value.new_tensor(1.0), atol=1e-6, rtol=0)
+        ):
             raise ValueError("saved mixture weights must be a probability distribution")
 
 
@@ -111,7 +132,7 @@ def _to_cpu(obj: Any) -> Any:
     return obj
 
 
-def save_calibrator(calibrator: Any, path: PathLike) -> None:
+def save_calibrator(calibrator: Calibrator, path: PathLike) -> None:
     """Serialize ``calibrator`` to ``path``.
 
     Parameters
@@ -123,8 +144,7 @@ def save_calibrator(calibrator: Any, path: PathLike) -> None:
     """
     if not getattr(calibrator, "calibrator_id", ""):
         raise ValueError(
-            f"{type(calibrator).__name__} has no registered calibrator_id and "
-            "cannot be saved"
+            f"{type(calibrator).__name__} has no registered calibrator_id and cannot be saved"
         )
     directory = os.path.dirname(os.fspath(path))
     if directory:
@@ -140,13 +160,23 @@ def save_calibrator(calibrator: Any, path: PathLike) -> None:
         "fitted": calibrator.is_fitted,
         "state": _to_cpu(calibrator._get_state()),
     }
-    torch.save(payload, os.fspath(path))
+    # A unique, exclusively created name keeps concurrent saves from colliding.
+    tmp_path = f"{os.fspath(path)}.{os.getpid()}.{uuid.uuid4().hex}.tmp"
+    try:
+        with open(tmp_path, "xb") as handle:
+            torch.save(payload, handle)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(tmp_path, os.fspath(path))
+    finally:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
 
 
 def load_calibrator(
     path: PathLike,
     map_location: MapLocation | None = "cpu",
-) -> Any:
+) -> Calibrator:
     """Load a calibrator previously written by :func:`save_calibrator`.
 
     Parameters
@@ -167,17 +197,30 @@ def load_calibrator(
         raise FileNotFoundError(f"calibrator file not found: {path}")
 
     location: MapLocation = "cpu" if map_location is None else map_location
-    payload = torch.load(os.fspath(path), map_location=location, weights_only=True)
+    if not isinstance(location, (str, torch.device)):
+        raise TypeError("map_location must be a device string or torch.device")
+    device = torch.device(location)
+    if device.type == "cuda" and not torch.cuda.is_available():
+        raise RuntimeError(f"map_location={location!r} but CUDA is not available")
+    try:
+        payload = torch.load(os.fspath(path), map_location=location, weights_only=True)
+    except (pickle.UnpicklingError, EOFError, IndexError, RuntimeError) as exc:
+        raise ValueError(f"could not read Fiducio calibrator file: {path}") from exc
 
     if not isinstance(payload, dict) or payload.get("format") != FORMAT_NAME:
         raise ValueError(f"{path} is not a Fiducio calibrator file")
 
-    if type(payload.get("format_version")) is not int or payload["format_version"] != FORMAT_VERSION:
+    if (
+        type(payload.get("format_version")) is not int
+        or payload["format_version"] != FORMAT_VERSION
+    ):
         raise ValueError("unsupported or missing Fiducio format_version")
     required = {"fiducio_version", "calibrator_id", "config", "num_classes", "fitted", "state"}
     if not required <= payload.keys():
         raise ValueError("missing required Fiducio payload fields")
-    if not isinstance(payload["calibrator_id"], str) or not isinstance(payload["fiducio_version"], str):
+    if not isinstance(payload["calibrator_id"], str) or not isinstance(
+        payload["fiducio_version"], str
+    ):
         raise ValueError("invalid calibrator id or package version")
     if not isinstance(payload["config"], dict) or not isinstance(payload["state"], dict):
         raise ValueError("config and state must be dictionaries")
@@ -198,12 +241,14 @@ def load_calibrator(
         )
 
     calibrator_id = payload["calibrator_id"]
-    cls = get_calibrator_class(calibrator_id)
+    try:
+        cls = get_calibrator_class(calibrator_id)
+    except KeyError as exc:
+        raise ValueError(f"unsupported calibrator id {calibrator_id!r}") from exc
 
     config = dict(payload["config"])
     if "device" in config:
         raise ValueError("saved config must not override map_location")
-    device = torch.device(location) if isinstance(location, (str, torch.device)) else None
     try:
         calibrator = cls(device=device, **config)
     except (TypeError, ValueError, OverflowError) as exc:

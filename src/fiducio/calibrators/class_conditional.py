@@ -38,12 +38,15 @@ from ..utils.tensors import inverse_softplus, positive_finite
 from ._optim import minimize, resolve_optimizer
 
 
-def _inv_softplus(value: float, device: torch.device) -> torch.Tensor:
-    return inverse_softplus(value, device)
-
-
 class _ClassConditionalBase(Calibrator):
-    """Shared implementation for class-conditional matrix scaling calibrators."""
+    """Shared implementation for class-conditional matrix scaling calibrators.
+
+    Regularization is the mean, over experts, of the matrix-scaling penalty on
+    each expert's induced affine map:
+    ``lambda_reg * mean(off-diagonal W^2) + mu_reg * mean(bias^2)``. Both terms
+    are means, matching Kull et al.'s (2019) normalized ODIR (their code with
+    ``reg_norm=True``); values from un-normalized settings are not transferable.
+    """
 
     _input_space = "logprobs"
     #: whether expert parameters are mapped through softplus to be positive.
@@ -70,8 +73,13 @@ class _ClassConditionalBase(Calibrator):
     ) -> None:
         super().__init__(input_type=input_type, ignore_index=ignore_index, device=device)
         self.optimizer, self.lr, self.max_iter = resolve_optimizer(
-            optimizer, lr, max_iter,
-            adam_lr=1e-2, lbfgs_lr=1.0, adam_max_iter=200, lbfgs_max_iter=100,
+            optimizer,
+            lr,
+            max_iter,
+            adam_lr=1e-2,
+            lbfgs_lr=1.0,
+            adam_max_iter=200,
+            lbfgs_max_iter=100,
         )
         self._init_stopping(self.optimizer, patience, min_delta, lr_patience, lr_factor)
         self.lambda_reg = positive_finite(lambda_reg, "lambda_reg", allow_zero=True)
@@ -92,8 +100,8 @@ class _ClassConditionalBase(Calibrator):
         c = int(num_classes)
         k = self._matrix_dim(c)
         if self._positive_params:
-            raw_floor = _inv_softplus(self.init_floor, self.device).item()
-            raw_alpha = _inv_softplus(max(self.init_alpha, self.init_floor), self.device).item()
+            raw_floor = inverse_softplus(self.init_floor, self.device).item()
+            raw_alpha = inverse_softplus(max(self.init_alpha, self.init_floor), self.device).item()
             raw_mu = torch.full((c, k), raw_floor, device=self.device)
             raw_b = torch.full((c, k, k), raw_floor, device=self.device)
             eye = torch.eye(k, dtype=torch.bool, device=self.device)
@@ -177,14 +185,21 @@ class _ClassConditionalBase(Calibrator):
                 return F.cross_entropy(val_logits, y_val)
 
         minimize(
-            self.optimizer, [raw_b, raw_mu], loss_fn, lr=self.lr, max_iter=self.max_iter,
-            val_fn=val_fn, stopping=self._stopping,
+            self.optimizer,
+            [raw_b, raw_mu],
+            loss_fn,
+            lr=self.lr,
+            max_iter=self.max_iter,
+            val_fn=val_fn,
+            stopping=self._stopping,
         )
         with torch.no_grad():
             self._raw_b = raw_b.detach()
             self._raw_mu = raw_mu.detach()
 
-    def _fit_independent(self, z_flat: torch.Tensor, y_flat: torch.Tensor, num_classes: int) -> None:
+    def _fit_independent(
+        self, z_flat: torch.Tensor, y_flat: torch.Tensor, num_classes: int
+    ) -> None:
         """Optimize each expert in its own loop, on only the voxels routed to it."""
         assert self._raw_b is not None and self._raw_mu is not None
         top = torch.argmax(z_flat, dim=1)
@@ -232,8 +247,13 @@ class _ClassConditionalBase(Calibrator):
                         return F.cross_entropy(val_logits, val_targets)
 
             minimize(
-                self.optimizer, [b_c, mu_c], loss_fn, lr=self.lr, max_iter=self.max_iter,
-                val_fn=val_fn, stopping=self._stopping,
+                self.optimizer,
+                [b_c, mu_c],
+                loss_fn,
+                lr=self.lr,
+                max_iter=self.max_iter,
+                val_fn=val_fn,
+                stopping=self._stopping,
             )
             with torch.no_grad():
                 self._raw_b[c] = b_c.detach()
@@ -288,8 +308,10 @@ class _ClassConditionalBase(Calibrator):
     def _set_state(self, state: dict[str, Any]) -> None:
         raw_b = state.get("raw_b")
         raw_mu = state.get("raw_mu")
-        self._raw_b = None if raw_b is None else torch.as_tensor(raw_b, device=self.device)
-        self._raw_mu = None if raw_mu is None else torch.as_tensor(raw_mu, device=self.device)
+        self._raw_b = None if raw_b is None else torch.as_tensor(raw_b, device=self.device).float()
+        self._raw_mu = (
+            None if raw_mu is None else torch.as_tensor(raw_mu, device=self.device).float()
+        )
 
 
 @register_calibrator("class_conditional_matrix_scaling")
@@ -339,9 +361,9 @@ class ArgmaxPreservingMatrixScaling(_ClassConditionalBase):
     ) -> torch.Tensor:
         c = int(logp_rows.shape[1])
         comp = self._competitor_indices(c, logp_rows.device)[expert]
-        margins = (
-            logp_rows[:, expert : expert + 1] - logp_rows.index_select(1, comp)
-        ).clamp_min(0.0)
+        margins = (logp_rows[:, expert : expert + 1] - logp_rows.index_select(1, comp)).clamp_min(
+            0.0
+        )
         tilde = margins.matmul(b_c.t()) + mu_c
         out = torch.zeros_like(logp_rows)
         out[:, comp] = -tilde
@@ -385,7 +407,7 @@ class OrderPreservingMatrixScaling(_ClassConditionalBase):
     def _expert_logits(
         self, logp_rows: torch.Tensor, expert: int, b_c: torch.Tensor, mu_c: torch.Tensor
     ) -> torch.Tensor:
-        sorted_logp, perm = torch.sort(logp_rows, dim=1, descending=True)
+        sorted_logp, perm = torch.sort(logp_rows, dim=1, descending=True, stable=True)
         margins = (sorted_logp[:, :-1] - sorted_logp[:, 1:]).clamp_min(0.0)
         tilde = margins.matmul(b_c.t()) + mu_c
         h_sorted = torch.zeros_like(logp_rows)

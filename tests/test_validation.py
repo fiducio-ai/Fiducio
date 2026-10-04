@@ -2,11 +2,23 @@
 
 from __future__ import annotations
 
+import math
+
+import numpy as np
 import pytest
 import torch
 
 from conftest import synthetic_logits, to_probs
-from fiducio import MatrixScaling, NotFittedError, TemperatureScaling
+from fiducio import (
+    ArgmaxPreservingMatrixScaling,
+    MatrixScaling,
+    NotFittedError,
+    TemperatureScaling,
+    expected_calibration_error,
+    negative_log_likelihood,
+    reliability_curve,
+    two_channel_from_binary,
+)
 
 
 def test_transform_before_fit_raises():
@@ -94,3 +106,115 @@ def test_numpy_inputs_accepted():
     cal = TemperatureScaling(device="cpu")
     out = cal.fit_transform(logits.numpy(), labels.numpy())
     assert out.shape == to_probs(logits).shape
+
+
+def test_masked_transform_output_is_valid_probs_input():
+    logits, labels = synthetic_logits((2, 3, 6, 6), seed=26)
+    mask = torch.ones(2, 6, 6, dtype=torch.bool)
+    mask[:, :2] = False
+    cal = MatrixScaling(device="cpu").fit(logits, labels, mask=mask)
+    probs = cal.transform(logits, mask=mask)
+    valid = probs.sum(dim=1)[mask]
+    assert torch.allclose(valid, torch.ones_like(valid), atol=1e-4)
+    chained = TemperatureScaling(input_type="probs", device="cpu").fit(probs, labels, mask=mask)
+    assert chained.transform(probs, mask=mask).shape == probs.shape
+    assert math.isfinite(negative_log_likelihood(probs, labels, mask=mask))
+
+
+def test_zero_rows_are_rejected_without_mask():
+    probs = torch.zeros(2, 3, 4, 4)
+    labels = torch.zeros(2, 4, 4, dtype=torch.long)
+    with pytest.raises(ValueError, match="sum to 1"):
+        negative_log_likelihood(probs, labels)
+
+
+def test_non_tensor_predictions_and_targets_rejected():
+    with pytest.raises(TypeError, match="torch.Tensor"):
+        TemperatureScaling(device="cpu").fit([[1.0, 2.0]], [[0]])
+    logits, labels = synthetic_logits((2, 3, 4, 4), seed=27)
+    with pytest.raises(TypeError, match="torch.Tensor"):
+        TemperatureScaling(device="cpu").fit(logits, [[0]])
+
+
+def test_invalid_n_bins_rejected():
+    probs = to_probs(synthetic_logits((2, 3, 4, 4), seed=28)[0])
+    labels = torch.zeros(2, 4, 4, dtype=torch.long)
+    for n_bins in (0, True, 2.0, "3"):
+        with pytest.raises(ValueError, match="n_bins"):
+            reliability_curve(probs, labels, n_bins=n_bins)
+    assert len(reliability_curve(probs, labels, n_bins=np.int64(4)).bin_counts) == 4
+
+
+def test_two_channel_from_binary_rejects_bad_input_type():
+    with pytest.raises(ValueError, match="input_type"):
+        two_channel_from_binary(torch.randn(2, 1, 4, 4), input_type="scores")
+
+
+def test_unrepresentable_initial_temperature_rejected():
+    logits, labels = synthetic_logits((2, 3, 4, 4), seed=29)
+    with pytest.raises(ValueError, match="representable in float32"):
+        ArgmaxPreservingMatrixScaling(device="cpu", init_floor=1e-46, max_iter=1).fit(
+            logits, labels
+        )
+
+
+def test_duplicate_registry_id_rejected():
+    from fiducio.registry import register_calibrator
+
+    class Other(TemperatureScaling):
+        pass
+
+    with pytest.raises(ValueError, match="already registered"):
+        register_calibrator("temperature_scaling")(Other)
+
+
+def test_half_precision_probabilities_accepted():
+    logits, labels = synthetic_logits((2, 5, 64, 64), seed=3)
+    for dtype in (torch.float16, torch.bfloat16):
+        probs = torch.softmax(logits.to(dtype), dim=1)
+        assert math.isfinite(expected_calibration_error(probs, labels))
+        TemperatureScaling(input_type="probs", max_iter=5, device="cpu").fit(probs, labels)
+
+
+def test_masked_out_padding_is_not_validated():
+    logits, labels = synthetic_logits((2, 3, 6, 6), seed=5)
+    probs = to_probs(logits)
+    mask = torch.ones(2, 6, 6, dtype=torch.bool)
+    mask[:, :2] = False
+    padded_logits = logits.clone()
+    padded_logits[:, :, :2] = float("nan")
+    padded_probs = probs.clone()
+    padded_probs[:, :, :2] = float("nan")
+    expected = expected_calibration_error(probs, labels, mask=mask)
+    assert expected_calibration_error(padded_probs, labels, mask=mask) == expected
+    for input_type, inputs in (("logits", padded_logits), ("probs", padded_probs)):
+        cal = TemperatureScaling(input_type=input_type, max_iter=5, device="cpu")
+        out = cal.fit(inputs, labels, mask=mask).transform(inputs, mask=mask)
+        assert torch.equal(out[:, :, :2], torch.zeros_like(out[:, :, :2]))
+        assert torch.isfinite(out).all()
+    with pytest.raises(ValueError, match="non-finite"):
+        expected_calibration_error(padded_probs, labels)
+
+
+def test_float64_beyond_float32_range_rejected():
+    logits, labels = synthetic_logits((1, 3, 4, 4), seed=6)
+    logits = logits.double()
+    cal = TemperatureScaling(max_iter=5, device="cpu").fit(logits, labels)
+    logits[0, 0, 0, 0] = 1e39
+    with pytest.raises(ValueError, match="float32 range"):
+        cal.transform(logits)
+
+
+def test_default_ignore_index_is_exported():
+    from fiducio.utils import DEFAULT_IGNORE_INDEX
+
+    assert DEFAULT_IGNORE_INDEX == -100
+
+
+def test_max_iter_accepts_numpy_integers_only():
+    assert TemperatureScaling(max_iter=np.int64(5)).max_iter == 5
+    for bad in (True, 5.0, "5"):
+        with pytest.raises(ValueError, match="must be an integer"):
+            TemperatureScaling(max_iter=bad)
+    with pytest.raises(ValueError, match="> 0"):
+        TemperatureScaling(max_iter=-1)

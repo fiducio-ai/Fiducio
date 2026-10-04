@@ -7,9 +7,7 @@ import torch
 
 from conftest import ALL_CALIBRATOR_IDS, make_calibrator, synthetic_logits
 
-pytestmark = pytest.mark.skipif(
-    not torch.cuda.is_available(), reason="CUDA not available"
-)
+pytestmark = pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not available")
 
 
 @pytest.mark.parametrize("calibrator_id", ALL_CALIBRATOR_IDS)
@@ -34,3 +32,16 @@ def test_save_on_cuda_loads_on_cpu(tmp_path):
     assert str(loaded.device) == "cpu"
     out = loaded.transform(logits)  # cpu input
     assert not out.is_cuda
+
+
+def test_metrics_on_cuda_in_deterministic_mode():
+    from fiducio import expected_calibration_error
+
+    logits, labels = synthetic_logits((2, 3, 6, 6), seed=82)
+    probs = torch.softmax(logits, dim=1).cuda()
+    previous = torch.are_deterministic_algorithms_enabled()
+    torch.use_deterministic_algorithms(True)
+    try:
+        expected_calibration_error(probs, labels.cuda())
+    finally:
+        torch.use_deterministic_algorithms(previous)

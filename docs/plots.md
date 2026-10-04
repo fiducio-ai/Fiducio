@@ -22,8 +22,9 @@ import torch
 from fiducio import TemperatureScaling
 from fiducio.plots import reliability_diagram
 
-logits = torch.randn(8, 4, 64, 64) * 4
-labels = logits.argmax(dim=1)
+signal = torch.randn(8, 4, 64, 64)
+labels = signal.argmax(dim=1)
+logits = (signal + torch.randn(8, 4, 64, 64)) * 4  # over-confident
 
 calibrator = TemperatureScaling().fit(logits, labels)
 
@@ -39,11 +40,12 @@ larger figures. It accepts the same `mask` / `ignore_index` arguments as the
 metrics.
 
 By default the panel is annotated with the population-weighted ECE. Pass
-`metric="ace"` to annotate with the unweighted ACE instead (same bins, but
-averaged without weighting by bin population) — more informative when
-confidence bins are very unevenly populated, since a sparsely populated (but
-badly calibrated) bin no longer gets drowned out by a large, well-calibrated
-one:
+`metric="ace"` to annotate with `unweighted_calibration_error` (alias
+`average_calibration_error`) instead (same bins, but averaged without weighting by
+bin population) — more informative when confidence bins are very unevenly
+populated, since a sparsely populated (but badly calibrated) bin no longer gets
+drowned out by a large, well-calibrated one. This is not the adaptive ACE of
+other work:
 
 ```python
 reliability_diagram(calibrator.transform(logits), labels, ax=ax2, metric="ace")

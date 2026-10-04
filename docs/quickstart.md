@@ -30,7 +30,7 @@ calibrator.fit(logits, labels)
 
 ```python
 new_logits = torch.randn(2, 4, 64, 64)
-calibrated = calibrator.transform(new_logits)   # calibrated probabilities (B, C, H, W)
+calibrated = calibrator.transform(new_logits)  # calibrated probabilities (B, C, H, W)
 ```
 
 `transform` always returns **probabilities** that sum to 1 along the class axis.
@@ -46,10 +46,18 @@ test_logits = torch.randn(8, 4, 64, 64)
 test_labels = torch.randint(0, 4, (8, 64, 64))
 raw = F.softmax(test_logits, dim=1)
 calibrated_test = calibrator.transform(test_logits)
-print("NLL", negative_log_likelihood(raw, test_labels), "->",
-      negative_log_likelihood(calibrated_test, test_labels))
-print("ECE", expected_calibration_error(raw, test_labels), "->",
-      expected_calibration_error(calibrated_test, test_labels))
+print(
+    "NLL",
+    negative_log_likelihood(raw, test_labels),
+    "->",
+    negative_log_likelihood(calibrated_test, test_labels),
+)
+print(
+    "ECE",
+    expected_calibration_error(raw, test_labels),
+    "->",
+    expected_calibration_error(calibrated_test, test_labels),
+)
 ```
 
 ## 5. Save and reload
@@ -58,7 +66,7 @@ print("ECE", expected_calibration_error(raw, test_labels), "->",
 from fiducio import load_calibrator
 
 calibrator.save("calibrator.pt")
-calibrator = load_calibrator("calibrator.pt")   # loads on CPU by default
+calibrator = load_calibrator("calibrator.pt")  # loads on CPU by default
 ```
 
 ## Logits or probabilities?
@@ -67,7 +75,7 @@ Set `input_type` to match what you pass in:
 
 ```python
 TemperatureScaling(input_type="logits")  # raw scores (default)
-TemperatureScaling(input_type="probs")   # probabilities that sum to 1
+TemperatureScaling(input_type="probs")  # probabilities that sum to 1
 ```
 
 ## Accepted tensor shapes

@@ -26,7 +26,7 @@ def test_both_optimizers_reduce_nll(calibrator_id, optimizer):
     sums = out.sum(dim=1)
     assert torch.allclose(sums, torch.ones_like(sums), atol=1e-4)
     assert torch.isfinite(out).all()
-    assert negative_log_likelihood(out, labels) <= negative_log_likelihood(raw, labels) + 1e-3
+    assert negative_log_likelihood(out, labels) < negative_log_likelihood(raw, labels) - 1e-3
 
 
 def test_invalid_optimizer_rejected():
@@ -54,6 +54,11 @@ def test_explicit_lr_and_max_iter_override():
 def test_non_positive_max_iter_rejected(calibrator_id, max_iter):
     with pytest.raises(ValueError, match="max_iter must be > 0"):
         make_calibrator(calibrator_id, max_iter=max_iter)
+
+
+def test_float_max_iter_rejected():
+    with pytest.raises(ValueError, match="max_iter must be an integer"):
+        make_calibrator("temperature_scaling", max_iter=200.0)
 
 
 @pytest.mark.parametrize("optimizer", ["adam", "lbfgs"])

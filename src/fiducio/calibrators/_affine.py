@@ -14,7 +14,7 @@ from ._optim import minimize, resolve_optimizer
 
 
 class _AffineCalibrator(Calibrator):
-    """Affine calibration ``softmax(W z + b)`` on a canonical representation.
+    r"""Affine calibration ``softmax(W z + b)`` on a canonical representation.
 
     Subclasses pick the parameterisation through ``_mode``:
 
@@ -25,6 +25,17 @@ class _AffineCalibrator(Calibrator):
 
     ``z`` is the canonical representation produced by the base class (logits for
     scaling methods, log-probabilities for Dirichlet calibration).
+
+    The regularizer penalizes the off-diagonal entries of the weight matrix and the
+    bias:
+
+    .. math:: \lambda_\mathrm{reg}\,\mathrm{mean}(W_\mathrm{off}^2)
+              + \mu_\mathrm{reg}\,\mathrm{mean}(b^2)
+
+    (for diagonal scaling the squared deviation from one is penalized instead).
+    Both terms are means, matching Kull et al.'s (2019) normalized ODIR
+    (their code with ``reg_norm=True``); values from un-normalized settings are
+    not transferable.
     """
 
     _mode: str = "matrix"
@@ -47,8 +58,13 @@ class _AffineCalibrator(Calibrator):
     ) -> None:
         super().__init__(input_type=input_type, ignore_index=ignore_index, device=device)
         self.optimizer, self.lr, self.max_iter = resolve_optimizer(
-            optimizer, lr, max_iter,
-            adam_lr=0.1, lbfgs_lr=1.0, adam_max_iter=200, lbfgs_max_iter=100,
+            optimizer,
+            lr,
+            max_iter,
+            adam_lr=0.1,
+            lbfgs_lr=1.0,
+            adam_max_iter=200,
+            lbfgs_max_iter=100,
         )
         self._init_stopping(self.optimizer, patience, min_delta, lr_patience, lr_factor)
         self.lambda_reg = positive_finite(lambda_reg, "lambda_reg", allow_zero=True)
@@ -124,8 +140,13 @@ class _AffineCalibrator(Calibrator):
                 return F.cross_entropy(self._apply_flat(z_val), y_val)
 
         minimize(
-            self.optimizer, params, loss_fn, lr=self.lr, max_iter=self.max_iter,
-            val_fn=val_fn, stopping=self._stopping,
+            self.optimizer,
+            params,
+            loss_fn,
+            lr=self.lr,
+            max_iter=self.max_iter,
+            val_fn=val_fn,
+            stopping=self._stopping,
         )
         self._weight = self._weight.detach()
         self._bias = self._bias.detach()
@@ -154,7 +175,11 @@ class _AffineCalibrator(Calibrator):
     def _set_state(self, state: dict[str, Any]) -> None:
         weight = state.get("weight")
         bias = state.get("bias")
-        self._weight = None if weight is None else torch.as_tensor(weight, device=self.device)
-        self._bias = None if bias is None else torch.as_tensor(bias, device=self.device)
+        self._weight = (
+            None if weight is None else torch.as_tensor(weight, device=self.device).float()
+        )
+        self._bias = None if bias is None else torch.as_tensor(bias, device=self.device).float()
         row_sum = state.get("row_sum")
-        self._row_sum = None if row_sum is None else torch.as_tensor(row_sum, device=self.device)
+        self._row_sum = (
+            None if row_sum is None else torch.as_tensor(row_sum, device=self.device).float()
+        )

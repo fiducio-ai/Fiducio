@@ -60,8 +60,11 @@ def test_reliability_diagram_supports_ace_metric():
 
 
 def test_reliability_diagram_rejects_unknown_metric():
+    import matplotlib.pyplot as plt
+
     from fiducio.plots import reliability_diagram
 
     logits, labels = synthetic_logits((2, 3, 6, 6), seed=73)
     with pytest.raises(ValueError, match="metric must be"):
         reliability_diagram(to_probs(logits), labels, metric="mce")
+    assert plt.get_fignums() == []

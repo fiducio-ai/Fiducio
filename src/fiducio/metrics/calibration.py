@@ -8,29 +8,52 @@ dimension 1) and integer labels of shape ``(B, *spatial)``, with optional
 
 from __future__ import annotations
 
+import operator
 from dataclasses import dataclass
 from typing import Any
 
 import torch
 
-from ..utils import flatten_valid, safe_log, to_tensor, validate_predictions, validate_targets
+from ..utils import safe_log, to_tensor, validate_predictions, validate_targets
 from ..utils.tensors import integer_targets
 
-_EPS = 1e-12
 
-
-def _flatten_valid(
+def _voxels(
     probs: Any,
     targets: Any,
     mask: Any | None,
     ignore_index: int,
-) -> tuple[torch.Tensor, torch.Tensor]:
-    p = to_tensor(probs, dtype=torch.float32).detach()
-    c = validate_predictions(p, input_type="probs")
-    y = integer_targets(targets, device=p.device)
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor | None]:
+    """Validate inputs and return ``(probs, labels, valid)`` in their spatial layout.
+
+    Metrics reduce over the class axis before selecting valid voxels, so large
+    volumes are never copied into ``(N, C)`` rows. Labels at invalid voxels are
+    replaced by 0 so they can be used as gather indices; ``valid`` is ``None``
+    when every voxel is valid.
+    """
+    p = to_tensor(probs).detach()
+    if not p.is_floating_point():
+        p = p.float()
     m = None if mask is None else to_tensor(mask, device=p.device).bool()
+    c = validate_predictions(p, input_type="probs", mask=m)
+    y = integer_targets(targets, device=p.device)
     validate_targets(p, y, m, num_classes=c, ignore_index=ignore_index)
-    return flatten_valid(p, y, m, ignore_index)
+    if p.dtype not in (torch.float32, torch.float64):
+        p = p.float()
+    valid = y != ignore_index
+    if m is not None:
+        valid &= m
+    if bool(valid.all()):
+        return p, y, None
+    return p, y.masked_fill(~valid, 0), valid
+
+
+def _select(x: torch.Tensor, valid: torch.Tensor | None) -> torch.Tensor:
+    return x.reshape(-1) if valid is None else x[valid]
+
+
+def _true_class_probs(p: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+    return p.gather(1, y.unsqueeze(1)).squeeze(1)
 
 
 def negative_log_likelihood(
@@ -39,11 +62,15 @@ def negative_log_likelihood(
     mask: Any | None = None,
     ignore_index: int = -100,
 ) -> float:
-    """Mean negative log-likelihood (cross-entropy) over valid voxels."""
-    p, y = _flatten_valid(probs, targets, mask, ignore_index)
-    if p.shape[0] == 0:
+    """Mean negative log-likelihood (cross-entropy) over valid voxels.
+
+    Zero probabilities are floored at ``1e-12`` by :func:`fiducio.utils.safe_log`,
+    capping the NLL at ~27.63 instead of ``inf``.
+    """
+    p, y, valid = _voxels(probs, targets, mask, ignore_index)
+    true_p = _select(_true_class_probs(p, y), valid).double()
+    if true_p.numel() == 0:
         return float("nan")
-    true_p = p.gather(1, y.unsqueeze(1)).squeeze(1)
     return float((-safe_log(true_p)).mean().item())
 
 
@@ -54,12 +81,13 @@ def brier_score(
     ignore_index: int = -100,
 ) -> float:
     """Mean multiclass Brier score over valid voxels."""
-    p, y = _flatten_valid(probs, targets, mask, ignore_index)
-    if p.shape[0] == 0:
+    p, y, valid = _voxels(probs, targets, mask, ignore_index)
+    if valid is not None and not bool(valid.any()):
         return float("nan")
-    one_hot = torch.zeros_like(p)
-    one_hot.scatter_(1, y.unsqueeze(1), 1.0)
-    return float((p - one_hot).square().sum(dim=1).mean().item())
+    # sum_c (p_c - onehot_c)^2 = ||p||^2 - 2 p_y + 1, without a one-hot copy of p.
+    sq_norm = _select(torch.linalg.vector_norm(p, dim=1), valid).double().square()
+    true_p = _select(_true_class_probs(p, y), valid).double()
+    return float((sq_norm - 2 * true_p + 1).mean().item())
 
 
 @dataclass
@@ -81,7 +109,7 @@ class ReliabilityCurve:
         Expected calibration error (count-weighted mean ``|confidence -
         accuracy|`` over bins).
     ace:
-        Average calibration error (unweighted mean ``|confidence - accuracy|``
+        Unweighted calibration error (unweighted mean ``|confidence - accuracy|``
         over non-empty bins). Unlike ``ece``, a sparsely populated bin counts
         as much as a densely populated one.
     """
@@ -108,29 +136,33 @@ def reliability_curve(
     for drawing reliability diagrams (see
     :func:`fiducio.plots.reliability_diagram`).
     """
-    if isinstance(n_bins, bool) or not isinstance(n_bins, int) or n_bins < 1:
+    try:  # operator.index accepts numpy integers
+        n_bins = -1 if isinstance(n_bins, bool) else operator.index(n_bins)
+    except TypeError:
+        n_bins = -1
+    if n_bins < 1:
         raise ValueError("n_bins must be an integer >= 1")
-    p, y = _flatten_valid(probs, targets, mask, ignore_index)
+    p, y, valid = _voxels(probs, targets, mask, ignore_index)
     # Construct the same float32 boundaries as before, then accumulate in double.
     edges = torch.linspace(0.0, 1.0, n_bins + 1, device=p.device).double()
-    if p.shape[0] == 0:
+    confidence, prediction = p.max(dim=1)
+    correct = _select(prediction == y, valid)
+    confidence = _select(confidence, valid).double()
+    if confidence.numel() == 0:
         zeros = torch.zeros(n_bins, dtype=torch.float64, device=p.device)
         return ReliabilityCurve(
             edges, zeros, zeros.clone(), zeros.long(), float("nan"), float("nan")
         )
-
-    confidence, prediction = p.max(dim=1)
-    confidence = confidence.double()
-    correct = (prediction == y).double()
     # Bin index in [0, n_bins - 1].
-    idx = torch.bucketize(confidence, edges[1:-1].contiguous(), right=False)
+    idx = torch.bucketize(confidence, edges[1:-1].contiguous(), out_int32=True)
 
-    counts = torch.zeros(n_bins, dtype=torch.int64, device=p.device).scatter_add_(
-        0, idx, torch.ones_like(idx)
+    counts = torch.bincount(idx, minlength=n_bins)
+    # Weighted bincount has no deterministic CUDA kernel; scatter_add_ does.
+    sum_conf = torch.zeros(n_bins, dtype=torch.float64, device=p.device).scatter_add_(
+        0, idx.long(), confidence
     )
-    sum_conf = torch.zeros(n_bins, dtype=torch.float64, device=p.device).scatter_add_(0, idx, confidence)
-    sum_acc = torch.zeros_like(sum_conf).scatter_add_(0, idx, correct)
-    safe_counts = counts.clamp_min(1.0)
+    sum_acc = torch.bincount(idx[correct], minlength=n_bins).double()
+    safe_counts = counts.clamp_min(1)
     bin_conf = sum_conf / safe_counts
     bin_acc = sum_acc / safe_counts
     total = float(confidence.shape[0])
@@ -153,7 +185,7 @@ def expected_calibration_error(
     The confidence is the maximum predicted probability and the accuracy is
     whether the argmax matches the label. Bins partition ``[0, 1]`` uniformly
     and each bin's gap is weighted by its share of voxels — see
-    :func:`average_calibration_error` for the unweighted variant.
+    :func:`unweighted_calibration_error` for the unweighted variant.
 
     ``n_bins`` defaults to 15. The paper reports ECE with ``n_bins=50`` (ACE with
     ``n_bins=15``) and averages metrics per image before pooling; pass
@@ -163,21 +195,27 @@ def expected_calibration_error(
     return reliability_curve(probs, targets, mask, ignore_index, n_bins).ece
 
 
-def average_calibration_error(
+def unweighted_calibration_error(
     probs: Any,
     targets: Any,
     mask: Any | None = None,
     ignore_index: int = -100,
     n_bins: int = 15,
 ) -> float:
-    """Top-1 average calibration error (ACE) with uniform binning.
+    """Top-1 unweighted calibration error (ACE) with uniform binning.
+
+    The unweighted mean of the per-bin ``|confidence - accuracy|`` gap over
+    non-empty uniform bins. This is **not** the adaptive calibration error of
+    other work, which uses data-dependent (equal-mass) bins.
 
     Uses the same uniform confidence bins as :func:`expected_calibration_error`,
-    but averages the per-bin ``|confidence - accuracy|`` gap **unweighted**
-    over non-empty bins instead of weighting each bin by its share of voxels.
-    A confidence region visited by only a handful of voxels therefore counts as
-    much as a densely populated one, which ECE would otherwise drown out.
-    ``n_bins=15`` matches the paper's ACE; the paper computes ACE on the pooled
-    test voxels rather than per image.
+    but weights each non-empty bin equally instead of by its share of voxels; a
+    confidence region visited by only a handful of voxels therefore counts as
+    much as a densely populated one. ``n_bins=15`` matches the paper's ACE; the
+    paper computes ACE on the pooled test voxels rather than per image. Kept as
+    ``average_calibration_error`` for backwards compatibility.
     """
     return reliability_curve(probs, targets, mask, ignore_index, n_bins).ace
+
+
+average_calibration_error = unweighted_calibration_error

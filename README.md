@@ -2,7 +2,7 @@
 
 [![Tests](https://github.com/fiducio-ai/Fiducio/actions/workflows/tests.yml/badge.svg)](https://github.com/fiducio-ai/Fiducio/actions/workflows/tests.yml)
 [![Docs](https://github.com/fiducio-ai/Fiducio/actions/workflows/docs.yml/badge.svg)](https://fiducio-ai.github.io/Fiducio/)
-[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/python-3.10%E2%80%933.14-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green)](https://github.com/fiducio-ai/Fiducio/blob/main/LICENSE)
 
 **Fiducio** is a model-agnostic Python library of **post-hoc calibrators for 2D
@@ -66,8 +66,8 @@ import torch
 from fiducio import TemperatureScaling, load_calibrator
 
 # From a held-out, labelled calibration set:
-logits = torch.randn(8, 4, 64, 64)          # (B, C, H, W) model logits
-labels = torch.randint(0, 4, (8, 64, 64))   # (B, H, W) labels
+logits = torch.randn(8, 4, 64, 64)  # (B, C, H, W) model logits
+labels = torch.randint(0, 4, (8, 64, 64))  # (B, H, W) labels
 
 calibrator = TemperatureScaling(input_type="logits").fit(logits, labels)
 
@@ -127,14 +127,19 @@ from fiducio import OrderPreservingMatrixScaling
 
 calibrator = OrderPreservingMatrixScaling(max_iter=2000, patience=20, lr_patience=10)
 calibrator.fit(
-    logits, labels,
-    val_predictions=val_logits, val_targets=val_labels,  # held out from both
+    logits,
+    labels,
+    val_predictions=val_logits,
+    val_targets=val_labels,  # held out from both
 )
 ```
 
 The iterate with the best validation NLL is kept. The default fixed budget
 (`max_iter`) is short, so it can underfit expressive calibrators; prefer a larger
-`max_iter` together with `patience` for CDC, CMSap and CMSop.
+`max_iter` together with `patience` for CDC, CMSap and CMSop. This reproduces
+only the Adam + validation-NLL early-stopping recipe; the paper's case batching,
+class weighting, schedules, clipping and hyperparameter search are not part of the
+library (see the [implementation guide](https://github.com/fiducio-ai/Fiducio/blob/main/reproducibility/README.md)).
 
 ### Paper method mapping
 
@@ -163,6 +168,12 @@ Calibration metrics are included: `negative_log_likelihood`,
 drowned out by a large one), `brier_score`, `reliability_curve`, plus an
 optional reliability-diagram plot (`fiducio.plots.reliability_diagram`, needs
 `fiducio[plots]`).
+
+BA-ECE (boundary-aware ECE), per-case metric aggregation, the DSC/flip-rate
+audit and the paper's paired hierarchical-bootstrap tests are not included; the
+shipped metrics are top-1 pooled point estimates. `average_calibration_error` is the
+unweighted mean over non-empty uniform bins (not the adaptive ACE of other work)
+and is also available as `unweighted_calibration_error`.
 
 ## Documentation
 

@@ -9,9 +9,10 @@ Releases are manual and gated. No workflow uploads to PyPI on its own.
     - Twine and a content check (`scripts/check_distribution.py`): license,
       `py.typed`, identical sources in the wheel and sdist, the project page shipped
       in the sdist and absent from the wheel;
-    - ruff and mypy on Python 3.10, 3.11 and 3.12;
+    - ruff on Python 3.11 and mypy on Python 3.10–3.14;
     - the full test suite and the examples against the *installed wheel*, on
-      Python 3.10–3.12 with the locked PyTorch, plus one run with the minimum
+      Python 3.10–3.14 with the locked PyTorch (Linux, plus macOS and Windows on
+      3.12), plus one run with the minimum
       supported PyTorch 2.10;
     - `mkdocs build --strict` from the checkout and from the unpacked sdist,
       the project-page check (`scripts/check_site.py`), and a wheel rebuilt from
@@ -28,7 +29,8 @@ Releases are manual and gated. No workflow uploads to PyPI on its own.
 ## Procedure
 
 1. Merge the release PR once `Tests` is green. Update `CHANGELOG.md`, the version
-   in `pyproject.toml` and `uv.lock` (`uv lock`) in that PR.
+   in `pyproject.toml`, `CITATION.cff` and `uv.lock` (`uv lock`) in that PR. CI
+   derives the expected version from `pyproject.toml`.
 2. From an up-to-date `main`, create and push an annotated tag:
    `git tag -a vX.Y.Z -m "Fiducio X.Y.Z" && git push origin vX.Y.Z`.
 3. Actions → *Publish to PyPI (manual)* → *Run workflow*. Pick the **tag** as the

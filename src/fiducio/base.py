@@ -20,7 +20,7 @@ from .utils import (
     validate_targets,
 )
 from .utils.stopping import StoppingRule, resolve_stopping
-from .utils.tensors import integer_targets, validate_mask
+from .utils.tensors import integer_targets
 
 DeviceLike = str | torch.device
 
@@ -67,8 +67,9 @@ class Calibrator(ABC):
 
     Setting either requires ``val_predictions`` / ``val_targets`` in :meth:`fit`;
     the iterate with the best validation NLL is kept. With ``max_iter`` acting as
-    an upper bound, this reproduces the "Adam + early stopping on validation
-    NLL" recipe used in the paper.
+    an upper bound, this reproduces only the Adam + validation-NLL early-stopping
+    recipe; the paper's case batching, class weighting, schedules, clipping and
+    hyperparameter search are not part of the library.
     """
 
     #: Stable id assigned by :func:`fiducio.registry.register_calibrator`.
@@ -149,16 +150,13 @@ class Calibrator(ABC):
         """
         preds, tgts, msk = self._prepare(predictions, targets, mask, with_targets=True)
         assert tgts is not None  # guaranteed by with_targets=True
-        num_classes = validate_predictions(preds, input_type=self.input_type)
-        validate_targets(
-            preds, tgts, msk, num_classes=num_classes, ignore_index=self.ignore_index
-        )
+        num_classes = validate_predictions(preds, input_type=self.input_type, mask=msk)
+        validate_targets(preds, tgts, msk, num_classes=num_classes, ignore_index=self.ignore_index)
         canonical = self._to_canonical(preds)
         z_flat, y_flat = flatten_valid(canonical, tgts, msk, self.ignore_index)
         if z_flat.shape[0] == 0:
             raise ValueError(
-                "no valid voxels to fit on (all positions are masked out or equal "
-                "ignore_index)"
+                "no valid voxels to fit on (all positions are masked out or equal ignore_index)"
             )
         val_data = self._prepare_validation(
             val_predictions, val_targets, val_mask, num_classes=num_classes
@@ -198,9 +196,11 @@ class Calibrator(ABC):
     def decision_function(self, predictions: Any) -> torch.Tensor:
         """Return calibrated **logits** (pre-softmax) of the input shape.
 
-        Unlike :meth:`transform`, no mask is applied — a logit of 0 is a
-        meaningful value, so masking calibrated logits is left to the caller.
-        ``softmax`` of the result along dimension 1 equals :meth:`transform`.
+        The ``mask`` argument of :meth:`transform` is deliberately not accepted
+        here: a masked logit of 0 is a meaningful value, and ``argmax`` over its
+        output at masked voxels is meaningless. Use :meth:`transform` when masks
+        matter. ``softmax`` of the result along dimension 1 equals
+        :meth:`transform` without a mask.
         """
         if not self._fitted:
             raise NotFittedError("call fit() before decision_function()")
@@ -253,8 +253,7 @@ class Calibrator(ABC):
     def __repr__(self) -> str:
         status = "fitted" if self._fitted else "unfitted"
         return (
-            f"{type(self).__name__}(input_type={self.input_type!r}, "
-            f"{status}, device={self.device})"
+            f"{type(self).__name__}(input_type={self.input_type!r}, {status}, device={self.device})"
         )
 
     # ------------------------------------------------------------- subclass API
@@ -324,7 +323,7 @@ class Calibrator(ABC):
             )
         preds, tgts, msk = self._prepare(val_predictions, val_targets, val_mask, with_targets=True)
         assert tgts is not None
-        val_classes = validate_predictions(preds, input_type=self.input_type)
+        val_classes = validate_predictions(preds, input_type=self.input_type, mask=msk)
         if val_classes != num_classes:
             raise ValueError(
                 f"validation predictions have {val_classes} classes, expected {num_classes}"
@@ -343,7 +342,10 @@ class Calibrator(ABC):
         *,
         with_targets: bool,
     ) -> tuple[torch.Tensor, torch.Tensor | None, torch.Tensor | None]:
-        preds = to_tensor(predictions, dtype=torch.float32, device=self.device).detach()
+        # Validation runs on the input dtype; _to_canonical casts to float32.
+        preds = to_tensor(predictions, device=self.device).detach()
+        if not preds.is_floating_point():
+            preds = preds.float()
         tgts: torch.Tensor | None = None
         if with_targets:
             if targets is None:
@@ -356,6 +358,7 @@ class Calibrator(ABC):
 
     def _to_canonical(self, predictions: torch.Tensor) -> torch.Tensor:
         """Convert validated predictions to the calibrator's canonical space."""
+        predictions = predictions.float()
         if self._input_space == "logits":
             if self.input_type == "logits":
                 return predictions
@@ -371,9 +374,8 @@ class Calibrator(ABC):
         """Validate inputs and return calibrated logits (no autograd graph)."""
         preds, _, msk = self._prepare(predictions, None, mask, with_targets=False)
         validate_predictions(
-            preds, input_type=self.input_type, expected_num_classes=self._num_classes
+            preds, input_type=self.input_type, expected_num_classes=self._num_classes, mask=msk
         )
-        validate_mask(preds, msk)
         with torch.no_grad():
             canonical = self._to_canonical(preds)
             logits = self._map_logits(canonical)

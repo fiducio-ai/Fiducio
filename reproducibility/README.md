@@ -4,6 +4,9 @@ Fiducio contains reusable calibrators. The numerical references in this release
 validate selected calibration maps and objectives; they do not reproduce the
 paper's fitted models, hyperparameter searches or benchmark tables.
 
+The "Research reference" column below names classes and files in the separate
+research checkout used to generate the fixtures, not paths in this repository.
+
 ## Method mapping
 
 | Paper method | Public class | Research reference |
@@ -16,7 +19,8 @@ paper's fitted models, hyperparameter searches or benchmark tables.
 | CMSop | `OrderPreservingMatrixScaling` | `LogitRegularizedOrderPreservingCCDirichletCalibrator` |
 | LTS | Not included in this release | Separate research implementation; not reproduced here |
 
-The conditional reference classes are in `calibrators/order_preserving_dirichlet.py`.
+The conditional reference classes live in the separate research checkout used to
+generate the fixtures and are not part of this release.
 CMS uses joint optimization by default. `independent_experts=True` is a separate
 optimization choice, not an interchangeable setting for paper results.
 
@@ -36,6 +40,10 @@ environments, which still require their own provenance records.
 reference outputs. It records the research HEAD, whether its checkout was dirty,
 the SHA-256 hashes of the imported source files, and the PyTorch version.
 The hashes, not HEAD alone, identify the source used to generate the references.
+The recorded source hashes cannot be independently verified from this repository
+because the research checkout is not shipped; they document the generator, not a
+reproducible public build. The fixture was generated on torch 2.6.0+cu124, while
+the library floor is 2.10.
 
 The standard test suite checks MS, MSc, CDC, CMSap and CMSop for two class counts
 and two seeds: mapped logits, regularization, joint unweighted cross-entropy,
@@ -78,6 +86,9 @@ before replacing the checked-in reference. Standard CI needs no research checkou
   early stopping (Adam, best-validation-NLL restore, optional `ReduceLROnPlateau`)
   is available through `patience` / `lr_patience` and `fit(val_predictions=...)`;
   the paper's hyperparameter search and its chosen values are not shipped.
+  The fitting defaults (full-batch unweighted voxel cross-entropy, no class
+  weighting, no hyperparameter search) are not the paper's protocol, and the
+  paper's numbers cannot be regenerated from this repository.
 
 ## Before linking the camera-ready version
 

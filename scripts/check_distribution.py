@@ -1,4 +1,5 @@
 """Validate source parity, wheel records and release contents before publication."""
+
 from __future__ import annotations
 
 import argparse
@@ -16,10 +17,15 @@ def check(dist: Path) -> None:
     if len(wheels) != 1 or len(sources) != 1:
         raise ValueError("expected exactly one wheel and one sdist")
     with zipfile.ZipFile(wheels[0]) as wheel, tarfile.open(sources[0]) as sdist:
-        files = {m.name.split("/", 1)[1]: sdist.extractfile(m).read()
-                 for m in sdist.getmembers() if m.isfile()}
+        files = {
+            m.name.split("/", 1)[1]: sdist.extractfile(m).read()
+            for m in sdist.getmembers()
+            if m.isfile()
+        }
         names = wheel.namelist()
-        if "fiducio/py.typed" not in names or not any(n.endswith("/licenses/LICENSE") for n in names):
+        if "fiducio/py.typed" not in names or not any(
+            n.endswith("/licenses/LICENSE") for n in names
+        ):
             raise ValueError("wheel is missing typing marker or license")
         for name in names:
             if name.startswith("fiducio/") and files.get("src/" + name) != wheel.read(name):
@@ -28,14 +34,22 @@ def check(dist: Path) -> None:
         for name, digest, size in csv.reader(io.StringIO(wheel.read(record).decode())):
             if digest:
                 content = wheel.read(name)
-                expected = "sha256=" + base64.urlsafe_b64encode(hashlib.sha256(content).digest()).decode().rstrip("=")
+                expected = "sha256=" + base64.urlsafe_b64encode(
+                    hashlib.sha256(content).digest()
+                ).decode().rstrip("=")
                 if digest != expected or int(size) != len(content):
                     raise ValueError(f"invalid wheel record: {name}")
-        for required in ["docs/paper/index.html", "docs/paper/assets/page.js",
-                         "docs/paper/assets/page.css", "docs/paper/assets/fonts/OFL-Roboto.txt",
-                         "docs/paper/assets/fonts/OFL-RobotoMono.txt", "docs/assets/favicon.ico",
-                         "docs/assets/fiducio-logo.png", "docs/assets/fiducio-logo-white.png",
-                         "docs/stylesheets/extra.css"]:
+        for required in [
+            "docs/paper/index.html",
+            "docs/paper/assets/page.js",
+            "docs/paper/assets/page.css",
+            "docs/paper/assets/fonts/OFL-Roboto.txt",
+            "docs/paper/assets/fonts/OFL-RobotoMono.txt",
+            "docs/assets/favicon.ico",
+            "docs/assets/fiducio-logo.png",
+            "docs/assets/fiducio-logo-white.png",
+            "docs/stylesheets/extra.css",
+        ]:
             if required not in files:
                 raise ValueError(f"sdist missing {required}")
         for path in Path("docs/paper").rglob("*"):

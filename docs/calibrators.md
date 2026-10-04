@@ -22,6 +22,9 @@ Translation-invariant means the output is unchanged when the same constant is
 added to every input logit of a voxel. Short aliases (`TS`, `MS`, `CMS`, ...) are provided for convenience; the explicit
 names are recommended in code that others will read.
 
+*Footnote: with `input_type="probs"` the canonical space is log-probabilities,
+so VS, MS and TS become shift-invariant in that input mode.*
+
 ## Paper method mapping
 
 The following methods of [*Rethinking Post-Hoc Calibration in Semantic Segmentation*](https://openreview.net/forum?id=xwNoSNxgxV) (Kirscher et al., Transactions on Machine Learning Research, 2026; preprint [arXiv:2607.01902](https://arxiv.org/abs/2607.01902)) are implemented here. LTS is not included in this
@@ -70,17 +73,23 @@ A practical decision guide:
 - **Probability-space transform?** `DirichletCalibration` applies an affine map
   to log-probabilities (log-linear in probability space).
 - **Calibration must not change the predicted labels?** Use
-  `ArgmaxPreservingMatrixScaling`, which guarantees the calibrated argmax equals
-  the uncalibrated one for every voxel — so Dice/IoU are unchanged.
+  `ArgmaxPreservingMatrixScaling`: the calibrated argmax equals the uncalibrated
+  one at every valid voxel up to floating-point ties, so an argmax segmentation,
+  and Dice/IoU computed from it, is unchanged. Thresholded or post-processed
+  segmentations are not covered.
 - **Calibration must not change the class ranking at all?** Use
   `OrderPreservingMatrixScaling`, which preserves the full per-voxel ordering.
 - **Want a flexible per-region map with no constraints?**
   `ClassConditionalMatrixScaling` fits one affine map per uncalibrated top class.
+- **Only two classes?** `MSc` is very restrictive for `C = 2`; the paper finds
+  it significantly worse on BA-ECE. Prefer a less constrained calibrator.
 
 The class-conditional calibrators (`CDC`/`CMS`, `CMSap`/`CMSAP`, `CMSop`/`CMSOP`)
 jointly optimise all experts in a single loss and regularise the affine map
 induced in the common logit space. They are the most expressive option and
-benefit most from a reasonably sized calibration set.
+benefit most from a reasonably sized calibration set. Their parameters grow as
+`O(C^3)`, so they suit low-to-moderate class counts, and
+`independent_experts=True` costs one full optimization per class.
 
 ## Regularisation
 
@@ -90,6 +99,11 @@ the class-conditional calibrators accept:
 - `lambda_reg` — L2 penalty on off-diagonal matrix entries (diagonal entries
   are not directly penalized);
 - `mu_reg` — L2 penalty on the bias.
+
+The penalty is `lambda_reg * mean(off-diagonal W^2) + mu_reg * mean(b^2)` (the
+mean is taken over experts for the class-conditional family). Both terms are
+means, matching Kull et al.'s (2019) normalized ODIR (their code with
+`reg_norm=True`); values from un-normalized settings are not transferable.
 
 `VectorScaling`'s `lambda_reg` pulls the scale vector towards 1. Start at `0` and
 increase if the calibrator overfits a small calibration set.

@@ -29,6 +29,8 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Operating System :: OS Independent",
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
   "Typing :: Typed",
@@ -71,7 +73,7 @@ dev = [
 build = ["build>=1.0", "twine>=6.0", "setuptools>=77.0.3", "wheel"]
 
 [tool.uv]
-required-version = "==0.12.3"
+required-version = ">=0.12.3"
 
 # CPU is the repository's development/CI backend. These source settings are
 # not part of the wheel's runtime dependency metadata.
@@ -120,9 +122,21 @@ ignore_missing_imports = true
 warn_unused_ignores = true
 warn_redundant_casts = true
 warn_unused_configs = true
-disallow_untyped_defs = false
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+warn_return_any = true
+no_implicit_optional = true
+strict_equality = true
 files = ["src/fiducio"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+filterwarnings = ["error"]
+
+[tool.coverage.run]
+source = ["fiducio"]
+
+[tool.coverage.report]
+fail_under = 95

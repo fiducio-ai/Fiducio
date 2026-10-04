@@ -7,7 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.1] - Unreleased
+### Added
+
+- `unweighted_calibration_error`, the precise name of `average_calibration_error`
+  (kept as an alias): the unweighted mean over non-empty uniform bins, not the
+  adaptive ACE of other work.
+- `validate_predictions` takes an optional `mask=`.
+- Python 3.13 and 3.14 are declared and tested in CI, and the wheel is also
+  tested on macOS and Windows.
+
+### Changed
+
+- With a `mask`, prediction values are only validated at valid positions:
+  masked-out padding may hold anything (including NaN) and `transform` outputs 0
+  there (`apply_mask_to_probabilities` fills rather than multiplies). Positions
+  excluded only through `ignore_index` are still validated.
+- The sum-to-1 tolerance for probabilities is widened to twice the machine
+  epsilon for float16/bfloat16 inputs, so half-precision softmax outputs are
+  accepted. Validation runs on the input dtype and calibrators still compute in
+  float32; float64 predictions beyond the float32 range are rejected.
+- Metrics no longer downcast float64 inputs to float32, and NLL and Brier
+  accumulate in float64; values can differ from 0.1.1 by about 1e-6.
+- Metrics and validation reduce over the class axis before selecting valid
+  voxels. On large volumes, peak extra memory drops by about 2–3× without a mask
+  (NLL 1.9×, ECE 2.4×, Brier 3.2× in our measurements) and by 1.1–2.5× with one.
+
+### Fixed
+
+- ETS stage 2 starts next to the temperature-scaled distribution
+  (`w = [0.998, 0.001, 0.001]`). The 0.1.1 start (`softmax([1, 0, 0])`) could
+  return a map worse than the uncalibrated model after short fits; a one-hot
+  start would freeze the weights, since their gradient scales with the weights.
+  Stage 2 runs in float64 on the true-class probabilities only, so L-BFGS does
+  not stall on some platforms and the stage needs C times less memory. The
+  objective is unchanged and, at default budgets, so are the fitted weights.
+  The start is within −log(0.998) ≈ 2e-3 nats of the stage-1 fit, so short fits
+  are no longer materially worse than the uncalibrated model (≤1e-4 nats in our
+  tests); this is not a guarantee. When the optimum is far from temperature
+  scaling, very short fits (`max_iter` ≲ 20) converge more slowly than in 0.1.1.
+- `load_calibrator`:
+  - casts parameters saved in float64 to float32 instead of failing at
+    transform time;
+  - raises `ValueError` for unreadable/corrupt files, unknown calibrator ids and
+    sparse saved tensors;
+  - raises `TypeError` for a `map_location` that is not a device, and a clear
+    `RuntimeError` for a CUDA `map_location` when CUDA is unavailable.
+- `save_calibrator` writes to a unique temporary file, syncs it and replaces the
+  target, so a failed save leaves an existing file intact and concurrent saves
+  to the same path do not collide.
+- `max_iter=200.0` is rejected with "max_iter must be an integer".
+- `n_bins` and `max_iter` accept numpy integers.
+- Order-preserving matrix scaling sorts stably, so tied classes are ranked the
+  same way on every device.
+- The examples' synthetic data is now actually over-confident (it was
+  under-confident, so temperature scaling sharpened it).
+
+## [0.1.1] - 2026-09-21
 
 Patch release. The public API (classes, functions and signatures) is unchanged.
 Some invalid inputs that 0.1.0 accepted silently now raise `ValueError`.

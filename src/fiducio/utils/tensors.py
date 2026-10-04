@@ -142,30 +142,36 @@ def validate_predictions(
             f"but received C={num_classes}"
         )
     validate_mask(predictions, mask)
-    if mask is None:
-        values, class_dim = predictions, 1
-    else:
-        values, class_dim = predictions.movedim(1, -1)[mask.to(torch.bool)], -1
-    # A finite sum proves every value finite without an elementwise copy; on
-    # overflow the exact check decides.
-    if not torch.isfinite(values.sum()) and not torch.isfinite(values).all():
+    valid = None if mask is None else mask.to(torch.bool)
+
+    def at_valid(per_voxel: torch.Tensor) -> torch.Tensor:
+        # Reduce over the class axis first, so masks never copy (N, C) rows.
+        return per_voxel if valid is None else per_voxel[valid]
+
+    acc = torch.float64 if predictions.dtype == torch.float64 else torch.float32
+    sums = at_valid(predictions.sum(dim=1, dtype=acc))
+    # A finite per-voxel sum proves that voxel finite; on overflow the exact
+    # check decides.
+    if (
+        not torch.isfinite(sums).all()
+        and not at_valid(torch.isfinite(predictions).all(dim=1)).all()
+    ):
         raise ValueError("predictions contain non-finite values (nan/inf)")
-    if values.dtype == torch.float64 and values.numel():
+    if not sums.numel():
+        return num_classes
+    lo = float(at_valid(predictions.amin(dim=1)).min())
+    hi = float(at_valid(predictions.amax(dim=1)).max())
+    if predictions.dtype == torch.float64 and max(-lo, hi) > torch.finfo(torch.float32).max:
         # Calibrators compute in float32, where these values would overflow.
-        lo, hi = (float(v) for v in torch.aminmax(values))
-        if max(-lo, hi) > torch.finfo(torch.float32).max:
-            raise ValueError("predictions exceed the float32 range")
-    if input_type == "probs" and values.numel():
-        pmin = float(values.min())
-        pmax = float(values.max())
-        if pmin < 0.0 or pmax > 1.0:
+        raise ValueError("predictions exceed the float32 range")
+    if input_type == "probs":
+        if lo < 0.0 or hi > 1.0:
             raise ValueError(
                 "input_type='probs' but values fall outside [0, 1]; "
                 "pass input_type='logits' for unnormalised scores"
             )
-        atol = max(_PROB_SUM_ATOL, 2 * torch.finfo(values.dtype).eps)
-        deviation = values.sum(dim=class_dim, dtype=torch.float32).sub_(1.0).abs_().max()
-        if float(deviation) > atol:
+        atol = max(_PROB_SUM_ATOL, 2 * torch.finfo(predictions.dtype).eps)
+        if float(sums.sub_(1.0).abs_().max()) > atol:
             raise ValueError(
                 "input_type='probs' but probabilities do not sum to 1 along the "
                 "class axis (dimension 1)"

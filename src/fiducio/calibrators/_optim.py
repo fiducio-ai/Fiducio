@@ -51,6 +51,8 @@ def resolve_optimizer(
             max_iter = operator.index(max_iter)
         except TypeError:
             raise ValueError("max_iter must be an integer") from None
+    if isinstance(lr, bool):
+        raise ValueError("lr must be a number, not a bool")
     resolved_lr = (adam_lr if name == "adam" else lbfgs_lr) if lr is None else float(lr)
     resolved_iter = (
         (adam_max_iter if name == "adam" else lbfgs_max_iter) if max_iter is None else int(max_iter)

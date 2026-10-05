@@ -102,7 +102,7 @@ channels (`C = 2`). `mask` and `ignore_index` exclude voxels from fitting.
 | Class | Alias | Translation-invariant | Decision preservation |
 |-------|-------|:---------------------:|-----------------------|
 | `TemperatureScaling` | `TS` | yes | argmax and full order |
-| `EnsembleTemperatureScaling` | `ETS` | yes | argmax and full order |
+| `EnsembleTemperatureScaling` | `ETS` | yes | argmax and full order¹ |
 | `VectorScaling` | `VS` | no | — |
 | `MatrixScaling` | `MS` | no | — |
 | `TranslationInvariantMatrixScaling` | `MSc` | yes | — |
@@ -110,6 +110,9 @@ channels (`C = 2`). `mask` and `ignore_index` exclude voxels from fitting.
 | `ClassConditionalMatrixScaling` | `CMS` / `CDC` | yes | — |
 | `ArgmaxPreservingMatrixScaling` | `CMSAP` / `CMSap` | yes | argmax |
 | `OrderPreservingMatrixScaling` | `CMSOP` / `CMSop` | yes | argmax and full order |
+
+¹ In exact arithmetic; in `float32` the mixture can resolve near-ties differently
+once it collapses towards the uniform component.
 
 Translation-invariant means the output is unchanged when the same constant is
 added to every input logit of a voxel.

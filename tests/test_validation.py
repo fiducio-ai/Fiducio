@@ -69,6 +69,14 @@ def test_probs_not_summing_to_one_rejected():
         cal.fit(bad, labels)
 
 
+def test_calibrator_out_of_range_probs_suggests_input_type():
+    """The calibrator branch keeps its own advice: input_type is a real argument."""
+    cal = TemperatureScaling(input_type="probs", device="cpu")
+    logits, labels = synthetic_logits((2, 3, 4, 4), seed=23)
+    with pytest.raises(ValueError, match="pass input_type='logits'"):
+        cal.fit(logits, labels)
+
+
 def test_non_finite_predictions_rejected():
     cal = TemperatureScaling(device="cpu")
     logits, labels = synthetic_logits((2, 3, 4, 4), seed=21)

@@ -195,6 +195,8 @@ def load_calibrator(
     """
     if not os.path.exists(path):
         raise FileNotFoundError(f"calibrator file not found: {path}")
+    if not os.path.isfile(path):
+        raise ValueError(f"calibrator path is not a file: {path}")
 
     location: MapLocation = "cpu" if map_location is None else map_location
     if not isinstance(location, (str, torch.device)):

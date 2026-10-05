@@ -102,6 +102,8 @@ class Calibrator(ABC):
     lr_patience: int | None = None
     lr_factor: float = 0.1
     _stopping: StoppingRule | None = None
+    #: set by gradient-fitted subclasses; read by :meth:`_refresh_stopping`.
+    optimizer: str = "adam"
 
     @property
     def is_fitted(self) -> bool:
@@ -158,6 +160,7 @@ class Calibrator(ABC):
             raise ValueError(
                 "no valid voxels to fit on (all positions are masked out or equal ignore_index)"
             )
+        self._refresh_stopping()
         val_data = self._prepare_validation(
             val_predictions, val_targets, val_mask, num_classes=num_classes
         )
@@ -182,6 +185,12 @@ class Calibrator(ABC):
         mask:
             Optional ``(B, *spatial)`` boolean mask. Masked-out voxels are set to
             0 across all classes in the output.
+
+        Returns
+        -------
+        torch.Tensor
+            Calibrated probabilities, always in ``float32`` (calibrators compute
+            in float32, so ``float64`` inputs do not yield ``float64`` outputs).
         """
         if not self._fitted:
             raise NotFittedError("call fit() before transform()")
@@ -295,6 +304,16 @@ class Calibrator(ABC):
             self.min_delta = self._stopping.min_delta
             self.lr_patience = self._stopping.lr_patience
             self.lr_factor = self._stopping.lr_factor
+
+    def _refresh_stopping(self) -> None:
+        """Re-resolve early stopping from the current attributes.
+
+        ``_init_stopping`` runs in ``__init__``, so settings assigned after
+        construction (``cal.patience = 5``) would otherwise be ignored.
+        """
+        self._init_stopping(
+            self.optimizer, self.patience, self.min_delta, self.lr_patience, self.lr_factor
+        )
 
     def _prepare_validation(
         self,

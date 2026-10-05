@@ -25,6 +25,12 @@ names are recommended in code that others will read.
 *Footnote: with `input_type="probs"` the canonical space is log-probabilities,
 so VS, MS and TS become shift-invariant in that input mode.*
 
+The `ETS` guarantee holds in exact arithmetic — a non-negative weighted sum of
+monotone maps preserves the order — but not bit-for-bit in `float32` once the
+mixture collapses towards the uniform component: ties and near-ties (top-2 gaps
+below the float32 resolution) can then resolve differently. Treat `ETS` as
+order-preserving up to floating-point rounding.
+
 ## Paper method mapping
 
 The following methods of [*Rethinking Post-Hoc Calibration in Semantic Segmentation*](https://openreview.net/forum?id=xwNoSNxgxV) (Kirscher et al., Transactions on Machine Learning Research, 2026; preprint [arXiv:2607.01902](https://arxiv.org/abs/2607.01902)) are implemented here. LTS is not included in this

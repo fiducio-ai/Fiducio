@@ -35,7 +35,7 @@ def _voxels(
     if not p.is_floating_point():
         p = p.float()
     m = None if mask is None else to_tensor(mask, device=p.device).bool()
-    c = validate_predictions(p, input_type="probs", mask=m)
+    c = validate_predictions(p, input_type="probs", mask=m, context="metrics")
     y = integer_targets(targets, device=p.device)
     validate_targets(p, y, m, num_classes=c, ignore_index=ignore_index)
     if p.dtype not in (torch.float32, torch.float64):

@@ -69,6 +69,8 @@ def safe_log(probs: torch.Tensor, eps: float = 1e-12) -> torch.Tensor:
 
 def positive_finite(value: float, name: str, *, allow_zero: bool = False) -> float:
     """Validate a scalar hyperparameter before constructing tensors."""
+    if isinstance(value, bool):
+        raise ValueError(f"{name} must be a number, not a bool")
     value = float(value)
     if not math.isfinite(value) or (value < 0 if allow_zero else value <= 0):
         domain = "non-negative" if allow_zero else "positive"
@@ -110,6 +112,7 @@ def validate_predictions(
     input_type: str,
     expected_num_classes: int | None = None,
     mask: torch.Tensor | None = None,
+    context: str = "calibrator",
 ) -> int:
     """Validate a predictions tensor and return the number of classes.
 
@@ -117,6 +120,10 @@ def validate_predictions(
     positions, so masked-out padding may hold anything, including NaN. For
     ``input_type="probs"`` the sum-to-1 tolerance is ``1e-3``, widened for
     half-precision inputs to cover their rounding error.
+
+    ``context`` tailors the advice given when values fall outside ``[0, 1]``:
+    calibrators accept ``input_type="logits"``, metrics always take
+    probabilities.
 
     Raises
     ------
@@ -166,6 +173,11 @@ def validate_predictions(
         raise ValueError("predictions exceed the float32 range")
     if input_type == "probs":
         if lo < 0.0 or hi > 1.0:
+            if context == "metrics":
+                raise ValueError(
+                    "values fall outside [0, 1]; metrics take probabilities, so "
+                    "apply torch.softmax(logits, dim=1) first"
+                )
             raise ValueError(
                 "input_type='probs' but values fall outside [0, 1]; "
                 "pass input_type='logits' for unnormalised scores"

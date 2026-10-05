@@ -1,7 +1,9 @@
 # Examples
 
 Runnable, CPU-only examples ship in the
-[`examples/`](https://github.com/fiducio-ai/Fiducio/tree/main/examples) directory.
+[`examples/`](https://github.com/fiducio-ai/Fiducio/tree/main/examples) directory
+**of the source repository** — they are not part of the installed wheel, so clone
+the repository (or download a single script) before running the commands below.
 They do not download any model or dataset.
 
 ## 1. Synthetic data

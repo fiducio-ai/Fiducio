@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Metrics no longer suggest `input_type='logits'` when probabilities fall outside
+  `[0, 1]`: the argument does not exist on metrics, which always take
+  probabilities. The message now points at `torch.softmax(logits, dim=1)`.
+- `patience` / `lr_patience` assigned after construction (rather than passed to
+  the constructor) are now honoured by `fit`, instead of being silently ignored.
+- `lr=True` is rejected as a hyperparameter instead of being read as `1.0`;
+  `patience` / `lr_patience` now accept numpy integers, like `max_iter`.
+- `load_calibrator` raises a clear `ValueError` for a directory instead of a raw
+  `IsADirectoryError`.
+
+### Documentation
+
+- `installation.md` documents the CPU-only two-step install and the ~5 GB that a
+  bare `pip install fiducio` pulls in when PyTorch is absent.
+- `examples.md` states that the example scripts ship with the repository, not the
+  wheel.
+- The `ETS` decision-preservation entry is qualified: exact in arithmetic, subject
+  to float32 rounding when the mixture collapses towards uniform.
+
 ## [0.2.0] - 2026-10-04
 
 ### Added

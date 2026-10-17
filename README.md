@@ -182,6 +182,28 @@ Decision and ordering guarantees hold in exact arithmetic and are subject to
 floating-point ties and rounding. They do not cover thresholded or post-processed
 segmentations.
 
+## Multi-rater calibration
+
+[TwinTrack](https://arxiv.org/abs/2604.15950v2) (Kirscher et al., MIDL 2026,
+short paper) motivates binary isotonic calibration towards the mean human
+response (MHR). Fiducio also extends its nine parametric methods to accept
+class distributions. Missing annotations are excluded from the vote counts.
+
+```python
+from fiducio import BinaryIsotonicCalibration, mean_human_response
+
+mhr, annotated = mean_human_response(annotations, num_classes=2)  # (B,R,*spatial)
+cal = BinaryIsotonicCalibration(input_type="probs").fit(probabilities, mhr, mask=annotated)
+calibrated = cal.transform(test_probabilities)
+```
+
+The isotonic map is binary, with at most 250 bins and weighted PAVA. It may
+change a segmentation at threshold 0.5. Its tie handling and interpolation are
+Fiducio conventions; exact TwinTrack reproduction is not claimed. All fits
+remain in memory. See the [multi-rater guide](https://fiducio-ai.github.io/Fiducio/multi_rater/)
+and `examples/multi_rater_calibration.py` for validation and the distinction
+between ECE against MHR and mean ECE against individual raters.
+
 ## Documentation
 
 The [paper project page](https://fiducio-ai.github.io/Fiducio/paper/) presents the
@@ -230,6 +252,24 @@ If you use Fiducio in your research, please cite it using the metadata in
   issn    = {2835-8856},
   year    = {2026},
   url     = {https://openreview.net/forum?id=xwNoSNxgxV}
+}
+```
+
+For work using calibration to MHR or the isotonic approach, also cite
+*TwinTrack: Post-hoc Multi-Rater Calibration for Medical Image Segmentation*
+(Kirscher et al., MIDL 2026, short paper):
+
+```bibtex
+@misc{kirscher2026twintrack,
+  title         = {TwinTrack: Post-hoc Multi-Rater Calibration for Medical Image Segmentation},
+  author        = {Kirscher, Tristan and Ertl, Alexandra and Maier-Hein, Klaus and
+                   Coubez, Xavier and Meyer, Philippe and Faisan, Sylvain},
+  year          = {2026},
+  eprint        = {2604.15950},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG},
+  note          = {Accepted at MIDL 2026, short paper},
+  url           = {https://arxiv.org/abs/2604.15950v2}
 }
 ```
 

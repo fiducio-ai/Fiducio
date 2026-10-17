@@ -104,7 +104,9 @@ def reliability_diagram(
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     ax.set_xlabel("confidence" if class_index is None else f"class {class_index} probability")
-    ax.set_ylabel("agreement" if class_index is None else "observed proportion / mean human response")
+    ax.set_ylabel(
+        "agreement" if class_index is None else "observed proportion / mean human response"
+    )
     ax.set_aspect("equal")
     if title:
         ax.set_title(title)

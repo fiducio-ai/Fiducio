@@ -39,12 +39,21 @@ Most calibrators are mathematically defined on logits; Fiducio converts
 internally as needed, so you only have to declare what you pass in. If you have a
 choice, prefer logits — they carry strictly more information than probabilities.
 
+## Multi-rater targets
+
+[TwinTrack](https://arxiv.org/abs/2604.15950v2) (Kirscher et al., MIDL 2026,
+short paper) calibrates probabilities towards the mean human response: the
+proportion of annotators assigning each class to a voxel. Fiducio accepts these
+floating distributions on all nine parametric methods and provides binary
+isotonic regression inspired by TwinTrack. See the [multi-rater guide](multi_rater.md)
+for missing votes, weighting, validation and metric conventions.
+
 ## Tensor convention
 
 Fiducio is channel-first with the **class axis fixed at dimension 1**:
 
 - `predictions`: `(B, C, *spatial)`
-- `targets`: `(B, *spatial)`, integer class indices
+- `targets`: `(B, *spatial)`, integer class indices, or `(B, C, *spatial)` floating distributions
 - `mask` (optional): `(B, *spatial)`, `True` = valid
 
 The class axis is never guessed from the shape. 2D, 3D and general n-D inputs are
@@ -80,14 +89,15 @@ no probability mass.
 
 - Computation runs on the calibrator's `device` (`cpu`/`cuda`); `None` selects
   CUDA when available.
-- Inputs are converted to `float32` internally; labels to `int64`.
+- Predictions compute in `float32`; labels use `int64` and distributions remain
+  floating. Isotonic coordinates and PAVA use `float64`.
 - Saved calibrators **load on CPU by default**; pass `map_location="cuda"` to
   `load_calibrator` to load onto a GPU. The device used when saving is not forced.
 
 ## Optimizer
 
-Every calibrator is fitted by gradient descent and exposes an `optimizer`
-argument:
+The nine parametric calibrators are fitted by gradient descent and expose an
+`optimizer` argument. Binary isotonic regression uses weighted PAVA instead:
 
 - `optimizer="adam"` (default) — Adam, matching the common reference
   implementations; robust and the safe choice.
@@ -101,7 +111,7 @@ calibrators keep `lr=0.01` for Adam), and can be overridden explicitly.
 
 ## Early stopping
 
-With `optimizer="adam"` (the default), every calibrator can stop on a held-out
+With `optimizer="adam"` (the default), every parametric calibrator can stop on a held-out
 validation set instead of running a fixed number of iterations, which is the
 recipe used in the paper (Adam, early stopping on the validation NLL, learning
 rate decayed on plateaus):

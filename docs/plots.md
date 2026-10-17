@@ -56,3 +56,13 @@ reliability_diagram(calibrator.transform(logits), labels, ax=ax2, metric="ace")
 If you want to build your own figure, [`fiducio.reliability_curve`](api/metrics.md)
 returns the raw per-bin statistics (`bin_edges`, `bin_confidence`,
 `bin_accuracy`, `bin_counts`, `ece`, `ace`) as tensors.
+
+## Class reliability and multi-rater targets
+
+Pass `class_index=1` to plot positive-class probabilities against observed
+frequencies or the proportion of annotators. Soft targets have the same shape
+as probabilities; exclude unannotated voxels with `mask`. The displayed ECE is
+against the supplied targets. Mean-rater-ECE requires the individual votes and
+is computed separately. [TwinTrack](https://arxiv.org/abs/2604.15950v2)
+(Kirscher et al., MIDL 2026, short paper) uses 50 uniform evaluation bins; see
+the [multi-rater guide](multi_rater.md) for both ECE definitions.

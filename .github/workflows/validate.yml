@@ -109,7 +109,7 @@ jobs:
           cd "$RUNNER_TEMP"
           "$python" -c 'import os, fiducio; from pathlib import Path; assert "site-packages" in Path(fiducio.__file__).parts; assert fiducio.__version__ == os.environ["EXPECTED_VERSION"], (fiducio.__version__, os.environ["EXPECTED_VERSION"])'
           "$python" -m pytest "$GITHUB_WORKSPACE/tests" -c "$GITHUB_WORKSPACE/pyproject.toml" --cov=fiducio --cov-report=term-missing
-          for example in basic_segmentation_calibration pytorch_model_calibration reliability_diagram ensemble_pooling; do
+          for example in basic_segmentation_calibration pytorch_model_calibration reliability_diagram ensemble_pooling multi_rater_calibration; do
             "$python" "$GITHUB_WORKSPACE/examples/$example.py"
           done
 

@@ -65,3 +65,10 @@ python examples/reliability_diagram.py
 one on the mean probabilities (`input_type="probs"`) and one on the mean logits
 (`input_type="logits"`). Members are pooled before fitting. Calibration and test
 cases are disjoint. These are synthetic examples, not paper benchmark results.
+
+## Multi-rater calibration
+
+Run `uv run python examples/multi_rater_calibration.py` to compare single-rater
+and MHR targets for temperature scaling and binary isotonic calibration on
+synthetic case splits. It reports both MHR-ECE and mean-rater-ECE and saves a
+class reliability diagram. See the [multi-rater guide](multi_rater.md).

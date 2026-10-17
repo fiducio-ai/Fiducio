@@ -1,10 +1,10 @@
 # Intégration de la calibration multi-rater vers la MHR
 
-Plan préparé le 13 octobre 2026, complété le 17 octobre après vérification du
-code de `d93570f`. Il décrit les changements à réaliser ; aucune fonctionnalité
-MHR n'est encore implémentée. Le worktree `feat/mhr-calibration`, situé dans
-`/tmp/fiducio-mhr-mimo`, pointe encore sur ce même commit sans diff de code.
-Ce document planifie le travail ; il ne déclenche ni implémentation ni publication.
+Plan préparé le 13 octobre 2026, complété le 17 octobre à partir de `d93570f`.
+L'implémentation a ensuite été autorisée et réalisée sur `feat/mhr-integration` :
+maintenance numérique, cibles MHR sur les neuf méthodes, métriques, isotone,
+exemple et documentation avec citation TwinTrack. Les sections ci-dessous
+conservent les décisions et critères d'acceptation. Aucune version n'est publiée.
 
 ## Objectif et référence
 
@@ -301,16 +301,18 @@ main ; un simple test de forme ou de finitude ne vérifie pas PAVA.
 
 ## Découpage exécutable et critères de passage
 
-**État au 17 octobre : prêt à implémenter.** Les trois remarques de la
-relecture indépendante ont été intégrées, ainsi que l'exigence de citation
-TwinTrack MIDL 2026. Il n'y a pas de décision scientifique ou d'API laissée
-à l'utilisateur avant de commencer. L'absence de relecture OpenCode et de
-comparaison au code original TwinTrack est consignée ; elle limite ce qu'on
-peut affirmer sur une reproduction exacte, sans bloquer cette intégration.
+**État au 17 octobre : lots A à E implémentés localement.** Les trois remarques
+de la relecture indépendante ont été intégrées, ainsi que la citation TwinTrack
+MIDL 2026. Les tests, le lint, le typage, la documentation stricte, la construction
+wheel/sdist et un essai du paquet installé sont vérifiés. Les tests CUDA sont
+présents mais ignorés faute de GPU ; la matrice des autres OS/Python n'est pas
+réexécutée localement. L'absence de comparaison au code original TwinTrack
+limite toute affirmation de reproduction exacte.
 
-Les PR ci-dessous sont séquentielles. Chaque PR inclut ses tests et la doc de
-son API ; la dernière rassemble le parcours complet. Les versions restent
-proposées : l'autorisation de rédiger ce plan ne vaut pas publication.
+Les lots ci-dessous sont séquentiels et isolés en commits. Ils sont réunis dans
+une PR d'intégration pour vérifier la matrice CI sur l'ensemble cohérent. Chaque
+lot inclut ses tests ; le dernier rassemble le parcours et la documentation.
+Les versions restent proposées : aucune publication n'est déclenchée.
 
 | PR | Contenu et fichiers principaux | Critère de passage |
 | --- | --- | --- |
@@ -346,7 +348,7 @@ Le correctif Brier de A est conservé lors de l'extension aux cibles souples de 
    réelle sur des cas séparés reste nécessaire avant de revendiquer un gain
    scientifique sur le dataset utilisateur.
 
-Garder une PR par lot pour pouvoir contrôler chaque changement. Un échec de
+Garder un commit par lot pour pouvoir contrôler chaque changement. Un échec de
 test ciblé se résout dans son lot ; il ne doit pas être reporté au lot final.
 Une version corrective intermédiaire peut être publiée si utile, mais sa
 publication ne conditionne pas le démarrage de B. Ne pas attendre qu'OpenCode

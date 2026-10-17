@@ -39,3 +39,7 @@
 ## Order-preserving matrix scaling
 
 ::: fiducio.OrderPreservingMatrixScaling
+
+## Binary isotonic calibration
+
+::: fiducio.BinaryIsotonicCalibration

@@ -1,7 +1,9 @@
 # API: Metrics & helpers
 
 The metrics take probabilities of shape `(B, C, *spatial)` and integer labels of
-shape `(B, *spatial)`, with optional `mask` and `ignore_index`.
+shape `(B, *spatial)`, or floating class distributions with the same shape as
+the probabilities. Use `mask` to exclude soft targets; `ignore_index` applies
+to hard labels. See [multi-rater calibration](../multi_rater.md).
 
 ::: fiducio.negative_log_likelihood
 
@@ -18,6 +20,8 @@ shape `(B, *spatial)`, with optional `mask` and `ignore_index`.
 ::: fiducio.ReliabilityCurve
 
 ## Helpers
+
+::: fiducio.mean_human_response
 
 ::: fiducio.two_channel_from_binary
 

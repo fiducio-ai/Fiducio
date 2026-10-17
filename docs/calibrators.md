@@ -31,6 +31,21 @@ mixture collapses towards the uniform component: ties and near-ties (top-2 gaps
 below the float32 resolution) can then resolve differently. Treat `ETS` as
 order-preserving up to floating-point rounding.
 
+## Binary isotonic calibration and MHR
+
+[`BinaryIsotonicCalibration`](api/calibrators.md#fiducio.BinaryIsotonicCalibration)
+fits a nondecreasing positive-class map with weighted PAVA on at most 250 bins.
+It accepts two-channel probabilities or logits and hard or MHR targets. This
+approach is inspired by [TwinTrack](https://arxiv.org/abs/2604.15950v2)
+(Kirscher et al., MIDL 2026, short paper). Tie handling and interpolation are
+explicit Fiducio conventions; exact reproduction has not been verified.
+It can change a segmentation at threshold 0.5, and has no optimizer or early
+stopping. The nine parametric calibrators also accept MHR distributions.
+See [multi-rater calibration](multi_rater.md) for details and metric conventions.
+
+Decision and ordering guarantees in the table hold in exact arithmetic and
+are subject to floating-point ties and rounding.
+
 ## Paper method mapping
 
 The following methods of [*Rethinking Post-Hoc Calibration in Semantic Segmentation*](https://openreview.net/forum?id=xwNoSNxgxV) (Kirscher et al., Transactions on Machine Learning Research, 2026; preprint [arXiv:2607.01902](https://arxiv.org/abs/2607.01902)) are implemented here. LTS is not included in this
@@ -68,7 +83,7 @@ of one shared fit across all classes).
 A practical decision guide:
 
 - **Start with `TemperatureScaling`.** It has a single parameter, is very hard to
-  overfit, never changes the segmentation, and is a strong baseline. If your only
+  overfit, preserves the argmax up to floating-point ties and rounding, and is a strong baseline. If your only
   problem is over/under-confidence, it is often enough.
 - **Need per-class flexibility?** Try `VectorScaling`, then `MatrixScaling`. Use
   the off-diagonal/bias regularisation (`lambda_reg`, `mu_reg`) when the number

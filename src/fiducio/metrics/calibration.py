@@ -174,7 +174,7 @@ def reliability_curve(
         except TypeError:
             c = -1
         if not 0 <= c < p.shape[1]:
-            raise ValueError(f"class_index must be an integer in [0, {p.shape[1]-1}]")
+            raise ValueError(f"class_index must be an integer in [0, {p.shape[1] - 1}]")
         confidence = p[:, c]
         observed = y[:, c] if y.shape == p.shape else y == c
     correct = _select(observed, valid).double()
@@ -228,7 +228,9 @@ def expected_calibration_error(
     ``n_bins=50`` and compute per case to follow that convention. Boundary-aware
     ECE is not included.
     """
-    return reliability_curve(probs, targets, mask, ignore_index, n_bins, class_index=class_index).ece
+    return reliability_curve(
+        probs, targets, mask, ignore_index, n_bins, class_index=class_index
+    ).ece
 
 
 def unweighted_calibration_error(
@@ -255,7 +257,9 @@ def unweighted_calibration_error(
     paper computes ACE on the pooled test voxels rather than per image. Kept as
     ``average_calibration_error`` for backwards compatibility.
     """
-    return reliability_curve(probs, targets, mask, ignore_index, n_bins, class_index=class_index).ace
+    return reliability_curve(
+        probs, targets, mask, ignore_index, n_bins, class_index=class_index
+    ).ace
 
 
 average_calibration_error = unweighted_calibration_error

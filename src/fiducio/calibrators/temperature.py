@@ -19,8 +19,8 @@ _T_EPS = 1e-6
 class TemperatureScaling(Calibrator):
     """Temperature scaling: ``softmax(z / T)`` with a single scalar ``T > 0``.
 
-    The simplest and most robust post-hoc calibrator. It cannot change the
-    predicted class ordering; it only rescales confidence.
+    The simplest post-hoc calibrator. It preserves class ordering in exact
+    arithmetic; floating-point ties and rounding can change an argmax.
 
     Parameters
     ----------

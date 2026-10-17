@@ -178,6 +178,10 @@ shipped metrics are top-1 pooled point estimates. `average_calibration_error` is
 unweighted mean over non-empty uniform bins (not the adaptive ACE of other work)
 and is also available as `unweighted_calibration_error`.
 
+Decision and ordering guarantees hold in exact arithmetic and are subject to
+floating-point ties and rounding. They do not cover thresholded or post-processed
+segmentations.
+
 ## Documentation
 
 The [paper project page](https://fiducio-ai.github.io/Fiducio/paper/) presents the

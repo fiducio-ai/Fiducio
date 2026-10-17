@@ -347,7 +347,8 @@ class ArgmaxPreservingMatrixScaling(_ClassConditionalBase):
 
     Parameterised through non-negative margins between the top class and its
     competitors, which guarantees the calibrated argmax equals the uncalibrated
-    argmax for every voxel. Experts are optimized jointly by default; set
+    argmax in exact arithmetic; floating-point ties and rounding can change it.
+    Experts are optimized jointly by default; set
     ``independent_experts=True`` to fit each one in its own optimization loop.
     """
 
@@ -395,7 +396,8 @@ class OrderPreservingMatrixScaling(_ClassConditionalBase):
 
     Parameterised through non-negative gaps between consecutively ranked
     classes, which guarantees the full class ranking is preserved for every
-    voxel. Experts are optimized jointly by default; set
+    voxel in exact arithmetic, subject to floating-point ties and rounding.
+    Experts are optimized jointly by default; set
     ``independent_experts=True`` to fit each one in its own optimization loop.
     """
 

@@ -84,10 +84,12 @@ def brier_score(
     p, y, valid = _voxels(probs, targets, mask, ignore_index)
     if valid is not None and not bool(valid.any()):
         return float("nan")
-    # sum_c (p_c - onehot_c)^2 = ||p||^2 - 2 p_y + 1, without a one-hot copy of p.
-    sq_norm = _select(torch.linalg.vector_norm(p, dim=1), valid).double().square()
-    true_p = _select(_true_class_probs(p, y), valid).double()
-    return float((sq_norm - 2 * true_p + 1).mean().item())
+    # Direct residuals avoid cancellation near perfect predictions, one channel at a time.
+    squared = torch.zeros_like(_select(y, valid), dtype=torch.float64)
+    for c in range(p.shape[1]):
+        residual = _select(p[:, c], valid).double() - _select(y == c, valid).double()
+        squared += residual.square()
+    return float(squared.mean().item())
 
 
 @dataclass

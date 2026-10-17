@@ -398,4 +398,9 @@ class Calibrator(ABC):
         with torch.no_grad():
             canonical = self._to_canonical(preds)
             logits = self._map_logits(canonical)
+            finite = torch.isfinite(logits).all(dim=1)
+            if msk is not None:
+                finite = finite[msk]
+            if not bool(finite.all()):
+                raise ValueError("calibration produced non-finite logits (numerical overflow)")
         return logits, msk

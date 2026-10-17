@@ -20,7 +20,7 @@ from .utils import (
     validate_targets,
 )
 from .utils.stopping import StoppingRule, resolve_stopping
-from .utils.tensors import integer_targets
+from .utils.tensors import prepare_targets
 
 DeviceLike = str | torch.device
 
@@ -36,7 +36,8 @@ class Calibrator(ABC):
 
     * **predictions** are channel-first, class axis at dimension 1
       (``(B, C, *spatial)``; ``(N, C)`` is also accepted);
-    * **targets** are integer labels of shape ``(B, *spatial)``;
+    * **targets** are integer labels ``(B, *spatial)`` or floating class
+      distributions ``(B, C, *spatial)``, including mean human responses;
     * **mask**, when given, is ``(B, *spatial)`` with ``True`` for valid voxels.
 
     Inputs may be raw ``logits`` or normalised ``probs`` (see ``input_type``).
@@ -55,7 +56,7 @@ class Calibrator(ABC):
 
     Notes
     -----
-    Calibrators fitted by gradient descent (all of them) also accept, as
+    Calibrators fitted by gradient descent also accept, as
     keyword-only constructor arguments, an optional validation-based early
     stopping rule (Adam only):
 
@@ -132,7 +133,9 @@ class Calibrator(ABC):
         predictions:
             ``(B, C, *spatial)`` logits or probabilities (see ``input_type``).
         targets:
-            ``(B, *spatial)`` integer labels.
+            ``(B, *spatial)`` integer labels or ``(B, C, *spatial)`` floating
+            distributions. Soft targets must sum to 1; exclude positions with
+            ``mask`` rather than ``ignore_index``. Each valid voxel has equal weight.
         mask:
             Optional ``(B, *spatial)`` boolean mask; ``True`` marks valid voxels.
         val_predictions, val_targets, val_mask:
@@ -323,7 +326,7 @@ class Calibrator(ABC):
         *,
         num_classes: int,
     ) -> tuple[torch.Tensor, torch.Tensor] | None:
-        """Flatten the optional validation set into canonical ``(N, C)`` / ``(N,)`` tensors."""
+        """Flatten validation predictions and hard labels or soft distributions."""
         if val_predictions is None and val_targets is None:
             if val_mask is not None:
                 raise ValueError("val_mask given without val_predictions and val_targets")
@@ -369,7 +372,7 @@ class Calibrator(ABC):
         if with_targets:
             if targets is None:
                 raise ValueError("targets are required for fit()")
-            tgts = integer_targets(targets, device=self.device)
+            tgts = prepare_targets(preds, targets)
         msk: torch.Tensor | None = None
         if mask is not None:
             msk = to_tensor(mask, device=self.device).to(torch.bool)

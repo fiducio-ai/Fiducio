@@ -6,7 +6,8 @@ math works for 2D, 3D and general n-D segmentation:
 * **predictions** are channel-first with the class axis at dimension 1:
   ``(B, C, *spatial)`` (e.g. ``(B, C, H, W)`` in 2D, ``(B, C, D, H, W)`` in 3D).
   A plain ``(N, C)`` tensor (no spatial axes) is also accepted.
-* **targets** are integer class indices of shape ``(B, *spatial)``.
+* **targets** are integer class indices ``(B, *spatial)`` or floating class
+  distributions ``(B, C, *spatial)`` (including mean human responses).
 * **mask**, when given, is a boolean tensor of shape ``(B, *spatial)`` where
   ``True`` marks valid positions.
 
@@ -16,6 +17,7 @@ The class axis is *always* dimension 1. Fiducio never tries to guess it.
 from __future__ import annotations
 
 import math
+import operator
 
 import numpy as np
 import torch
@@ -97,6 +99,47 @@ def integer_targets(targets: ArrayLike, *, device: torch.device) -> torch.Tensor
     ):
         raise ValueError("targets must contain integer labels representable in int64")
     return y.long()
+
+
+def prepare_targets(predictions: torch.Tensor, targets: ArrayLike) -> torch.Tensor:
+    """Preserve class distributions; convert spatial labels only after checking integers."""
+    y = to_tensor(targets, device=predictions.device).detach()
+    if y.shape == predictions.shape:
+        if not y.is_floating_point():
+            raise ValueError("soft targets must be floating class distributions")
+        return y
+    return integer_targets(y, device=predictions.device)
+
+
+def mean_human_response(
+    annotations: ArrayLike, *, num_classes: int, ignore_index: int = DEFAULT_IGNORE_INDEX
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Return empirical class proportions and an annotated-voxel mask.
+
+    ``annotations`` has shape ``(B, R, *spatial)`` with rater axis 1.
+    Missing votes equal ``ignore_index``. Unannotated voxels have zero mass;
+    pass the returned mask to ``fit`` and metrics. Each valid voxel receives
+    equal weight, regardless of how many available raters it has.
+    """
+    try:
+        classes = -1 if isinstance(num_classes, bool) else operator.index(num_classes)
+    except TypeError:
+        classes = -1
+    if classes < 2:
+        raise ValueError("num_classes must be an integer >= 2")
+    a = to_tensor(annotations).detach()
+    if a.ndim < 2:
+        raise ValueError("annotations must have shape (B, R, *spatial)")
+    a = integer_targets(a, device=a.device)
+    present = a != ignore_index
+    if bool(((a < 0) | (a >= classes))[present].any()):
+        raise ValueError(f"annotation labels must lie in [0, {classes - 1}]")
+    counts = present.sum(dim=1)
+    proportions = torch.stack(
+        [((a == c) & present).sum(dim=1) for c in range(classes)], dim=1
+    ).float()
+    proportions /= counts.clamp_min(1).unsqueeze(1)
+    return proportions, counts > 0
 
 
 def validate_mask(predictions: torch.Tensor, mask: torch.Tensor | None) -> None:
@@ -199,9 +242,14 @@ def validate_targets(
     num_classes: int,
     ignore_index: int,
 ) -> None:
-    """Validate label and mask tensors against ``predictions``."""
+    """Validate hard labels or soft class distributions against predictions."""
     if not torch.is_tensor(targets):
         raise TypeError("targets must be a torch.Tensor")
+    if targets.shape == predictions.shape:
+        if not targets.is_floating_point():
+            raise ValueError("soft targets must be floating class distributions")
+        validate_predictions(targets, input_type="probs", mask=mask, context="targets")
+        return
     expected_shape = (predictions.shape[0],) + tuple(predictions.shape[2:])
     if tuple(targets.shape) != expected_shape:
         raise ValueError(
@@ -246,12 +294,22 @@ def flatten_valid(
     mask: torch.Tensor | None,
     ignore_index: int,
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    """Return the valid ``(N, C)`` rows and ``(N,)`` labels for fitting.
+    """Return valid ``(N, C)`` rows and labels ``(N,)`` or distributions ``(N,C)``.
 
     Positions whose label equals ``ignore_index`` or whose mask is ``False`` are
-    dropped.
+    dropped. Soft targets use only the mask; exact one-hot targets are reduced
+    to labels to preserve the hard-label optimizer path.
     """
     flat, _ = class_last_flatten(z)
+    if targets.shape == z.shape:
+        soft, _ = class_last_flatten(targets)
+        if mask is not None:
+            valid = mask.reshape(-1).bool()
+            flat, soft = flat[valid], soft[valid]
+        # Keep exact one-hot targets on the hard-label kernel for reproducible fits.
+        if bool(((soft == 0) | (soft == 1)).all()) and bool((soft.sum(1) == 1).all()):
+            return flat, soft.argmax(1)
+        return flat, soft.to(dtype=z.dtype)
     targets_flat = targets.reshape(-1)
     valid = targets_flat != ignore_index
     if mask is not None:

@@ -123,16 +123,20 @@ class EnsembleTemperatureScaling(Calibrator):
         temperature = max(self.temperature, _T_EPS)
         uniform = 1.0 / float(num_classes)
 
-        def true_class_probs(z: torch.Tensor, y: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-            # The NLL only needs each component's probability of the true class.
+        def component_probs(z: torch.Tensor, y: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+            # Hard labels only need the true-class probabilities; soft labels need all classes.
             # float64 keeps the small stage-2 loss changes above rounding noise, so
             # L-BFGS line searches do not stall on some platforms.
-            index = y.unsqueeze(1)
-            scaled = F.softmax(z / temperature, dim=1).gather(1, index).squeeze(1)
-            original = F.softmax(z, dim=1).gather(1, index).squeeze(1)
+            index = y.unsqueeze(1) if y.ndim == 1 else None
+            scaled = F.softmax(z / temperature, dim=1)
+            if index is not None:
+                scaled = scaled.gather(1, index).squeeze(1)
+            original = F.softmax(z, dim=1)
+            if index is not None:
+                original = original.gather(1, index).squeeze(1)
             return scaled.double(), original.double()
 
-        q0, q1 = true_class_probs(z_flat.detach(), y_flat)
+        q0, q1 = component_probs(z_flat.detach(), y_flat)
         # Start next to the temperature-scaled distribution. The softmax gradient of
         # each weight scales with the weight itself, so the other weights must not
         # start at ~0 or the optimizer can never move them.
@@ -141,19 +145,23 @@ class EnsembleTemperatureScaling(Calibrator):
         )
         raw_w = torch.log(init_w).requires_grad_(True)
 
-        def mixture_nll(t0: torch.Tensor, t1: torch.Tensor) -> torch.Tensor:
+        def mixture_nll(t0: torch.Tensor, t1: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
             w = F.softmax(raw_w, dim=0)
-            return -torch.log((w[0] * t0 + w[1] * t1 + w[2] * uniform).clamp_min(_EPS)).mean()
+            log_p = torch.log((w[0] * t0 + w[1] * t1 + w[2] * uniform).clamp_min(_EPS))
+            if y.ndim == 2:
+                return -(y.double() * log_p).sum(dim=1).mean()
+            return -log_p.mean()
 
         def loss_fn() -> torch.Tensor:
-            return mixture_nll(q0, q1)
+            return mixture_nll(q0, q1, y_flat)
 
         val_fn = None
         if self._val is not None:
-            v0, v1 = true_class_probs(*self._val)
+            v0, v1 = component_probs(*self._val)
+            _, y_val = self._val
 
             def val_fn() -> torch.Tensor:
-                return mixture_nll(v0, v1)
+                return mixture_nll(v0, v1, y_val)
 
         minimize(
             self.optimizer,

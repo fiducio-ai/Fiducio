@@ -29,6 +29,8 @@ def test_public_api_is_importable():
     for name in [
         "Calibrator",
         "TemperatureScaling",
+        "BinaryIsotonicCalibration",
+        "mean_human_response",
         "EnsembleTemperatureScaling",
         "VectorScaling",
         "MatrixScaling",

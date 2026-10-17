@@ -45,3 +45,41 @@ def test_metrics_on_cuda_in_deterministic_mode():
         expected_calibration_error(probs, labels.cuda())
     finally:
         torch.use_deterministic_algorithms(previous)
+
+
+def test_multi_rater_isotonic_and_metrics_on_cuda(tmp_path):
+    from fiducio import (
+        BinaryIsotonicCalibration,
+        brier_score,
+        load_calibrator,
+        mean_human_response,
+        negative_log_likelihood,
+        reliability_curve,
+    )
+
+    a = torch.tensor([[0, 1, 1], [1, 1, -100], [-100, -100, -100]], device="cuda")
+    q, valid = mean_human_response(a, num_classes=2)
+    p = torch.tensor([[0.8, 0.2], [0.1, 0.9], [float("nan"), float("nan")]], device="cuda")
+    cal = BinaryIsotonicCalibration(input_type="probs", device="cuda").fit(p, q, mask=valid)
+    out = cal.transform(p, mask=valid)
+    assert out.is_cuda and torch.isfinite(out).all()
+    assert negative_log_likelihood(out, q, mask=valid) >= 0
+    assert brier_score(out, q, mask=valid) >= 0
+    previous = torch.are_deterministic_algorithms_enabled()
+    torch.use_deterministic_algorithms(True)
+    try:
+        assert reliability_curve(out, q, mask=valid, class_index=1).ece >= 0
+    finally:
+        torch.use_deterministic_algorithms(previous)
+    path = tmp_path / "isotonic_cuda.pt"
+    cal.save(path)
+    loaded = load_calibrator(path)
+    torch.testing.assert_close(loaded.transform(p.cpu(), mask=valid.cpu()), out.cpu())
+
+
+@pytest.mark.parametrize("calibrator_id", ALL_CALIBRATOR_IDS)
+def test_soft_targets_on_cuda(calibrator_id):
+    logits, _ = synthetic_logits((2, 3, 4, 4), seed=83)
+    q = (logits / 2).softmax(1).cuda()
+    cal = make_calibrator(calibrator_id, device="cuda", max_iter=3).fit(logits.cuda(), q)
+    assert torch.isfinite(cal.transform(logits.cuda())).all()

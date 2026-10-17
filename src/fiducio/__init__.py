@@ -22,6 +22,7 @@ from .calibrators import (
     TS,
     VS,
     ArgmaxPreservingMatrixScaling,
+    BinaryIsotonicCalibration,
     ClassConditionalMatrixScaling,
     CMSap,
     CMSop,
@@ -59,6 +60,7 @@ __all__ = [
     "NotFittedError",
     # calibrators
     "TemperatureScaling",
+    "BinaryIsotonicCalibration",
     "EnsembleTemperatureScaling",
     "VectorScaling",
     "MatrixScaling",

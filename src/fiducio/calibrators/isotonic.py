@@ -43,7 +43,9 @@ class BinaryIsotonicCalibration(Calibrator):
     -----
     Fit sorts all valid voxels: O(N log N) time and O(N) memory, not streaming.
     No optimizer or validation-based early stopping is used. Learned coordinates
-    are stored in float64; public probabilities are float32 and preserve 0/1.
+    are stored in float64; public probabilities are float32. Fitted map values
+    of exactly 0/1 are returned without clipping. Input scores of 0/1 are still
+    calibrated and need not map to 0/1.
     ``decision_function`` returns log-probabilities, including -inf at zeros.
     """
 

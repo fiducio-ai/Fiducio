@@ -80,7 +80,10 @@ It does not promise to preserve the per-voxel class argmax. Only `C=2` is suppor
 there is no independent multiclass isotonic renormalization.
 
 Coordinates, sums and PAVA use float64; public probabilities use float32.
-Exact input zeros are retained during fitting, and exact output 0/1 are preserved.
+Exact input zeros are retained during fitting. When the learned map outputs
+exactly 0 or 1, those values are returned without clipping. An input score of
+0 or 1 is still calibrated and need not remain 0 or 1; outside the learned
+score range, it maps to the nearest fitted endpoint value.
 `decision_function` returns log-probabilities and legitimately contains `-inf`
 at zero probabilities. Saved coordinates remain finite and are validated for
 monotonicity when loaded. Existing parametric checkpoints remain readable.

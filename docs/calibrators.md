@@ -44,8 +44,9 @@ stopping. The nine parametric calibrators also accept MHR distributions.
 See [multi-rater calibration](multi_rater.md) for details and metric conventions.
 
 `n_bins` is a genuine hyperparameter; Fiducio does not pick it for you. Search
-over candidate values and keep the best on held-out MHR targets (the evaluation
-bins and the fitting bins are unrelated settings):
+over candidate values and keep the best scoring one on MHR targets held out
+from the fit (the snippet below reuses the fitting data for brevity; the
+evaluation bins and the fitting bins are unrelated settings):
 
 ```python
 for n_bins in (16, 64, 250, 500, 1000):  # fitting bins

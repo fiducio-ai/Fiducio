@@ -1,5 +1,7 @@
 """Known optima and lifecycle tests for binary isotonic calibration."""
 
+import itertools
+
 import numpy as np
 import pytest
 import torch
@@ -14,6 +16,95 @@ def probabilities(scores):
 
 def calibrator(**kwargs):
     return BinaryIsotonicCalibration(input_type="probs", device="cpu", **kwargs)
+
+
+def _numpy_binned_pava_reference(scores, targets, n_bins):
+    """Independent NumPy reimplementation of the documented binning + PAVA protocol."""
+    order = np.argsort(scores, kind="stable")
+    s, t = scores[order], targets[order]
+    _, counts = np.unique(s, return_counts=True)
+    group_ends = np.cumsum(counts)
+    n, k = len(s), min(n_bins, len(s))
+    ranks = np.ceil(np.arange(1, k) * n / k).astype(np.int64)
+    idx = np.searchsorted(group_ends, ranks, side="left")
+    ends = np.unique(np.concatenate([group_ends[idx], [group_ends[-1]]]))
+    starts = np.concatenate([[0], ends[:-1]])
+    valid = ends > starts
+    ends, starts = ends[valid], starts[valid]
+    weights = (ends - starts).astype(float)
+    x_ref = np.add.reduceat(s, starts) / weights
+    means = np.add.reduceat(t, starts) / weights
+    stack = []
+    for value, weight in zip(means, weights, strict=True):
+        stack.append([value, weight, 1])
+        while len(stack) > 1 and stack[-2][0] > stack[-1][0]:
+            v1, w1, s1 = stack.pop()
+            v0, w0, s0 = stack.pop()
+            stack.append([(v0 * w0 + v1 * w1) / (w0 + w1), w0 + w1, s0 + s1])
+    return x_ref, np.array([v for v, _, size in stack for _ in range(size)])
+
+
+def test_bins_and_interpolation_match_numpy_reference():
+    rng = np.random.default_rng(2026)
+    # Quantized scores create heavy ties, like a float16-rounded ensemble.
+    # Casting through float32 keeps the NumPy reference on the exact same values
+    # the calibrator consumes.
+    scores = np.round(rng.random(800), 2).astype(np.float32).astype(np.float64)
+    votes = rng.integers(0, 2, (800, 5)).mean(axis=1).astype(np.float32).astype(np.float64)
+    reference_x, reference_y = _numpy_binned_pava_reference(scores, votes, 250)
+    cal = calibrator(n_bins=250).fit(
+        probabilities(scores), probabilities(votes)
+    )
+    torch.testing.assert_close(cal.x, torch.tensor(reference_x, dtype=torch.float64), atol=1e-12, rtol=1e-12)
+    torch.testing.assert_close(cal.y, torch.tensor(reference_y, dtype=torch.float64), atol=1e-9, rtol=1e-9)
+    grid = np.linspace(0.0, 1.0, 4001)
+    expected = np.interp(grid, reference_x, reference_y, left=reference_y[0], right=reference_y[-1])
+    out = cal.transform(probabilities(grid))[:, 1].numpy()
+    torch.testing.assert_close(torch.tensor(out), torch.tensor(expected, dtype=torch.float32), atol=1e-5, rtol=1e-5)
+
+
+def _brute_force_isotonic_optimum(s_sorted, t_sorted):
+    """Exhaustive minimum cost over every nondecreasing partition of tie groups."""
+    _, counts = np.unique(s_sorted, return_counts=True)
+    starts = np.concatenate([[0], np.cumsum(counts)[:-1]])
+    weights = counts.astype(float)
+    means = np.add.reduceat(t_sorted, starts) / weights
+    groups = len(counts)
+    best = np.inf
+    for r in range(groups):
+        for cuts in itertools.combinations(range(groups - 1), r):
+            bounds = [0] + [c + 1 for c in cuts] + [groups]
+            vals, cost = [], 0.0
+            for a, b in zip(bounds[:-1], bounds[1:], strict=True):
+                mu = (weights[a:b] * means[a:b]).sum() / weights[a:b].sum()
+                vals.append(mu)
+                cost += (weights[a:b] * (means[a:b] - mu) ** 2).sum()
+            if all(vals[i] <= vals[i + 1] + 1e-12 for i in range(len(vals) - 1)):
+                best = min(best, cost)
+    return best, means, counts.astype(float)
+
+
+@pytest.mark.parametrize("seed", [0, 1, 2, 3])
+def test_pava_reaches_the_exhaustive_monotone_optimum(seed):
+    rng = np.random.default_rng(2026 + seed)
+    for _trial in range(10):
+        n_groups = int(rng.integers(3, 8))
+        repeats = int(rng.integers(0, 5))
+        base_scores = np.sort(rng.random(n_groups))
+        duplicated = rng.integers(0, n_groups, repeats)
+        scores = np.concatenate([base_scores, base_scores[duplicated]])
+        base_targets = rng.random(n_groups)
+        targets = np.concatenate([base_targets, base_targets[duplicated]])
+        order = np.argsort(scores, kind="stable")
+        s_sorted, t_sorted = scores[order], targets[order]
+        optimum, means, weights = _brute_force_isotonic_optimum(s_sorted, t_sorted)
+        cal = calibrator(n_bins=64)
+        p = np.stack([1 - s_sorted, s_sorted], axis=1)
+        q = np.stack([1 - t_sorted, t_sorted], axis=1)
+        cal._fit_core(torch.tensor(p, dtype=torch.float32), torch.tensor(q, dtype=torch.float32), 2)
+        loss = float((weights * (means - cal.y.numpy()) ** 2).sum())
+        assert loss <= optimum + 1e-9 * max(optimum, 1.0)
+        torch.testing.assert_close(torch.tensor(loss), torch.tensor(float(optimum)), atol=1e-9, rtol=1e-9)
 
 
 def test_weighted_pava_known_optimum_and_interpolation():

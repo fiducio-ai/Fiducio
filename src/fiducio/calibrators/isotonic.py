@@ -121,7 +121,11 @@ class BinaryIsotonicCalibration(Calibrator):
 
     @torch.no_grad()
     def transform(self, predictions: Any, mask: Any | None = None) -> torch.Tensor:
-        """Return calibrated probabilities, preserving exact zeros and ones."""
+        """Return calibrated probabilities; fitted map outputs of exactly 0/1 are not clipped.
+
+        Input scores of 0 or 1 are calibrated like any other score and need not
+        map to 0 or 1 (see the class notes).
+        """
         if not self._fitted:
             raise NotFittedError("call fit() before transform()")
         preds, _, msk = self._prepare(predictions, None, mask, with_targets=False)

@@ -188,7 +188,8 @@ def reliability_curve(
     idx = torch.bucketize(confidence, edges[1:-1].contiguous(), out_int32=True)
 
     counts = torch.bincount(idx, minlength=n_bins)
-    # Weighted bincount has no deterministic CUDA kernel; scatter_add_ does.
+    # Weighted sums need scatter_add_: deterministic on CPU, on CUDA only with
+    # torch.use_deterministic_algorithms(True).
     sum_conf = torch.zeros(n_bins, dtype=torch.float64, device=p.device).scatter_add_(
         0, idx.long(), confidence
     )

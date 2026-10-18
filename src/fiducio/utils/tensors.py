@@ -166,7 +166,7 @@ def validate_predictions(
 
     ``context`` tailors the advice given when values fall outside ``[0, 1]``:
     calibrators accept ``input_type="logits"``, metrics always take
-    probabilities.
+    probabilities, and soft targets have no ``input_type`` argument to adjust.
 
     Raises
     ------
@@ -206,6 +206,8 @@ def validate_predictions(
         not torch.isfinite(sums).all()
         and not at_valid(torch.isfinite(predictions).all(dim=1)).all()
     ):
+        if context == "targets":
+            raise ValueError("targets contain non-finite values (nan/inf)")
         raise ValueError("predictions contain non-finite values (nan/inf)")
     if not sums.numel():
         return num_classes
@@ -221,12 +223,21 @@ def validate_predictions(
                     "values fall outside [0, 1]; metrics take probabilities, so "
                     "apply torch.softmax(logits, dim=1) first"
                 )
+            if context == "targets":
+                raise ValueError(
+                    "soft targets must lie in [0, 1] along the class axis"
+                )
             raise ValueError(
                 "input_type='probs' but values fall outside [0, 1]; "
                 "pass input_type='logits' for unnormalised scores"
             )
         atol = max(_PROB_SUM_ATOL, 2 * torch.finfo(predictions.dtype).eps)
         if float(sums.sub_(1.0).abs_().max()) > atol:
+            if context == "targets":
+                raise ValueError(
+                    "soft targets must sum to 1 along the class axis "
+                    "(dimension 1)"
+                )
             raise ValueError(
                 "input_type='probs' but probabilities do not sum to 1 along the "
                 "class axis (dimension 1)"

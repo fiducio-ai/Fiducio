@@ -80,7 +80,8 @@ It does not promise to preserve the per-voxel class argmax. Only `C=2` is suppor
 there is no independent multiclass isotonic renormalization.
 
 Coordinates, sums and PAVA use float64; public probabilities use float32.
-Exact input zeros are retained during fitting. When the learned map outputs
+Exact input zeros are retained as fitting data; they do not pin the
+calibration map at 0. When the learned map outputs
 exactly 0 or 1, those values are returned without clipping. An input score of
 0 or 1 is still calibrated and need not remain 0 or 1; outside the learned
 score range, it maps to the nearest fitted endpoint value.
@@ -89,8 +90,9 @@ at zero probabilities. Saved coordinates remain finite and are validated for
 monotonicity when loaded. Existing parametric checkpoints remain readable.
 
 The binning, tie handling and interpolation above are explicit Fiducio
-conventions. The paper specifies 250 equal-mass fitting bins; identity with
-TwinTrack's original code has not been verified. Binned fitting also need not
+conventions. The paper specifies equal-mass fitting bins without fixing a bin
+count; Fiducio defaults to 250. Identity with TwinTrack's original code has not
+been verified. Binned fitting also need not
 equal an unbinned isotonic optimum on all individual voxels.
 
 ## Metrics: two different ECEs

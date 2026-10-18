@@ -192,7 +192,7 @@ class distributions. Missing annotations are excluded from the vote counts.
 ```python
 from fiducio import BinaryIsotonicCalibration, mean_human_response
 
-mhr, annotated = mean_human_response(annotations, num_classes=2)  # (B,R,*spatial)
+mhr, annotated = mean_human_response(annotations, num_classes=2)  # (B,C,*spatial)
 cal = BinaryIsotonicCalibration(input_type="probs").fit(probabilities, mhr, mask=annotated)
 calibrated = cal.transform(test_probabilities)
 ```

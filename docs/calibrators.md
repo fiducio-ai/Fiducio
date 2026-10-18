@@ -43,6 +43,22 @@ It can change a segmentation at threshold 0.5, and has no optimizer or early
 stopping. The nine parametric calibrators also accept MHR distributions.
 See [multi-rater calibration](multi_rater.md) for details and metric conventions.
 
+`n_bins` is a genuine hyperparameter; Fiducio does not pick it for you. Search
+over candidate values and keep the best on held-out MHR targets (the evaluation
+bins and the fitting bins are unrelated settings):
+
+```python
+for n_bins in (16, 64, 250, 500, 1000):  # fitting bins
+    cal = BinaryIsotonicCalibration(input_type="probs", n_bins=n_bins).fit(probabilities, mhr, mask=annotated)
+    ece = expected_calibration_error(
+        cal.transform(probabilities), mhr, mask=annotated, class_index=1, n_bins=50  # evaluation bins
+    )
+```
+
+Bin counts above the number of distinct scores see the map coarsen, and when
+the top-confidence voxels weigh less than one fitting bin they inherit the
+last bin mean, so extreme scores can be pulled down.
+
 Decision and ordering guarantees in the table hold in exact arithmetic and
 are subject to floating-point ties and rounding.
 
@@ -104,6 +120,11 @@ A practical decision guide:
   `ClassConditionalMatrixScaling` fits one affine map per uncalibrated top class.
 - **Only two classes?** `MSc` is very restrictive for `C = 2`; the paper finds
   it significantly worse on BA-ECE. Prefer a less constrained calibrator.
+- **Binary problem with a flexible monotone map?** `BinaryIsotonicCalibration`
+  fits a nondecreasing step map on equal-mass bins (see *Binary isotonic
+  calibration and MHR* above). Unlike the parametric maps it can pull extreme
+  scores toward the last bin mean when the top-confidence voxels weigh less
+  than one bin; tune `n_bins` for your data.
 
 The class-conditional calibrators (`CDC`/`CMS`, `CMSap`/`CMSAP`, `CMSop`/`CMSOP`)
 jointly optimise all experts in a single loss and regularise the affine map

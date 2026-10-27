@@ -37,10 +37,12 @@ def main() -> None:
 
     panels = {
         "Uncalibrated": torch.softmax(test_logits, dim=1),
-        "TemperatureScaling": TemperatureScaling(max_iter=2000)
+        "TemperatureScaling": TemperatureScaling(max_iter=2000, device="cpu")
         .fit(fit_logits, fit_labels)
         .transform(test_logits),
-        "CMSop": CMSop(max_iter=2000).fit(fit_logits, fit_labels).transform(test_logits),
+        "CMSop": CMSop(max_iter=2000, device="cpu")
+        .fit(fit_logits, fit_labels)
+        .transform(test_logits),
     }
     fig, axes = plt.subplots(1, 3, figsize=(11, 3.8))
     for ax, (title, probs) in zip(axes, panels.items(), strict=True):

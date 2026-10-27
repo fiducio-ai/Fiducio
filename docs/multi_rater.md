@@ -63,6 +63,26 @@ targets. Validation must be separate from calibration and test cases; Adam's
 existing early-stopping rules apply. Isotonic regression does not use gradient
 optimization or early stopping and rejects validation data.
 
+For example, use MHR on both the calibration and validation splits:
+
+```python
+from fiducio import TemperatureScaling
+
+# p_* and a_* are probabilities and rater annotations from separate case splits.
+q_cal, mask_cal = mean_human_response(a_cal, num_classes=2)
+q_val, mask_val = mean_human_response(a_val, num_classes=2)
+cal = TemperatureScaling(input_type="probs", device="cpu", patience=15)
+cal.fit(
+    p_cal,
+    q_cal,
+    mask=mask_cal,
+    val_predictions=p_val,
+    val_targets=q_val,
+    val_mask=mask_val,
+)
+calibrated_test = cal.transform(p_test)
+```
+
 ## Binary isotonic fitting
 
 `BinaryIsotonicCalibration(n_bins=250)` learns a nondecreasing map for class 1:
@@ -134,6 +154,12 @@ and writes `outputs/multi_rater_reliability.png`. It needs the `plots` extra and
 not download patient data. It reports metrics pooled across test voxels, rather
 than averaging per-case metrics. The diagram is against MHR; the separately
 reported mean-rater ECE uses individual votes.
+
+![Positive-class reliability before and after isotonic calibration to MHR on held-out synthetic cases](assets/reliability_mhr.png)
+
+*Class 1 probabilities versus the MHR on held-out synthetic test cases, using
+50 uniform evaluation bins. The annotated ECE is against MHR, not mean-rater ECE.
+Regenerate it with the script above; see [Plotting](plots.md) for how to read the diagram.*
 
 For real data, split by patient before selecting voxels; fix the ensemble
 pooling, class merging and ROI before fitting. Record splits, raters, versions,

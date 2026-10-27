@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Saving a calibrator now preserves `patience` / `lr_patience` assigned after
+  construction, even when no subsequent `fit` has refreshed the stopping rule.
+  `get_config` validates and normalizes the current stopping settings, as `fit`
+  does, before serializing them.
+
+### Documentation
+
+- Add held-out reliability-diagram images and examples for top-1 confidence and
+  class-specific MHR calibration, with a guide to reading the diagrams.
+- Clarify input layouts, masks, calibrator guarantees and validation-based
+  isotonic bin selection throughout the quickstart and guides.
+
 ## [0.3.0] - 2026-10-27
 
 ### Added

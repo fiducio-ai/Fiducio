@@ -17,13 +17,14 @@ transform is and in what they guarantee.
 | [`ClassConditionalMatrixScaling`](api/calibrators.md#fiducio.ClassConditionalMatrixScaling) | `CMS` / `CDC` | one affine map per top class | yes | — |
 | [`ArgmaxPreservingMatrixScaling`](api/calibrators.md#fiducio.ArgmaxPreservingMatrixScaling) | `CMSAP` / `CMSap` | per-class margin map | yes | argmax |
 | [`OrderPreservingMatrixScaling`](api/calibrators.md#fiducio.OrderPreservingMatrixScaling) | `CMSOP` / `CMSop` | per-class gap map | yes | argmax **and** full order |
+| [`BinaryIsotonicCalibration`](api/calibrators.md#fiducio.BinaryIsotonicCalibration) | — | up to `n_bins` fitted points | yes | — |
 
 Translation-invariant means the output is unchanged when the same constant is
-added to every input logit of a voxel. Short aliases (`TS`, `MS`, `CMS`, ...) are provided for convenience; the explicit
-names are recommended in code that others will read.
+added to every input logit of a voxel. Short aliases (`TS`, `MS`, `CMS`, ...) are
+provided for convenience; explicit names are easier to read.
 
-*Footnote: with `input_type="probs"` the canonical space is log-probabilities,
-so VS, MS and TS become shift-invariant in that input mode.*
+The table describes logit inputs. With `input_type="probs"`, an upstream logit
+shift has already been removed by softmax.
 
 The `ETS` guarantee holds in exact arithmetic — a non-negative weighted sum of
 monotone maps preserves the order — but not bit-for-bit in `float32` once the
@@ -34,7 +35,8 @@ order-preserving up to floating-point rounding.
 ## Binary isotonic calibration and MHR
 
 [`BinaryIsotonicCalibration`](api/calibrators.md#fiducio.BinaryIsotonicCalibration)
-fits a nondecreasing positive-class map with weighted PAVA on at most 250 bins.
+fits a nondecreasing positive-class map with weighted PAVA on at most `n_bins`
+bins (default 250).
 It accepts two-channel probabilities or logits and hard or MHR targets. This
 approach is inspired by [TwinTrack](https://arxiv.org/abs/2604.15950v2)
 (Kirscher et al., MIDL 2026, short paper). Tie handling and interpolation are
@@ -43,28 +45,32 @@ It can change a segmentation at threshold 0.5, and has no optimizer or early
 stopping. The nine parametric calibrators also accept MHR distributions.
 See [multi-rater calibration](multi_rater.md) for details and metric conventions.
 
-`n_bins` is a genuine hyperparameter; Fiducio does not pick it for you. Search
-over candidate values and keep the best scoring one on MHR targets held out
-from the fit (the snippet below reuses the fitting data for brevity; the
-evaluation bins and the fitting bins are unrelated settings):
+Choose fitting `n_bins` on validation cases held out from the fit. The fitting
+bins and the evaluation bins are separate settings:
 
 ```python
-for n_bins in (16, 64, 250, 500, 1000):  # fitting bins
-    cal = BinaryIsotonicCalibration(input_type="probs", n_bins=n_bins).fit(
-        probabilities, mhr, mask=annotated
+from fiducio import BinaryIsotonicCalibration, expected_calibration_error
+
+# cal_* and val_* come from disjoint case splits.
+candidates = []
+for n_bins in (16, 64, 250):  # fitting bins
+    cal = BinaryIsotonicCalibration(input_type="probs", n_bins=n_bins, device="cpu").fit(
+        cal_probabilities, cal_mhr, mask=cal_annotated
     )
     ece = expected_calibration_error(
-        cal.transform(probabilities),
-        mhr,
-        mask=annotated,
+        cal.transform(val_probabilities, mask=val_annotated),
+        val_mhr,
+        mask=val_annotated,
         class_index=1,
         n_bins=50,  # evaluation bins
     )
+    candidates.append((ece, cal))
+validation_ece, calibrator = min(candidates, key=lambda item: item[0])
 ```
 
-Bin counts above the number of distinct scores see the map coarsen, and when
-the top-confidence voxels weigh less than one fitting bin they inherit the
-last bin mean, so extreme scores can be pulled down.
+Evaluate the selected calibrator once on separate test cases. Ties can reduce
+the actual number of fitting bins. A small high-confidence tail may be merged
+into the final bin, so extreme scores can be pulled towards that bin's mean.
 
 Decision and ordering guarantees in the table hold in exact arithmetic and
 are subject to floating-point ties and rounding.
@@ -106,8 +112,8 @@ of one shared fit across all classes).
 A practical decision guide:
 
 - **Start with `TemperatureScaling`.** It has a single parameter, is very hard to
-  overfit, preserves the argmax up to floating-point ties and rounding, and is a strong baseline. If your only
-  problem is over/under-confidence, it is often enough.
+  overfit, preserves the argmax up to floating-point ties and rounding, and is a
+  useful baseline for over- or under-confidence.
 - **Need per-class flexibility?** Try `VectorScaling`, then `MatrixScaling`. Use
   the off-diagonal/bias regularisation (`lambda_reg`, `mu_reg`) when the number
   of classes is large relative to the calibration set, to avoid overfitting.
@@ -128,7 +134,7 @@ A practical decision guide:
 - **Only two classes?** `MSc` is very restrictive for `C = 2`; the paper finds
   it significantly worse on BA-ECE. Prefer a less constrained calibrator.
 - **Binary problem with a flexible monotone map?** `BinaryIsotonicCalibration`
-  fits a nondecreasing step map on equal-mass bins (see *Binary isotonic
+  fits a nondecreasing, piecewise-linear map on equal-mass bins (see *Binary isotonic
   calibration and MHR* above). Unlike the parametric maps it can pull extreme
   scores toward the last bin mean when the top-confidence voxels weigh less
   than one bin; tune `n_bins` for your data.

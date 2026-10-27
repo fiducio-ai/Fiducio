@@ -7,8 +7,8 @@
 
 **Fiducio** is a model-agnostic Python library of **post-hoc calibrators for 2D
 and 3D semantic segmentation**. Give it the logits or probabilities of any
-segmentation model and a labelled calibration set, and a calibrator returns
-better-calibrated probabilities without retraining the segmentation model.
+segmentation model and a labelled calibration set to fit a probability
+transform without retraining the segmentation model.
 It implements temperature, vector, matrix and Dirichlet scaling, their
 translation-invariant variants, and the class-conditional (CDC, CMSap, CMSop)
 calibrators introduced in our paper
@@ -66,10 +66,11 @@ import torch
 from fiducio import TemperatureScaling, load_calibrator
 
 # From a held-out, labelled calibration set:
+torch.manual_seed(0)
 logits = torch.randn(8, 4, 64, 64)  # (B, C, H, W) model logits
 labels = torch.randint(0, 4, (8, 64, 64))  # (B, H, W) labels
 
-calibrator = TemperatureScaling(input_type="logits").fit(logits, labels)
+calibrator = TemperatureScaling(input_type="logits", device="cpu").fit(logits, labels)
 
 # Apply to new predictions (returns calibrated probabilities):
 probs = calibrator.transform(torch.randn(2, 4, 64, 64))
@@ -78,6 +79,9 @@ probs = calibrator.transform(torch.randn(2, 4, 64, 64))
 calibrator.save("calibrator.pt")
 calibrator = load_calibrator("calibrator.pt")
 ```
+
+The random tensors demonstrate the API. Measure calibration on separate test
+cases; see the [Quickstart](https://fiducio-ai.github.io/Fiducio/quickstart/).
 
 Every calibrator exposes the same API:
 `fit(predictions, targets, mask=None)`, `transform`, `predict_proba`,
@@ -95,7 +99,9 @@ The class axis is **always** dimension 1.
 | per-pixel table | `(N, C)` | `(N,)` |
 
 Inputs may be `logits` or `probs` (set `input_type`). Binary segmentation is two
-channels (`C = 2`). `mask` and `ignore_index` exclude voxels from fitting.
+channels (`C = 2`). Floating class-distribution targets, including MHR, have the
+same shape as predictions. Use `mask` to exclude soft targets; `ignore_index`
+applies to hard labels.
 
 ## Calibrators
 
@@ -110,6 +116,7 @@ channels (`C = 2`). `mask` and `ignore_index` exclude voxels from fitting.
 | `ClassConditionalMatrixScaling` | `CMS` / `CDC` | yes | — |
 | `ArgmaxPreservingMatrixScaling` | `CMSAP` / `CMSap` | yes | argmax |
 | `OrderPreservingMatrixScaling` | `CMSOP` / `CMSop` | yes | argmax and full order |
+| `BinaryIsotonicCalibration` | — | yes | none; may change the decision at 0.5 |
 
 ¹ In exact arithmetic; in `float32` the mixture can resolve near-ties differently
 once it collapses towards the uniform component.
@@ -117,8 +124,10 @@ once it collapses towards the uniform component.
 Translation-invariant means the output is unchanged when the same constant is
 added to every input logit of a voxel.
 
-Every calibrator also exposes `decision_function` (calibrated logits) and a
-configurable `optimizer` (`"adam"` default, or `"lbfgs"`).
+Every calibrator exposes `decision_function` (calibrated logits, or
+log-probabilities for isotonic calibration). The nine parametric methods have
+a configurable `optimizer` (`"adam"` default, or `"lbfgs"`); isotonic fitting
+uses weighted PAVA instead.
 
 ### Early stopping
 
@@ -156,14 +165,11 @@ library (see the [implementation guide](https://github.com/fiducio-ai/Fiducio/bl
 | CMSop | `OrderPreservingMatrixScaling` |
 
 CDC, CMSap and CMSop are class-conditional: they fit one affine map per
-uncalibrated top class, all experts optimized **jointly** by a single
-optimizer minimizing one cross-entropy loss over every voxel at once, with L2
-regularization (`lambda_reg` / `mu_reg`) applied to the affine map induced in
-the common *logit* space rather than to the raw per-expert parameters — this
-keeps the regularization meaningful for CMSap/CMSop, whose parameters are
-non-negative margins/gaps rather than raw matrix entries. Pass
-`independent_experts=True` to instead fit each expert in its own optimization
-loop on only the voxels routed to it.
+uncalibrated top class, optimized **jointly** in one cross-entropy loss.
+Regularization applies to each expert's induced affine map in the common
+logit space. Set `independent_experts=True` to fit each expert separately.
+See [Calibrators](https://fiducio-ai.github.io/Fiducio/calibrators/) for the
+regularization formula and method-specific limits.
 
 Calibration metrics are included: `negative_log_likelihood`,
 `expected_calibration_error` (ECE, population-weighted), `average_calibration_error`

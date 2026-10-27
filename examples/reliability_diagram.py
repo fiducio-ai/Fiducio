@@ -1,7 +1,7 @@
 """Plot before/after reliability diagrams for a calibrated model.
 
-Needs the plotting extra (``pip install "fiducio[plots]"``). It writes a PNG to a
-temporary directory and prints the path; it never opens a window. Run with::
+Needs the plotting extra (``pip install "fiducio[plots]"``). It writes
+``outputs/reliability.png`` and never opens a window. Run with::
 
     python examples/reliability_diagram.py
 """
@@ -9,7 +9,6 @@ temporary directory and prints the path; it never opens a window. Run with::
 from __future__ import annotations
 
 import sys
-import tempfile
 from pathlib import Path
 
 import torch
@@ -46,7 +45,8 @@ def main() -> None:
     reliability_diagram(cal_probs, labels, ax=ax2, title="After calibration")
     fig.tight_layout()
 
-    out = Path(tempfile.mkdtemp(prefix="fiducio-reliability-")) / "reliability.png"
+    out = Path("outputs/reliability.png")
+    out.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out, dpi=150)
     plt.close(fig)
     print(f"Saved reliability diagram to {out}")

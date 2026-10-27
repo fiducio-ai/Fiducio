@@ -43,7 +43,8 @@ def reliability_diagram(
     probs:
         ``(B, C, *spatial)`` probabilities.
     targets:
-        ``(B, *spatial)`` integer labels.
+        ``(B, *spatial)`` integer labels or ``(B, C, *spatial)`` floating class
+        distributions, including mean human responses.
     mask, ignore_index:
         Optional voxel selection (see :class:`fiducio.Calibrator`).
     n_bins:

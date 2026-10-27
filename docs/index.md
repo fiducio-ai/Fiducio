@@ -14,11 +14,12 @@ and class-conditional calibrators (MSc, CDC, CMSap, CMSop) implemented here.
 
 ## Why calibrate?
 
-Modern segmentation networks are usually **over-confident**: a voxel predicted
-with probability 0.99 is correct far less than 99% of the time. Post-hoc
+Segmentation networks can be **over-confident**: predictions with confidence
+0.99 need not be correct 99% of the time. Post-hoc
 calibration learns a lightweight transform on a held-out calibration set that
-makes predicted probabilities match observed frequencies, without retraining or
-changing the segmentation itself.
+aims to make predicted probabilities match observed frequencies, without
+retraining the model. Some calibrators preserve the class decision; others can
+change the segmentation. See the [calibrator guide](calibrators.md).
 
 ## What you get
 
@@ -45,14 +46,18 @@ See [Installation](installation.md) for extras and the GitHub install.
 import torch
 from fiducio import TemperatureScaling
 
+torch.manual_seed(0)
 logits = torch.randn(8, 4, 64, 64)  # (B, C, H, W) from your model
 labels = torch.randint(0, 4, (8, 64, 64))  # (B, H, W) calibration labels
 
-calibrator = TemperatureScaling().fit(logits, labels)
-probs = calibrator.transform(logits)  # calibrated probabilities
+calibrator = TemperatureScaling(device="cpu").fit(logits, labels)
+new_logits = torch.randn(2, 4, 64, 64)  # separate cases
+probs = calibrator.transform(new_logits)  # calibrated probabilities
 ```
 
-Continue with the [Quickstart](quickstart.md).
+These random tensors demonstrate the API, not a calibration benchmark.
+Continue with the [Quickstart](quickstart.md) or see
+[before/after reliability diagrams](plots.md).
 
 ## Project status
 

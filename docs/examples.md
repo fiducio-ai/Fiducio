@@ -6,6 +6,10 @@ Runnable, CPU-only examples ship in the
 the repository (or download a single script) before running the commands below.
 They do not download any model or dataset.
 
+Install `fiducio[plots]` for the plotting and multi-rater examples. From a
+development checkout, `uv sync --locked` includes matplotlib; prefix the commands
+below with `uv run --no-sync` to use that environment.
+
 ## 1. Synthetic data
 
 [`examples/basic_segmentation_calibration.py`](https://github.com/fiducio-ai/Fiducio/blob/main/examples/basic_segmentation_calibration.py)
@@ -51,9 +55,9 @@ only the model and the source of `images`/`targets` change. See
 
 [`examples/reliability_diagram.py`](https://github.com/fiducio-ai/Fiducio/blob/main/examples/reliability_diagram.py)
 
-Fits `TemperatureScaling` and saves a before/after reliability diagram as a PNG.
-Requires the plotting extra (`pip install "fiducio[plots]"`); see
-[Plotting](plots.md).
+Fits `TemperatureScaling` on calibration cases and plots separate test cases.
+Saves `outputs/reliability.png`; the [plotting guide](plots.md) shows the figure
+and explains how to read its bars, dots and ECE.
 
 ```bash
 python examples/reliability_diagram.py
@@ -66,9 +70,15 @@ one on the mean probabilities (`input_type="probs"`) and one on the mean logits
 (`input_type="logits"`). Members are pooled before fitting. Calibration and test
 cases are disjoint. These are synthetic examples, not paper benchmark results.
 
-## Multi-rater calibration
+## 5. Multi-rater calibration
 
-Run `uv run python examples/multi_rater_calibration.py` to compare single-rater
-and MHR targets for temperature scaling and binary isotonic calibration on
-synthetic case splits. It reports both MHR-ECE and mean-rater-ECE and saves a
-class reliability diagram. See the [multi-rater guide](multi_rater.md).
+Compare single-rater and MHR targets for temperature scaling and binary isotonic
+calibration, using separate calibration, validation and test cases:
+
+```bash
+python examples/multi_rater_calibration.py
+```
+
+The script reports both MHR-ECE and mean-rater-ECE, and saves the positive-class
+diagram to `outputs/multi_rater_reliability.png`. See the
+[multi-rater guide](multi_rater.md) for the metric definitions and a figure.

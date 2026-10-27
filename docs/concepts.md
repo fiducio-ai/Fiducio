@@ -7,23 +7,23 @@ each voxel. **Calibration** asks whether those probabilities are trustworthy: of
 all voxels predicted with confidence 0.9, are about 90% actually correct?
 
 *Post-hoc* calibration leaves the trained model untouched. It fits a small
-transform `g` on top of the frozen model so that `g(model output)` is
-better-calibrated. Because the segmentation map (the argmax) is often unchanged —
-and is unchanged by some calibrators up to floating-point ties — you can
-calibrate a deployed model without affecting the Dice/IoU of its argmax
-segmentation.
+transform `g` on top of the frozen model. Whether the class decision changes
+depends on the calibrator. Choose a decision-preserving method if the argmax
+segmentation, and its Dice/IoU, must remain unchanged, subject to floating-point
+ties. Thresholded or post-processed segmentations are not covered; see
+[Calibrators](calibrators.md).
 
 ## You need a separate, labelled calibration set
 
-Calibration must be fit on data the model did **not** train on, with ground-truth
-labels. Fitting on the training set gives over-optimistic, useless calibration,
-because the model is already over-confident there. The usual recipe:
+Fit calibration on labelled data the model did **not** train on. Reusing the
+training set can give an overly optimistic estimate. The usual recipe:
 
 1. Train the model on the training split.
 2. Hold out a **calibration split** with labels (a slice of validation data).
 3. Collect the model's logits and the labels on that split.
 4. `fit` a Fiducio calibrator on them.
-5. Evaluate calibration on a separate **test split**.
+5. If choosing a method or hyperparameters, use a separate validation split.
+6. Evaluate the selected calibrator on a separate **test split**.
 
 A few dozen labelled volumes are often enough for the simpler calibrators;
 the paper fitted 50 held-out cases, and the expressive class-conditional
@@ -35,9 +35,9 @@ calibrators (CDC, CMSap, CMSop) need a reasonably sized calibration set.
   `input_type="logits"` (the default).
 - **Probabilities** sum to 1 along the class axis. Pass `input_type="probs"`.
 
-Most calibrators are mathematically defined on logits; Fiducio converts
-internally as needed, so you only have to declare what you pass in. If you have a
-choice, prefer logits — they carry strictly more information than probabilities.
+Fiducio converts to each method's internal representation. Keep logits when
+available: converting to probabilities can round small values to zero. Use the
+same `input_type` for fitting and inference.
 
 ## Multi-rater targets
 
@@ -82,8 +82,9 @@ Two complementary ways to exclude voxels from fitting:
 - **`ignore_index`** — any label equal to this value is dropped (default
   `-100`, matching PyTorch's cross-entropy convention).
 
-In `transform`, a `mask` zeroes out masked positions in the output so they carry
-no probability mass.
+In `transform`, masked positions are zero across all classes. Pass the same mask
+to metrics, since those zero vectors are not probability distributions.
+For soft targets, use a mask; `ignore_index` applies only to hard labels.
 
 ## Device and dtype
 
@@ -101,9 +102,8 @@ The nine parametric calibrators are fitted by gradient descent and expose an
 
 - `optimizer="adam"` (default) — Adam, matching the common reference
   implementations; robust and the safe choice.
-- `optimizer="lbfgs"` — L-BFGS with strong-Wolfe line search; fast and
-  deterministic for the convex scaling objectives (temperature, vector, matrix,
-  Dirichlet).
+- `optimizer="lbfgs"` — L-BFGS with strong-Wolfe line search, an alternative for
+  full-batch fitting. Convergence depends on the data and objective.
 
 `lr` and `max_iter` default to per-optimizer values (Adam: `lr=0.1`,
 `max_iter=200`; L-BFGS: `lr=1.0`, `max_iter=100`; the class-conditional
@@ -152,7 +152,9 @@ search are not part of the library (see the
 - For the class-conditional calibrators the validation NLL is computed over all
   voxels (joint experts), or per expert on its own routed validation voxels
   (`independent_experts=True`; an expert that receives none runs to `max_iter`).
-- The settings are stored with the calibrator (`get_config`, `save`).
+- The current settings, including those assigned after construction, are stored
+  by `get_config` and `save`. Changing them affects the next fit, not the already
+  learned probabilities.
 
 The default `max_iter` is a short fixed budget and can underfit expressive
 calibrators (for example CDC, CMSap and CMSop with Adam's default `lr=0.01`);
@@ -170,14 +172,12 @@ voxels is meaningless; use `transform` when masks matter.
 
 ## Memory and large volumes
 
-Fitting loads **all valid voxels** of the calibration set into a single
-`(N, C)` tensor in memory. This is fast and simple for typical calibration sets
-(a few dozen volumes), but for very large 3D datasets the flattened tensor can
-become large. If you hit memory limits, fit on a representative subset of cases
-or crop to a region of interest with a `mask`; calibration parameters are low
-dimensional and rarely need the full dataset. (Streaming/batched fitting is on
-the roadmap.) `transform` itself is applied volume by volume and is not memory
-bound in the same way.
+Fitting holds predictions and **all valid voxels** in memory; there is no
+streaming or batched optimizer. Isotonic fitting additionally sorts the valid
+scores. For large 3D data, use a representative subset or a region-of-interest
+mask, and record the sampling policy. A foreground-balanced sample changes the
+target voxel population and may not calibrate complete volumes. Apply
+`transform` one case at a time when inference memory is limited.
 
 ## Behaviour before `fit`
 

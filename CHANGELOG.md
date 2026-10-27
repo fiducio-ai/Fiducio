@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-27
+
 ### Added
 
 - Soft class-distribution targets, including mean human responses (MHR), for all
@@ -26,7 +28,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   voxels instead of silently returning NaN probabilities.
 - Brier accumulates direct squared residuals in float64 to retain errors near
   perfect predictions without cancellation.
-
 - Metrics no longer suggest `input_type='logits'` when probabilities fall outside
   `[0, 1]`: the argument does not exist on metrics, which always take
   probabilities. The message now points at `torch.softmax(logits, dim=1)`.
@@ -45,6 +46,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   wheel.
 - The `ETS` decision-preservation entry is qualified: exact in arithmetic, subject
   to float32 rounding when the mixture collapses towards uniform.
+
+### Notes
+
+- Binary isotonic calibration may change the segmentation at threshold 0.5;
+  it does not preserve the original class decision.
+- ECE against mean human responses is not the mean per-rater ECE. Keep the
+  individual annotations when reporting the latter.
 
 ## [0.2.0] - 2026-10-04
 
@@ -214,7 +222,8 @@ Calibration in Semantic Segmentation* (Transactions on Machine Learning Research
   reliability figure (`examples/readme_figure.py`), locked uv development
   environments and a CI matrix for Python 3.10, 3.11 and 3.12.
 
-[Unreleased]: https://github.com/fiducio-ai/Fiducio/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/fiducio-ai/Fiducio/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/fiducio-ai/Fiducio/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/fiducio-ai/Fiducio/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/fiducio-ai/Fiducio/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/fiducio-ai/Fiducio/releases/tag/v0.1.0

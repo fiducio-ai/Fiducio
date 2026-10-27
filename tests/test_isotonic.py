@@ -52,15 +52,19 @@ def test_bins_and_interpolation_match_numpy_reference():
     scores = np.round(rng.random(800), 2).astype(np.float32).astype(np.float64)
     votes = rng.integers(0, 2, (800, 5)).mean(axis=1).astype(np.float32).astype(np.float64)
     reference_x, reference_y = _numpy_binned_pava_reference(scores, votes, 250)
-    cal = calibrator(n_bins=250).fit(
-        probabilities(scores), probabilities(votes)
+    cal = calibrator(n_bins=250).fit(probabilities(scores), probabilities(votes))
+    torch.testing.assert_close(
+        cal.x, torch.tensor(reference_x, dtype=torch.float64), atol=1e-12, rtol=1e-12
     )
-    torch.testing.assert_close(cal.x, torch.tensor(reference_x, dtype=torch.float64), atol=1e-12, rtol=1e-12)
-    torch.testing.assert_close(cal.y, torch.tensor(reference_y, dtype=torch.float64), atol=1e-9, rtol=1e-9)
+    torch.testing.assert_close(
+        cal.y, torch.tensor(reference_y, dtype=torch.float64), atol=1e-9, rtol=1e-9
+    )
     grid = np.linspace(0.0, 1.0, 4001)
     expected = np.interp(grid, reference_x, reference_y, left=reference_y[0], right=reference_y[-1])
     out = cal.transform(probabilities(grid))[:, 1].numpy()
-    torch.testing.assert_close(torch.tensor(out), torch.tensor(expected, dtype=torch.float32), atol=1e-5, rtol=1e-5)
+    torch.testing.assert_close(
+        torch.tensor(out), torch.tensor(expected, dtype=torch.float32), atol=1e-5, rtol=1e-5
+    )
 
 
 def _brute_force_isotonic_optimum(s_sorted, t_sorted):
@@ -104,7 +108,9 @@ def test_pava_reaches_the_exhaustive_monotone_optimum(seed):
         cal._fit_core(torch.tensor(p, dtype=torch.float32), torch.tensor(q, dtype=torch.float32), 2)
         loss = float((weights * (means - cal.y.numpy()) ** 2).sum())
         assert loss <= optimum + 1e-9 * max(optimum, 1.0)
-        torch.testing.assert_close(torch.tensor(loss), torch.tensor(float(optimum)), atol=1e-9, rtol=1e-9)
+        torch.testing.assert_close(
+            torch.tensor(loss), torch.tensor(float(optimum)), atol=1e-9, rtol=1e-9
+        )
 
 
 def test_weighted_pava_known_optimum_and_interpolation():

@@ -50,9 +50,15 @@ evaluation bins and the fitting bins are unrelated settings):
 
 ```python
 for n_bins in (16, 64, 250, 500, 1000):  # fitting bins
-    cal = BinaryIsotonicCalibration(input_type="probs", n_bins=n_bins).fit(probabilities, mhr, mask=annotated)
+    cal = BinaryIsotonicCalibration(input_type="probs", n_bins=n_bins).fit(
+        probabilities, mhr, mask=annotated
+    )
     ece = expected_calibration_error(
-        cal.transform(probabilities), mhr, mask=annotated, class_index=1, n_bins=50  # evaluation bins
+        cal.transform(probabilities),
+        mhr,
+        mask=annotated,
+        class_index=1,
+        n_bins=50,  # evaluation bins
     )
 ```
 

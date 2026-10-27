@@ -30,6 +30,15 @@ pip install fiducio
 With compatible PyTorch already present, pip keeps that build and adds Fiducio
 and any missing dependencies.
 
+### Why PyTorch ≥ 2.10
+
+The floor is a security choice, not a tested-compatibility limit. Saved
+calibrators are read with `torch.load(..., weights_only=True)`, and 2.10 is the
+first release that includes the fixes for CVE-2025-32434 and CVE-2026-24747
+(see [SECURITY.md](https://github.com/fiducio-ai/Fiducio/blob/main/SECURITY.md)).
+CI tests the minimum (2.10.0) and the locked release. If your environment is
+pinned to an older PyTorch, upgrade it, or open an issue describing the constraint.
+
 ## From GitHub
 
 To install the development version directly from the repository:

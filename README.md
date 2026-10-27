@@ -39,7 +39,7 @@ or, in a uv application:
 uv add fiducio
 ```
 
-Requires Python ≥ 3.10 and PyTorch ≥ 2.10. The core install depends only on `numpy` and `torch`. Optional extras:
+Requires Python ≥ 3.10 and PyTorch ≥ 2.10 (a security floor, see [installation](docs/installation.md#why-pytorch-210)). The core install depends only on `numpy` and `torch`. Optional extras:
 `fiducio[plots]` (matplotlib reliability diagrams), `fiducio[docs]`,
 `fiducio[dev]`, `fiducio[all]`.
 

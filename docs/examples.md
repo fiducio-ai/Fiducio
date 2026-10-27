@@ -4,7 +4,8 @@ Runnable, CPU-only examples ship in the
 [`examples/`](https://github.com/fiducio-ai/Fiducio/tree/main/examples) directory
 **of the source repository** — they are not part of the installed wheel, so clone
 the repository (or download a single script) before running the commands below.
-They do not download any model or dataset.
+The examples below do not download any model or dataset; the
+[Oxford Pets tutorial](tutorial.md) downloads a public dataset (or runs offline with `--smoke`).
 
 Install `fiducio[plots]` for the plotting and multi-rater examples. From a
 development checkout, `uv sync --locked` includes matplotlib; prefix the commands

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `examples/tutorial_oxford_pets.py` and a tutorial page: train a small U-Net on the
+  public Oxford-IIIT Pet dataset, calibrate on a held-out split and report metrics on
+  a separate test split. `--smoke` runs offline on synthetic data and is covered in CI.
+
 ## [0.3.1] - 2026-10-27
 
 ### Fixed

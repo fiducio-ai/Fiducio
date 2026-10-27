@@ -112,6 +112,7 @@ jobs:
           for example in basic_segmentation_calibration pytorch_model_calibration reliability_diagram ensemble_pooling multi_rater_calibration; do
             "$python" "$GITHUB_WORKSPACE/examples/$example.py"
           done
+          "$python" "$GITHUB_WORKSPACE/examples/tutorial_oxford_pets.py" --smoke --out "$RUNNER_TEMP/tutorial.png"
 
   docs:
     name: Documentation and project page

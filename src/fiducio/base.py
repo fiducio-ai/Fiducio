@@ -248,6 +248,7 @@ class Calibrator(ABC):
 
     def get_config(self) -> dict[str, Any]:
         """Return constructor keyword arguments (excluding ``device``)."""
+        self._refresh_stopping()
         config: dict[str, Any] = {
             "input_type": self.input_type,
             "ignore_index": self.ignore_index,

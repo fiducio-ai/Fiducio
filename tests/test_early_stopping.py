@@ -267,3 +267,65 @@ def test_stopping_settings_persist_in_roundtrip(tmp_path):
         0.5,
     )
     assert torch.allclose(cal.transform(val_logits), loaded.transform(val_logits), atol=1e-6)
+
+
+@pytest.mark.parametrize("calibrator_id", ALL_CALIBRATOR_IDS)
+@pytest.mark.parametrize("fitted", [False, True])
+@pytest.mark.parametrize("setting", ["patience", "lr_patience"])
+def test_assigned_stopping_settings_persist_before_next_fit(
+    tmp_path, calibrator_id, fitted, setting
+):
+    logits, labels = synthetic_logits((2, 3, 3, 3), seed=74)
+    cal = make_calibrator(calibrator_id, max_iter=2)
+    if fitted:
+        cal.fit(logits, labels)
+        before = cal.transform(logits)
+    setattr(cal, setting, 3)
+    cal.min_delta, cal.lr_factor = 1e-4, 0.5
+    path = tmp_path / "assigned.pt"
+    cal.save(path)
+    loaded = load_calibrator(path)
+
+    assert getattr(loaded, setting) == 3
+    assert (loaded.min_delta, loaded.lr_factor) == (1e-4, 0.5)
+    assert loaded.get_config() == cal.get_config()
+    for candidate in (cal, loaded):
+        with pytest.raises(ValueError, match="requires val_predictions and val_targets"):
+            candidate.fit(logits, labels)
+        if fitted:
+            torch.testing.assert_close(candidate.transform(logits), before, rtol=0, atol=0)
+
+
+def test_disabled_stopping_settings_persist_before_next_fit(tmp_path):
+    cal = make_calibrator("temperature_scaling", patience=3, lr_patience=2, max_iter=2)
+    cal.patience = cal.lr_patience = None
+    path = tmp_path / "disabled.pt"
+    cal.save(path)
+    loaded = load_calibrator(path)
+    assert "patience" not in cal.get_config()
+    assert loaded.patience is loaded.lr_patience is None
+    logits, labels = synthetic_logits((2, 3, 3, 3), seed=75)
+    loaded.fit(logits, labels)
+
+
+def test_assigned_numpy_stopping_settings_persist(tmp_path):
+    import numpy as np
+
+    cal = make_calibrator("temperature_scaling")
+    cal.patience = np.int64(3)
+    path = tmp_path / "numpy-stopping.pt"
+    cal.save(path)
+    loaded = load_calibrator(path)
+    assert loaded.patience == 3
+
+
+@pytest.mark.parametrize("setting", ["patience", "lr_patience"])
+def test_isotonic_rejects_assigned_stopping_when_saving(tmp_path, setting):
+    from fiducio import BinaryIsotonicCalibration
+
+    cal = BinaryIsotonicCalibration(device="cpu")
+    setattr(cal, setting, 3)
+    path = tmp_path / "isotonic.pt"
+    with pytest.raises(ValueError, match="does not support early stopping"):
+        cal.save(path)
+    assert not path.exists()

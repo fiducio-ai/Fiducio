@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+
+- Explain that the PyTorch ≥ 2.10 floor is a security requirement (`torch.load`
+  CVE fixes) rather than a compatibility limit.
+
 ## [0.3.1] - 2026-10-27
 
 ### Fixed

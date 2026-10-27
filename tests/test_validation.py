@@ -69,6 +69,43 @@ def test_probs_not_summing_to_one_rejected():
         cal.fit(bad, labels)
 
 
+def test_calibrator_out_of_range_probs_suggests_input_type():
+    """The calibrator branch keeps its own advice: input_type is a real argument."""
+    cal = TemperatureScaling(input_type="probs", device="cpu")
+    logits, labels = synthetic_logits((2, 3, 4, 4), seed=23)
+    with pytest.raises(ValueError, match="pass input_type='logits'"):
+        cal.fit(logits, labels)
+
+
+def test_soft_target_out_of_range_gives_target_advice():
+    """Soft targets have no input_type argument, so the advice must differ."""
+    cal = TemperatureScaling(input_type="probs", device="cpu")
+    probs = torch.full((2, 2, 4, 4), 0.5)
+    targets = probs.clone()
+    targets[:, 0] = -0.1
+    with pytest.raises(ValueError, match="soft targets must lie in") as exc:
+        cal.fit(probs, targets)
+    assert "input_type" not in str(exc.value)
+
+
+def test_soft_target_not_summing_to_one_gives_target_advice():
+    cal = TemperatureScaling(input_type="probs", device="cpu")
+    probs = torch.full((2, 2, 4, 4), 0.5)
+    targets = torch.full((2, 2, 4, 4), 0.25)  # sums to 0.5
+    with pytest.raises(ValueError, match="soft targets must sum to 1") as exc:
+        cal.fit(probs, targets)
+    assert "input_type" not in str(exc.value)
+
+
+def test_non_finite_soft_targets_named_as_targets():
+    cal = TemperatureScaling(input_type="probs", device="cpu")
+    probs = torch.full((2, 2, 4, 4), 0.5)
+    targets = torch.full((2, 2, 4, 4), 0.5)
+    targets[0, 0, 0, 0] = float("nan")
+    with pytest.raises(ValueError, match="targets contain non-finite"):
+        cal.fit(probs, targets)
+
+
 def test_non_finite_predictions_rejected():
     cal = TemperatureScaling(device="cpu")
     logits, labels = synthetic_logits((2, 3, 4, 4), seed=21)

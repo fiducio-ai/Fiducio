@@ -18,6 +18,19 @@ uv add fiducio
 
 The core install depends only on `numpy` and `torch`.
 
+If PyTorch is not already installed, `pip install fiducio` resolves the default
+PyPI `torch` wheel, which bundles the CUDA runtime: expect roughly 5 GB
+downloaded and several minutes of install time. On a CPU-only machine, install
+PyTorch first so pip keeps it:
+
+```bash
+pip install torch --index-url https://download.pytorch.org/whl/cpu
+pip install fiducio
+```
+
+With a compatible PyTorch already present, `pip install fiducio` only adds the
+library (about 50 KB) and does not replace your build.
+
 ## From GitHub
 
 To install the development version directly from the repository:

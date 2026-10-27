@@ -20,7 +20,7 @@ from .utils import (
     validate_targets,
 )
 from .utils.stopping import StoppingRule, resolve_stopping
-from .utils.tensors import integer_targets
+from .utils.tensors import prepare_targets
 
 DeviceLike = str | torch.device
 
@@ -36,7 +36,8 @@ class Calibrator(ABC):
 
     * **predictions** are channel-first, class axis at dimension 1
       (``(B, C, *spatial)``; ``(N, C)`` is also accepted);
-    * **targets** are integer labels of shape ``(B, *spatial)``;
+    * **targets** are integer labels ``(B, *spatial)`` or floating class
+      distributions ``(B, C, *spatial)``, including mean human responses;
     * **mask**, when given, is ``(B, *spatial)`` with ``True`` for valid voxels.
 
     Inputs may be raw ``logits`` or normalised ``probs`` (see ``input_type``).
@@ -55,7 +56,7 @@ class Calibrator(ABC):
 
     Notes
     -----
-    Calibrators fitted by gradient descent (all of them) also accept, as
+    Calibrators fitted by gradient descent also accept, as
     keyword-only constructor arguments, an optional validation-based early
     stopping rule (Adam only):
 
@@ -102,6 +103,8 @@ class Calibrator(ABC):
     lr_patience: int | None = None
     lr_factor: float = 0.1
     _stopping: StoppingRule | None = None
+    #: set by gradient-fitted subclasses; read by :meth:`_refresh_stopping`.
+    optimizer: str = "adam"
 
     @property
     def is_fitted(self) -> bool:
@@ -130,7 +133,9 @@ class Calibrator(ABC):
         predictions:
             ``(B, C, *spatial)`` logits or probabilities (see ``input_type``).
         targets:
-            ``(B, *spatial)`` integer labels.
+            ``(B, *spatial)`` integer labels or ``(B, C, *spatial)`` floating
+            distributions. Soft targets must sum to 1; exclude positions with
+            ``mask`` rather than ``ignore_index``. Each valid voxel has equal weight.
         mask:
             Optional ``(B, *spatial)`` boolean mask; ``True`` marks valid voxels.
         val_predictions, val_targets, val_mask:
@@ -158,6 +163,7 @@ class Calibrator(ABC):
             raise ValueError(
                 "no valid voxels to fit on (all positions are masked out or equal ignore_index)"
             )
+        self._refresh_stopping()
         val_data = self._prepare_validation(
             val_predictions, val_targets, val_mask, num_classes=num_classes
         )
@@ -182,6 +188,12 @@ class Calibrator(ABC):
         mask:
             Optional ``(B, *spatial)`` boolean mask. Masked-out voxels are set to
             0 across all classes in the output.
+
+        Returns
+        -------
+        torch.Tensor
+            Calibrated probabilities, always in ``float32`` (calibrators compute
+            in float32, so ``float64`` inputs do not yield ``float64`` outputs).
         """
         if not self._fitted:
             raise NotFittedError("call fit() before transform()")
@@ -296,6 +308,16 @@ class Calibrator(ABC):
             self.lr_patience = self._stopping.lr_patience
             self.lr_factor = self._stopping.lr_factor
 
+    def _refresh_stopping(self) -> None:
+        """Re-resolve early stopping from the current attributes.
+
+        ``_init_stopping`` runs in ``__init__``, so settings assigned after
+        construction (``cal.patience = 5``) would otherwise be ignored.
+        """
+        self._init_stopping(
+            self.optimizer, self.patience, self.min_delta, self.lr_patience, self.lr_factor
+        )
+
     def _prepare_validation(
         self,
         val_predictions: Any | None,
@@ -304,7 +326,7 @@ class Calibrator(ABC):
         *,
         num_classes: int,
     ) -> tuple[torch.Tensor, torch.Tensor] | None:
-        """Flatten the optional validation set into canonical ``(N, C)`` / ``(N,)`` tensors."""
+        """Flatten validation predictions and hard labels or soft distributions."""
         if val_predictions is None and val_targets is None:
             if val_mask is not None:
                 raise ValueError("val_mask given without val_predictions and val_targets")
@@ -350,7 +372,7 @@ class Calibrator(ABC):
         if with_targets:
             if targets is None:
                 raise ValueError("targets are required for fit()")
-            tgts = integer_targets(targets, device=self.device)
+            tgts = prepare_targets(preds, targets)
         msk: torch.Tensor | None = None
         if mask is not None:
             msk = to_tensor(mask, device=self.device).to(torch.bool)
@@ -379,4 +401,9 @@ class Calibrator(ABC):
         with torch.no_grad():
             canonical = self._to_canonical(preds)
             logits = self._map_logits(canonical)
+            finite = torch.isfinite(logits).all(dim=1)
+            if msk is not None:
+                finite = finite[msk]
+            if not bool(finite.all()):
+                raise ValueError("calibration produced non-finite logits (numerical overflow)")
         return logits, msk

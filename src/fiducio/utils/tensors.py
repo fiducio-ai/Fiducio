@@ -6,7 +6,8 @@ math works for 2D, 3D and general n-D segmentation:
 * **predictions** are channel-first with the class axis at dimension 1:
   ``(B, C, *spatial)`` (e.g. ``(B, C, H, W)`` in 2D, ``(B, C, D, H, W)`` in 3D).
   A plain ``(N, C)`` tensor (no spatial axes) is also accepted.
-* **targets** are integer class indices of shape ``(B, *spatial)``.
+* **targets** are integer class indices ``(B, *spatial)`` or floating class
+  distributions ``(B, C, *spatial)`` (including mean human responses).
 * **mask**, when given, is a boolean tensor of shape ``(B, *spatial)`` where
   ``True`` marks valid positions.
 
@@ -16,6 +17,7 @@ The class axis is *always* dimension 1. Fiducio never tries to guess it.
 from __future__ import annotations
 
 import math
+import operator
 
 import numpy as np
 import torch
@@ -69,6 +71,8 @@ def safe_log(probs: torch.Tensor, eps: float = 1e-12) -> torch.Tensor:
 
 def positive_finite(value: float, name: str, *, allow_zero: bool = False) -> float:
     """Validate a scalar hyperparameter before constructing tensors."""
+    if isinstance(value, bool):
+        raise ValueError(f"{name} must be a number, not a bool")
     value = float(value)
     if not math.isfinite(value) or (value < 0 if allow_zero else value <= 0):
         domain = "non-negative" if allow_zero else "positive"
@@ -97,6 +101,47 @@ def integer_targets(targets: ArrayLike, *, device: torch.device) -> torch.Tensor
     return y.long()
 
 
+def prepare_targets(predictions: torch.Tensor, targets: ArrayLike) -> torch.Tensor:
+    """Preserve class distributions; convert spatial labels only after checking integers."""
+    y = to_tensor(targets, device=predictions.device).detach()
+    if y.shape == predictions.shape:
+        if not y.is_floating_point():
+            raise ValueError("soft targets must be floating class distributions")
+        return y
+    return integer_targets(y, device=predictions.device)
+
+
+def mean_human_response(
+    annotations: ArrayLike, *, num_classes: int, ignore_index: int = DEFAULT_IGNORE_INDEX
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Return empirical class proportions and an annotated-voxel mask.
+
+    ``annotations`` has shape ``(B, R, *spatial)`` with rater axis 1.
+    Missing votes equal ``ignore_index``. Unannotated voxels have zero mass;
+    pass the returned mask to ``fit`` and metrics. Each valid voxel receives
+    equal weight, regardless of how many available raters it has.
+    """
+    try:
+        classes = -1 if isinstance(num_classes, bool) else operator.index(num_classes)
+    except TypeError:
+        classes = -1
+    if classes < 2:
+        raise ValueError("num_classes must be an integer >= 2")
+    a = to_tensor(annotations).detach()
+    if a.ndim < 2:
+        raise ValueError("annotations must have shape (B, R, *spatial)")
+    a = integer_targets(a, device=a.device)
+    present = a != ignore_index
+    if bool(((a < 0) | (a >= classes))[present].any()):
+        raise ValueError(f"annotation labels must lie in [0, {classes - 1}]")
+    counts = present.sum(dim=1)
+    proportions = torch.stack(
+        [((a == c) & present).sum(dim=1) for c in range(classes)], dim=1
+    ).float()
+    proportions /= counts.clamp_min(1).unsqueeze(1)
+    return proportions, counts > 0
+
+
 def validate_mask(predictions: torch.Tensor, mask: torch.Tensor | None) -> None:
     """Require the exact spatial layout, never implicit broadcasting."""
     expected = (predictions.shape[0], *predictions.shape[2:])
@@ -110,6 +155,7 @@ def validate_predictions(
     input_type: str,
     expected_num_classes: int | None = None,
     mask: torch.Tensor | None = None,
+    context: str = "calibrator",
 ) -> int:
     """Validate a predictions tensor and return the number of classes.
 
@@ -117,6 +163,10 @@ def validate_predictions(
     positions, so masked-out padding may hold anything, including NaN. For
     ``input_type="probs"`` the sum-to-1 tolerance is ``1e-3``, widened for
     half-precision inputs to cover their rounding error.
+
+    ``context`` tailors the advice given when values fall outside ``[0, 1]``:
+    calibrators accept ``input_type="logits"``, metrics always take
+    probabilities, and soft targets have no ``input_type`` argument to adjust.
 
     Raises
     ------
@@ -156,6 +206,8 @@ def validate_predictions(
         not torch.isfinite(sums).all()
         and not at_valid(torch.isfinite(predictions).all(dim=1)).all()
     ):
+        if context == "targets":
+            raise ValueError("targets contain non-finite values (nan/inf)")
         raise ValueError("predictions contain non-finite values (nan/inf)")
     if not sums.numel():
         return num_classes
@@ -166,12 +218,21 @@ def validate_predictions(
         raise ValueError("predictions exceed the float32 range")
     if input_type == "probs":
         if lo < 0.0 or hi > 1.0:
+            if context == "metrics":
+                raise ValueError(
+                    "values fall outside [0, 1]; metrics take probabilities, so "
+                    "apply torch.softmax(logits, dim=1) first"
+                )
+            if context == "targets":
+                raise ValueError("soft targets must lie in [0, 1] along the class axis")
             raise ValueError(
                 "input_type='probs' but values fall outside [0, 1]; "
                 "pass input_type='logits' for unnormalised scores"
             )
         atol = max(_PROB_SUM_ATOL, 2 * torch.finfo(predictions.dtype).eps)
         if float(sums.sub_(1.0).abs_().max()) > atol:
+            if context == "targets":
+                raise ValueError("soft targets must sum to 1 along the class axis (dimension 1)")
             raise ValueError(
                 "input_type='probs' but probabilities do not sum to 1 along the "
                 "class axis (dimension 1)"
@@ -187,9 +248,14 @@ def validate_targets(
     num_classes: int,
     ignore_index: int,
 ) -> None:
-    """Validate label and mask tensors against ``predictions``."""
+    """Validate hard labels or soft class distributions against predictions."""
     if not torch.is_tensor(targets):
         raise TypeError("targets must be a torch.Tensor")
+    if targets.shape == predictions.shape:
+        if not targets.is_floating_point():
+            raise ValueError("soft targets must be floating class distributions")
+        validate_predictions(targets, input_type="probs", mask=mask, context="targets")
+        return
     expected_shape = (predictions.shape[0],) + tuple(predictions.shape[2:])
     if tuple(targets.shape) != expected_shape:
         raise ValueError(
@@ -234,12 +300,22 @@ def flatten_valid(
     mask: torch.Tensor | None,
     ignore_index: int,
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    """Return the valid ``(N, C)`` rows and ``(N,)`` labels for fitting.
+    """Return valid ``(N, C)`` rows and labels ``(N,)`` or distributions ``(N,C)``.
 
     Positions whose label equals ``ignore_index`` or whose mask is ``False`` are
-    dropped.
+    dropped. Soft targets use only the mask; exact one-hot targets are reduced
+    to labels to preserve the hard-label optimizer path.
     """
     flat, _ = class_last_flatten(z)
+    if targets.shape == z.shape:
+        soft, _ = class_last_flatten(targets)
+        if mask is not None:
+            valid = mask.reshape(-1).bool()
+            flat, soft = flat[valid], soft[valid]
+        # Keep exact one-hot targets on the hard-label kernel for reproducible fits.
+        if bool(((soft == 0) | (soft == 1)).all()) and bool((soft.sum(1) == 1).all()):
+            return flat, soft.argmax(1)
+        return flat, soft.to(dtype=z.dtype)
     targets_flat = targets.reshape(-1)
     valid = targets_flat != ignore_index
     if mask is not None:

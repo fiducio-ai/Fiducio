@@ -34,8 +34,9 @@ def reliability_diagram(
     ax: Any | None = None,
     title: str | None = "Reliability diagram",
     metric: str | None = "ece",
+    class_index: int | None = None,
 ) -> Any:
-    """Draw a top-1 reliability diagram and return the matplotlib ``Axes``.
+    """Draw top-1 or class reliability and return the matplotlib ``Axes``.
 
     Parameters
     ----------
@@ -56,6 +57,11 @@ def reliability_diagram(
         (population-weighted, the default), ``"ace"`` (unweighted mean over
         non-empty bins — see :func:`fiducio.unweighted_calibration_error`), or
         ``None`` to omit the annotation.
+    class_index:
+        Optional class whose probability is compared with the observed class
+        proportion (MHR for soft targets). The annotated ECE is against these
+        targets, not the mean ECE against individual raters. See TwinTrack,
+        Kirscher et al., MIDL 2026, https://arxiv.org/abs/2604.15950v2.
 
     Returns
     -------
@@ -65,7 +71,7 @@ def reliability_diagram(
     if metric not in (None, "ece", "ace"):
         raise ValueError(f"metric must be 'ece', 'ace' or None, got {metric!r}")
     plt = _require_matplotlib()
-    curve = reliability_curve(probs, targets, mask, ignore_index, n_bins)
+    curve = reliability_curve(probs, targets, mask, ignore_index, n_bins, class_index=class_index)
 
     edges = curve.bin_edges.detach().cpu().numpy()
     centers = (edges[:-1] + edges[1:]) / 2.0
@@ -85,7 +91,7 @@ def reliability_diagram(
         width=width * 0.95,
         edgecolor="black",
         alpha=0.75,
-        label="accuracy",
+        label="accuracy" if class_index is None else "observed proportion",
     )
     ax.plot(
         confidence[populated],
@@ -97,14 +103,16 @@ def reliability_diagram(
     )
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
-    ax.set_xlabel("confidence")
-    ax.set_ylabel("accuracy")
+    ax.set_xlabel("confidence" if class_index is None else f"class {class_index} probability")
+    ax.set_ylabel(
+        "agreement" if class_index is None else "observed proportion / mean human response"
+    )
     ax.set_aspect("equal")
     if title:
         ax.set_title(title)
     if metric is not None:
         if metric == "ece":
-            label, value = "ECE", curve.ece
+            label, value = "ECE (against targets)", curve.ece
         elif metric == "ace":
             label, value = "ACE", curve.ace
         ax.text(

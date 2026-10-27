@@ -1,8 +1,9 @@
 """Calibration metrics for segmentation probabilities.
 
 All metrics accept probabilities of shape ``(B, C, *spatial)`` (class axis at
-dimension 1) and integer labels of shape ``(B, *spatial)``, with optional
-``mask`` and ``ignore_index``. They return Python floats (or, for
+dimension 1) and integer labels ``(B, *spatial)`` or floating class distributions
+``(B, C, *spatial)``. Soft targets use ``mask``; ``ignore_index`` applies to hard
+labels. They return Python floats (or, for
 :func:`reliability_curve`, a :class:`ReliabilityCurve`).
 """
 
@@ -15,7 +16,7 @@ from typing import Any
 import torch
 
 from ..utils import safe_log, to_tensor, validate_predictions, validate_targets
-from ..utils.tensors import integer_targets
+from ..utils.tensors import prepare_targets
 
 
 def _voxels(
@@ -35,17 +36,18 @@ def _voxels(
     if not p.is_floating_point():
         p = p.float()
     m = None if mask is None else to_tensor(mask, device=p.device).bool()
-    c = validate_predictions(p, input_type="probs", mask=m)
-    y = integer_targets(targets, device=p.device)
+    c = validate_predictions(p, input_type="probs", mask=m, context="metrics")
+    y = prepare_targets(p, targets)
     validate_targets(p, y, m, num_classes=c, ignore_index=ignore_index)
     if p.dtype not in (torch.float32, torch.float64):
         p = p.float()
-    valid = y != ignore_index
+    soft = y.shape == p.shape
+    valid = torch.ones_like(p[:, 0], dtype=torch.bool) if soft else y != ignore_index
     if m is not None:
         valid &= m
     if bool(valid.all()):
         return p, y, None
-    return p, y.masked_fill(~valid, 0), valid
+    return p, y.masked_fill(~valid.unsqueeze(1) if soft else ~valid, 0), valid
 
 
 def _select(x: torch.Tensor, valid: torch.Tensor | None) -> torch.Tensor:
@@ -68,6 +70,11 @@ def negative_log_likelihood(
     capping the NLL at ~27.63 instead of ``inf``.
     """
     p, y, valid = _voxels(probs, targets, mask, ignore_index)
+    if y.shape == p.shape:
+        loss = torch.zeros_like(_select(p[:, 0], valid), dtype=torch.float64)
+        for c in range(p.shape[1]):
+            loss -= _select(y[:, c], valid).double() * safe_log(_select(p[:, c], valid).double())
+        return float(loss.mean().item())
     true_p = _select(_true_class_probs(p, y), valid).double()
     if true_p.numel() == 0:
         return float("nan")
@@ -80,19 +87,27 @@ def brier_score(
     mask: Any | None = None,
     ignore_index: int = -100,
 ) -> float:
-    """Mean multiclass Brier score over valid voxels."""
+    """Mean sum of squared class residuals against labels or soft distributions.
+
+    Against an MHR, this differs from the mean per-rater Brier by the rater
+    disagreement term. Binary two-channel Brier is twice positive-channel MSE.
+    Residuals accumulate in float64 to retain errors near perfect predictions.
+    """
     p, y, valid = _voxels(probs, targets, mask, ignore_index)
     if valid is not None and not bool(valid.any()):
         return float("nan")
-    # sum_c (p_c - onehot_c)^2 = ||p||^2 - 2 p_y + 1, without a one-hot copy of p.
-    sq_norm = _select(torch.linalg.vector_norm(p, dim=1), valid).double().square()
-    true_p = _select(_true_class_probs(p, y), valid).double()
-    return float((sq_norm - 2 * true_p + 1).mean().item())
+    # Direct residuals avoid cancellation near perfect predictions, one channel at a time.
+    squared = torch.zeros_like(_select(p[:, 0], valid), dtype=torch.float64)
+    for c in range(p.shape[1]):
+        target = y[:, c] if y.shape == p.shape else y == c
+        residual = _select(p[:, c], valid).double() - _select(target, valid).double()
+        squared += residual.square()
+    return float(squared.mean().item())
 
 
 @dataclass
 class ReliabilityCurve:
-    """Per-bin reliability statistics from top-1 confidence binning.
+    """Per-bin top-1 or class-specific reliability statistics.
 
     Attributes
     ----------
@@ -101,7 +116,7 @@ class ReliabilityCurve:
     bin_confidence:
         ``(n_bins,)`` mean predicted confidence per bin (0 for empty bins).
     bin_accuracy:
-        ``(n_bins,)`` mean accuracy per bin (0 for empty bins).
+        ``(n_bins,)`` mean agreement or class proportion per bin (0 for empty bins).
     bin_counts:
         ``(n_bins,)`` int64 number of voxels per bin. Other statistics are
         float64; all tensors reside on the predictions' device.
@@ -128,11 +143,16 @@ def reliability_curve(
     mask: Any | None = None,
     ignore_index: int = -100,
     n_bins: int = 15,
+    *,
+    class_index: int | None = None,
 ) -> ReliabilityCurve:
-    """Compute top-1 reliability statistics with uniform binning.
+    """Compute top-1 or class-specific reliability with uniform binning.
 
     The confidence is the maximum predicted probability and the accuracy is
-    whether the argmax matches the label. Useful both for reporting ECE/ACE and
+    whether the argmax matches the label, or ``q[argmax(p)]`` for soft targets.
+    With ``class_index=c``, compare ``p_c`` with ``1[y=c]`` or ``q_c``.
+    ECE against MHR differs from mean per-rater ECE; retain the individual votes
+    to compute the latter. Useful both for reporting ECE/ACE and
     for drawing reliability diagrams (see
     :func:`fiducio.plots.reliability_diagram`).
     """
@@ -145,9 +165,20 @@ def reliability_curve(
     p, y, valid = _voxels(probs, targets, mask, ignore_index)
     # Construct the same float32 boundaries as before, then accumulate in double.
     edges = torch.linspace(0.0, 1.0, n_bins + 1, device=p.device).double()
-    confidence, prediction = p.max(dim=1)
-    correct = _select(prediction == y, valid)
-    confidence = _select(confidence, valid).double()
+    if class_index is None:
+        confidence, prediction = p.max(dim=1)
+        observed = _true_class_probs(y, prediction) if y.shape == p.shape else prediction == y
+    else:
+        try:
+            c = -1 if isinstance(class_index, bool) else operator.index(class_index)
+        except TypeError:
+            c = -1
+        if not 0 <= c < p.shape[1]:
+            raise ValueError(f"class_index must be an integer in [0, {p.shape[1] - 1}]")
+        confidence = p[:, c]
+        observed = y[:, c] if y.shape == p.shape else y == c
+    correct = _select(observed, valid).double()
+    confidence = _select(confidence, valid).double().contiguous()
     if confidence.numel() == 0:
         zeros = torch.zeros(n_bins, dtype=torch.float64, device=p.device)
         return ReliabilityCurve(
@@ -157,11 +188,12 @@ def reliability_curve(
     idx = torch.bucketize(confidence, edges[1:-1].contiguous(), out_int32=True)
 
     counts = torch.bincount(idx, minlength=n_bins)
-    # Weighted bincount has no deterministic CUDA kernel; scatter_add_ does.
+    # Weighted sums need scatter_add_: deterministic on CPU, on CUDA only with
+    # torch.use_deterministic_algorithms(True).
     sum_conf = torch.zeros(n_bins, dtype=torch.float64, device=p.device).scatter_add_(
         0, idx.long(), confidence
     )
-    sum_acc = torch.bincount(idx[correct], minlength=n_bins).double()
+    sum_acc = torch.zeros_like(sum_conf).scatter_add_(0, idx.long(), correct)
     safe_counts = counts.clamp_min(1)
     bin_conf = sum_conf / safe_counts
     bin_acc = sum_acc / safe_counts
@@ -179,8 +211,13 @@ def expected_calibration_error(
     mask: Any | None = None,
     ignore_index: int = -100,
     n_bins: int = 15,
+    *,
+    class_index: int | None = None,
 ) -> float:
     """Top-1 expected calibration error (ECE) with uniform binning.
+
+    Pass ``class_index`` for class-specific calibration against hard or soft
+    targets. This measures ECE against the supplied targets, not mean rater ECE.
 
     The confidence is the maximum predicted probability and the accuracy is
     whether the argmax matches the label. Bins partition ``[0, 1]`` uniformly
@@ -192,7 +229,9 @@ def expected_calibration_error(
     ``n_bins=50`` and compute per case to follow that convention. Boundary-aware
     ECE is not included.
     """
-    return reliability_curve(probs, targets, mask, ignore_index, n_bins).ece
+    return reliability_curve(
+        probs, targets, mask, ignore_index, n_bins, class_index=class_index
+    ).ece
 
 
 def unweighted_calibration_error(
@@ -201,8 +240,12 @@ def unweighted_calibration_error(
     mask: Any | None = None,
     ignore_index: int = -100,
     n_bins: int = 15,
+    *,
+    class_index: int | None = None,
 ) -> float:
     """Top-1 unweighted calibration error (ACE) with uniform binning.
+
+    ``class_index`` selects a class instead of the default top-1 confidence.
 
     The unweighted mean of the per-bin ``|confidence - accuracy|`` gap over
     non-empty uniform bins. This is **not** the adaptive calibration error of
@@ -215,7 +258,9 @@ def unweighted_calibration_error(
     paper computes ACE on the pooled test voxels rather than per image. Kept as
     ``average_calibration_error`` for backwards compatibility.
     """
-    return reliability_curve(probs, targets, mask, ignore_index, n_bins).ace
+    return reliability_curve(
+        probs, targets, mask, ignore_index, n_bins, class_index=class_index
+    ).ace
 
 
 average_calibration_error = unweighted_calibration_error

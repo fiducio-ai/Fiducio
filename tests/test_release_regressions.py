@@ -174,6 +174,9 @@ def test_large_initial_temperature_stays_finite(cls):
         {"lambda_reg": -1.0},
         {"mu_reg": float("nan")},
         {"min_delta": float("nan")},
+        {"patience": True},
+        {"lr_patience": 2.5},
+        {"patience": 0},
     ],
 )
 def test_invalid_hyperparameters_rejected(kwargs):
@@ -275,3 +278,38 @@ def test_outputs_keep_prediction_shape_with_and_without_mask(calibrator_id, shap
     assert cal.transform(z).shape == z.shape
     assert cal.transform(z, mask).shape == z.shape
     assert cal.decision_function(z).shape == z.shape
+
+
+def test_metrics_do_not_suggest_input_type():
+    """Metrics take probabilities only; the advice must not name an argument they lack."""
+    z, y = data()
+    with pytest.raises(ValueError, match="metrics take probabilities"):
+        expected_calibration_error(z, y)
+
+
+@pytest.mark.parametrize("calibrator_id", ALL_CALIBRATOR_IDS)
+def test_patience_set_after_construction_is_applied(calibrator_id):
+    """Assigning patience on a constructed calibrator must not be silently ignored."""
+    z, y = data()
+    cal = make_calibrator(calibrator_id, max_iter=5)
+    cal.patience = 3
+    cal.fit(z, y, val_predictions=z, val_targets=y)
+    assert cal._stopping is not None and cal._stopping.patience == 3
+
+
+def test_bool_is_rejected_as_numeric_hyperparameter():
+    with pytest.raises(ValueError, match="must be a number, not a bool"):
+        MatrixScaling(lr=True)
+    with pytest.raises(ValueError, match="must be a number, not a bool"):
+        MatrixScaling(lambda_reg=True)
+
+
+def test_numpy_integer_patience_is_accepted():
+    np = pytest.importorskip("numpy")
+    cal = MatrixScaling(patience=np.int64(5))
+    assert cal.patience == 5
+
+
+def test_load_calibrator_rejects_a_directory(tmp_path):
+    with pytest.raises(ValueError, match="is not a file"):
+        load_calibrator(tmp_path)

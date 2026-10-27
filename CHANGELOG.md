@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Soft class-distribution targets, including mean human responses (MHR), for all
+  nine parametric calibrators and their held-out validation paths.
+- `mean_human_response` returns class proportions and an annotated-voxel mask,
+  excluding missing votes without a one-hot tensor per rater.
+- `BinaryIsotonicCalibration`: binary equal-mass binning, weighted PAVA, linear
+  interpolation, exact 0/1 outputs and validated persistence in format 1.
+- Soft-target NLL/Brier/reliability and optional `class_index` on reliability,
+  ECE/ACE (including the existing alias) and plots.
+- Multi-rater guide and synthetic example, with TwinTrack MIDL 2026 attribution
+  and separate MHR-ECE and mean-rater-ECE conventions.
+
+### Fixed
+
+- Numerical overflow in calibrated logits now raises an explicit error at valid
+  voxels instead of silently returning NaN probabilities.
+- Brier accumulates direct squared residuals in float64 to retain errors near
+  perfect predictions without cancellation.
+
+- Metrics no longer suggest `input_type='logits'` when probabilities fall outside
+  `[0, 1]`: the argument does not exist on metrics, which always take
+  probabilities. The message now points at `torch.softmax(logits, dim=1)`.
+- `patience` / `lr_patience` assigned after construction (rather than passed to
+  the constructor) are now honoured by `fit`, instead of being silently ignored.
+- `lr=True` is rejected as a hyperparameter instead of being read as `1.0`;
+  `patience` / `lr_patience` now accept numpy integers, like `max_iter`.
+- `load_calibrator` raises a clear `ValueError` for a directory instead of a raw
+  `IsADirectoryError`.
+
+### Documentation
+
+- `installation.md` documents the CPU-only two-step install and the ~5 GB that a
+  bare `pip install fiducio` pulls in when PyTorch is absent.
+- `examples.md` states that the example scripts ship with the repository, not the
+  wheel.
+- The `ETS` decision-preservation entry is qualified: exact in arithmetic, subject
+  to float32 rounding when the mixture collapses towards uniform.
+
 ## [0.2.0] - 2026-10-04
 
 ### Added

@@ -36,6 +36,7 @@ nav:
   - Installation: installation.md
   - Quickstart: quickstart.md
   - Concepts: concepts.md
+  - Multi-rater calibration: multi_rater.md
   - Calibrators: calibrators.md
   - Examples: examples.md
   - Plotting: plots.md

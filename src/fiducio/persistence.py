@@ -99,6 +99,23 @@ def _validate_state(
             or not torch.isclose(value.sum(), value.new_tensor(1.0), atol=1e-6, rtol=0)
         ):
             raise ValueError("saved mixture weights must be a probability distribution")
+    if cid == "binary_isotonic_calibration" and fitted:
+        x, y = state["x"], state["y"]
+        if (
+            classes != 2
+            or x.ndim != 1
+            or y.shape != x.shape
+            or x.numel() == 0
+            or x.dtype != torch.float64
+            or y.dtype != torch.float64
+            or (x < 0).any()
+            or (x > 1).any()
+            or (y < 0).any()
+            or (y > 1).any()
+            or (x[1:] <= x[:-1]).any()
+            or (y[1:] < y[:-1]).any()
+        ):
+            raise ValueError("invalid saved isotonic coordinates or monotonicity")
 
 
 def _major(version_str: str | None) -> int | None:
@@ -195,6 +212,8 @@ def load_calibrator(
     """
     if not os.path.exists(path):
         raise FileNotFoundError(f"calibrator file not found: {path}")
+    if not os.path.isfile(path):
+        raise ValueError(f"calibrator path is not a file: {path}")
 
     location: MapLocation = "cpu" if map_location is None else map_location
     if not isinstance(location, (str, torch.device)):

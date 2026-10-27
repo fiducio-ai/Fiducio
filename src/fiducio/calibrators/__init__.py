@@ -13,6 +13,7 @@ from .class_conditional import (
 )
 from .dirichlet import DirichletCalibration
 from .ensemble_temperature import EnsembleTemperatureScaling
+from .isotonic import BinaryIsotonicCalibration
 from .matrix import MatrixScaling, TranslationInvariantMatrixScaling
 from .temperature import TemperatureScaling
 from .vector import VectorScaling
@@ -35,6 +36,7 @@ CMSop = OrderPreservingMatrixScaling
 
 __all__ = [
     "TemperatureScaling",
+    "BinaryIsotonicCalibration",
     "EnsembleTemperatureScaling",
     "VectorScaling",
     "MatrixScaling",

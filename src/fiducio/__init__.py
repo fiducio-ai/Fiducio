@@ -22,6 +22,7 @@ from .calibrators import (
     TS,
     VS,
     ArgmaxPreservingMatrixScaling,
+    BinaryIsotonicCalibration,
     ClassConditionalMatrixScaling,
     CMSap,
     CMSop,
@@ -45,7 +46,7 @@ from .metrics import (
 )
 from .persistence import load_calibrator, save_calibrator
 from .registry import get_calibrator_class, registered_ids
-from .utils import two_channel_from_binary
+from .utils import mean_human_response, two_channel_from_binary
 
 try:
     __version__ = version("fiducio")
@@ -59,6 +60,7 @@ __all__ = [
     "NotFittedError",
     # calibrators
     "TemperatureScaling",
+    "BinaryIsotonicCalibration",
     "EnsembleTemperatureScaling",
     "VectorScaling",
     "MatrixScaling",
@@ -96,6 +98,7 @@ __all__ = [
     "ReliabilityCurve",
     # helpers
     "two_channel_from_binary",
+    "mean_human_response",
     # plotting (optional, requires fiducio[plots])
     "plots",
 ]

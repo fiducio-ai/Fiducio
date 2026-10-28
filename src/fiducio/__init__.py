@@ -35,6 +35,7 @@ from .calibrators import (
     TranslationInvariantMatrixScaling,
     VectorScaling,
 )
+from .diagnostics import ReliabilityReport, diagnose
 from .metrics import (
     ReliabilityCurve,
     average_calibration_error,
@@ -96,6 +97,9 @@ __all__ = [
     "brier_score",
     "reliability_curve",
     "ReliabilityCurve",
+    # diagnostics
+    "diagnose",
+    "ReliabilityReport",
     # helpers
     "two_channel_from_binary",
     "mean_human_response",

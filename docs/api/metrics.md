@@ -19,6 +19,14 @@ to hard labels. See [multi-rater calibration](../multi_rater.md).
 
 ::: fiducio.ReliabilityCurve
 
+## Diagnostics
+
+See [reliability diagnostics](../diagnostics.md).
+
+::: fiducio.diagnose
+
+::: fiducio.ReliabilityReport
+
 ## Helpers
 
 ::: fiducio.mean_human_response

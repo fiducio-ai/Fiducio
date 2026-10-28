@@ -39,7 +39,7 @@ or, in a uv application:
 uv add fiducio
 ```
 
-Requires Python ≥ 3.10 and PyTorch ≥ 2.10. The core install depends only on `numpy` and `torch`. Optional extras:
+Requires Python ≥ 3.10 and PyTorch ≥ 2.10 (a security floor, see [installation](docs/installation.md#why-pytorch-210)). The core install depends only on `numpy` and `torch`. Optional extras:
 `fiducio[plots]` (matplotlib reliability diagrams), `fiducio[docs]`,
 `fiducio[dev]`, `fiducio[all]`.
 
@@ -177,6 +177,11 @@ Calibration metrics are included: `negative_log_likelihood`,
 drowned out by a large one), `brier_score`, `reliability_curve`, plus an
 optional reliability-diagram plot (`fiducio.plots.reliability_diagram`, needs
 `fiducio[plots]`).
+
+Before calibrating, `fiducio.diagnose(logits, labels)` prints a reliability report of
+the model on the calibration set: class balance, global calibration with bootstrap
+intervals over images, per-class calibration, and images or classes where the Dice is close to zero
+([guide](docs/diagnostics.md)). Its intervals are not the paper's hierarchical-bootstrap tests.
 
 BA-ECE (boundary-aware ECE), per-case metric aggregation, the DSC/flip-rate
 audit and the paper's paired hierarchical-bootstrap tests are not included; the

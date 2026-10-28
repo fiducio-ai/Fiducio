@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `examples/tutorial_oxford_pets.py` and a tutorial page: train a small U-Net on the
+  public Oxford-IIIT Pet dataset, calibrate on a held-out split and report metrics on
+  a separate test split. `--smoke` runs offline on synthetic data and is covered in CI.
+  The tutorial prints a `diagnose` report of the model on the calibration split first.
+- `fiducio.diagnose` and `ReliabilityReport`: a pre-calibration reliability report on a
+  calibration set (class balance, global calibration with bootstrap intervals over
+  images, per-class and routed calibration as point estimates, Dice failures by image
+  and class, factual warnings), with a text summary, a 2x2 figure and `to_dict()`.
+
+### Documentation
+
+- Explain that the PyTorch ≥ 2.10 floor is a security requirement (`torch.load`
+  CVE fixes) rather than a compatibility limit.
+
 ## [0.3.1] - 2026-10-27
 
 ### Fixed

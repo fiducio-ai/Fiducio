@@ -1,0 +1,7 @@
+# Python 3.12 or 3.13 (dirichletcal needs >= 3.12, torch-uncertainty < 3.14).
+# Not an extra of the package: these ranges do not fit its 3.10-3.14 lock.
+-e ..
+netcal==1.4.0
+torch-uncertainty==0.13.0
+dirichletcal==0.5.3
+pandas

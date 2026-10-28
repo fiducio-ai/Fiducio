@@ -39,6 +39,7 @@ nav:
   - Multi-rater calibration: multi_rater.md
   - Calibrators: calibrators.md
   - Reliability diagnostics: diagnostics.md
+  - Benchmark: benchmark.md
   - Examples: examples.md
   - Tutorial (Oxford Pets): tutorial.md
   - Plotting: plots.md

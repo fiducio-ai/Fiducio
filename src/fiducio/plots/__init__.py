@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..metrics.calibration import reliability_curve
+from ..metrics.calibration import ReliabilityCurve, reliability_curve
 
 __all__ = ["reliability_diagram"]
 
@@ -73,7 +73,20 @@ def reliability_diagram(
         raise ValueError(f"metric must be 'ece', 'ace' or None, got {metric!r}")
     plt = _require_matplotlib()
     curve = reliability_curve(probs, targets, mask, ignore_index, n_bins, class_index=class_index)
+    if ax is None:
+        _, ax = plt.subplots(figsize=(4.5, 4.5))
+    return _draw_reliability(ax, curve, class_index=class_index, title=title, metric=metric)
 
+
+def _draw_reliability(
+    ax: Any,
+    curve: ReliabilityCurve,
+    *,
+    class_index: int | None,
+    title: str | None,
+    metric: str | None,
+) -> Any:
+    """Draw an already computed reliability curve on ``ax``."""
     edges = curve.bin_edges.detach().cpu().numpy()
     centers = (edges[:-1] + edges[1:]) / 2.0
     width = edges[1] - edges[0]
@@ -81,9 +94,6 @@ def reliability_diagram(
     confidence = curve.bin_confidence.detach().cpu().numpy()
     counts = curve.bin_counts.detach().cpu().numpy()
     populated = counts > 0
-
-    if ax is None:
-        _, ax = plt.subplots(figsize=(4.5, 4.5))
 
     ax.plot([0, 1], [0, 1], linestyle="--", color="grey", label="perfect")
     ax.bar(

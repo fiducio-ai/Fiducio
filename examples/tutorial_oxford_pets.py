@@ -39,6 +39,7 @@ from fiducio import (
     MatrixScaling,
     TemperatureScaling,
     brier_score,
+    diagnose,
     expected_calibration_error,
     negative_log_likelihood,
 )
@@ -211,6 +212,8 @@ def main() -> None:
     parser.add_argument("--epochs", type=int, default=40)
     parser.add_argument("--out", type=Path, default=Path("outputs/tutorial_reliability.png"))
     args = parser.parse_args()
+    if args.size % 4 or args.n_images < 8:
+        parser.error("--size must be a multiple of 4 and --n-images at least 8")
     if args.smoke:
         args.n_images, args.size, args.epochs = 90, 32, 2
 
@@ -240,6 +243,18 @@ def main() -> None:
     cal_labels = y[splits["calibration"]]
     test_logits = logits_of(model, x[splits["test"]])
     test_labels = y[splits["test"]]
+
+    # Check how reliable the model is on the calibration split before calibrating.
+    # The background is class 1 in the trimap labels.
+    print("\nDiagnosis on the calibration split:")
+    print(
+        diagnose(
+            cal_logits,
+            cal_labels,
+            class_names=["pet", "background", "boundary"],
+            background_class=1,
+        )
+    )
 
     # Fit on the calibration split only.
     ts = TemperatureScaling(device="cpu").fit(cal_logits, cal_labels)

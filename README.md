@@ -9,9 +9,9 @@
 and 3D semantic segmentation**. Give it the logits or probabilities of any
 segmentation model and a labelled calibration set to fit a probability
 transform without retraining the segmentation model.
-It implements temperature, vector, matrix and Dirichlet scaling, their
-translation-invariant variants, and the class-conditional (CDC, CMSap, CMSop)
-calibrators introduced in our paper
+It implements temperature, vector, matrix and Dirichlet scaling, the
+translation-invariant matrix-scaling variant (MSc), and the class-conditional
+(CDC, CMSap, CMSop) calibrators introduced in our paper
 [*Rethinking Post-Hoc Calibration in Semantic Segmentation*](https://arxiv.org/abs/2607.01902),
 accepted at TMLR. Whether the segmentation is preserved depends on the
 calibrator; see the guarantees below.
@@ -39,7 +39,7 @@ or, in a uv application:
 uv add fiducio
 ```
 
-Requires Python ≥ 3.10 and PyTorch ≥ 2.10 (a security floor, see [installation](docs/installation.md#why-pytorch-210)). The core install depends only on `numpy` and `torch`. Optional extras:
+Requires Python ≥ 3.10 and PyTorch ≥ 2.10 (a security floor, see [installation](https://github.com/fiducio-ai/Fiducio/blob/main/docs/installation.md#why-pytorch-210)). The core install depends only on `numpy` and `torch`. Optional extras:
 `fiducio[plots]` (matplotlib reliability diagrams), `fiducio[docs]`,
 `fiducio[dev]`, `fiducio[all]`.
 
@@ -105,6 +105,9 @@ applies to hard labels.
 
 ## Calibrators
 
+This is a summary; the canonical table, with parameters and API links, is in
+[Calibrators](https://fiducio-ai.github.io/Fiducio/calibrators/).
+
 | Class | Alias | Translation-invariant | Decision preservation |
 |-------|-------|:---------------------:|-----------------------|
 | `TemperatureScaling` | `TS` | yes | argmax and full order |
@@ -164,6 +167,9 @@ library (see the [implementation guide](https://github.com/fiducio-ai/Fiducio/bl
 | CMSap | `ArgmaxPreservingMatrixScaling` |
 | CMSop | `OrderPreservingMatrixScaling` |
 
+LTS is not included in this release; this table is not the complete
+experimental method inventory.
+
 CDC, CMSap and CMSop are class-conditional: they fit one affine map per
 uncalibrated top class, optimized **jointly** in one cross-entropy loss.
 Regularization applies to each expert's induced affine map in the common
@@ -172,22 +178,24 @@ See [Calibrators](https://fiducio-ai.github.io/Fiducio/calibrators/) for the
 regularization formula and method-specific limits.
 
 Calibration metrics are included: `negative_log_likelihood`,
-`expected_calibration_error` (ECE, population-weighted), `average_calibration_error`
+`expected_calibration_error` (ECE, population-weighted), `unweighted_calibration_error`
 (ACE, unweighted over the same bins — doesn't let a sparsely populated bin get
 drowned out by a large one), `brier_score`, `reliability_curve`, plus an
 optional reliability-diagram plot (`fiducio.plots.reliability_diagram`, needs
 `fiducio[plots]`).
 
-Before calibrating, `fiducio.diagnose(logits, labels)` prints a reliability report of
-the model on the calibration set: class balance, global calibration with bootstrap
-intervals over images, per-class calibration, and images or classes where the Dice is close to zero
-([guide](docs/diagnostics.md)). Its intervals are not the paper's hierarchical-bootstrap tests.
+Before calibrating, `fiducio.diagnose(logits, labels)` returns a
+`ReliabilityReport` describing the model on the calibration set: class balance,
+global calibration with bootstrap intervals over images, per-class calibration,
+and images or classes where the Dice is close to zero. It does not print by
+itself; call `print(fiducio.diagnose(...))` to read it
+([guide](https://github.com/fiducio-ai/Fiducio/blob/main/docs/diagnostics.md)). Its intervals are not the paper's hierarchical-bootstrap tests.
 
 BA-ECE (boundary-aware ECE), per-case metric aggregation, the DSC/flip-rate
 audit and the paper's paired hierarchical-bootstrap tests are not included; the
-shipped metrics are top-1 pooled point estimates. `average_calibration_error` is the
+shipped metrics are top-1 pooled point estimates. `unweighted_calibration_error` is the
 unweighted mean over non-empty uniform bins (not the adaptive ACE of other work)
-and is also available as `unweighted_calibration_error`.
+and is also available under the backwards-compatible alias `average_calibration_error`.
 
 Decision and ordering guarantees hold in exact arithmetic and are subject to
 floating-point ties and rounding. They do not cover thresholded or post-processed
@@ -242,8 +250,13 @@ Full guide and API reference: **https://fiducio-ai.github.io/Fiducio/**
 - [Installation](https://fiducio-ai.github.io/Fiducio/installation/)
 - [Quickstart](https://fiducio-ai.github.io/Fiducio/quickstart/)
 - [Concepts](https://fiducio-ai.github.io/Fiducio/concepts/)
+- [Multi-rater calibration](https://fiducio-ai.github.io/Fiducio/multi_rater/)
 - [Calibrators](https://fiducio-ai.github.io/Fiducio/calibrators/)
+- [Reliability diagnostics](https://fiducio-ai.github.io/Fiducio/diagnostics/)
+- [Benchmark](https://fiducio-ai.github.io/Fiducio/benchmark/)
 - [Examples](https://fiducio-ai.github.io/Fiducio/examples/)
+- [Tutorial (Oxford Pets)](https://fiducio-ai.github.io/Fiducio/tutorial/)
+- [Plotting](https://fiducio-ai.github.io/Fiducio/plots/)
 
 ## Citation
 

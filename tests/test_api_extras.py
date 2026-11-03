@@ -51,6 +51,25 @@ def test_repr_reports_fit_state():
     assert "fitted" in repr(cal)
 
 
+@pytest.mark.parametrize("calibrator_id", ALL_CALIBRATOR_IDS)
+def test_repr_is_uniform_across_calibrators(calibrator_id):
+    cal = make_calibrator(calibrator_id)
+    text = repr(cal)
+    assert text.startswith(f"{type(cal).__name__}(")
+    assert "input_type='logits'" in text
+    assert "unfitted" in text
+    assert "device=" in text
+
+
+def test_every_calibrator_repr_reports_fitted_status():
+    logits, labels = synthetic_logits((2, 3, 5, 5), seed=65)
+    for calibrator_id in ALL_CALIBRATOR_IDS:
+        text = repr(make_calibrator(calibrator_id).fit(logits, labels))
+        assert "fitted" in text
+        assert "unfitted" not in text
+        assert "input_type=" in text and "device=" in text
+
+
 def test_factory_builds_by_id():
     for calibrator_id in registered_ids():
         cls = get_calibrator_class(calibrator_id)

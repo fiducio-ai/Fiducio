@@ -71,7 +71,8 @@ single-channel sigmoid output, convert it first with
 ```python
 from fiducio import two_channel_from_binary
 
-two_channel = two_channel_from_binary(sigmoid_logits, input_type="logits")  # (B, 2, *)
+# sigmoid_logits has shape (B, 1, *spatial): the positive-class score.
+two_channel = two_channel_from_binary(sigmoid_logits, input_type="logits")  # (B, 2, *spatial)
 ```
 
 ## Masks and `ignore_index`

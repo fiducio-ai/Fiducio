@@ -9,9 +9,12 @@ to hard labels. See [multi-rater calibration](../multi_rater.md).
 
 ::: fiducio.expected_calibration_error
 
-::: fiducio.average_calibration_error
-
 ::: fiducio.unweighted_calibration_error
+
+!!! note "Alias"
+    `average_calibration_error` is a backwards-compatible alias of
+    `unweighted_calibration_error` — the same function, not a separate
+    estimator.
 
 ::: fiducio.brier_score
 
@@ -32,7 +35,3 @@ See [reliability diagnostics](../diagnostics.md).
 ::: fiducio.mean_human_response
 
 ::: fiducio.two_channel_from_binary
-
-::: fiducio.get_calibrator_class
-
-::: fiducio.registered_ids

@@ -159,7 +159,9 @@ reported mean-rater ECE uses individual votes.
 
 *Class 1 probabilities versus the MHR on held-out synthetic test cases, using
 50 uniform evaluation bins. The annotated ECE is against MHR, not mean-rater ECE.
-Regenerate it with the script above; see [Plotting](plots.md) for how to read the diagram.*
+Regenerate it with the script above; see [Plotting](plots.md) for how to read the diagram.
+The PNG is light-only: a dark variant would need a plotting-theme option in
+`reliability_diagram`, whose colors are fixed for a light background.*
 
 For real data, split by patient before selecting voxels; fix the ensemble
 pooling, class merging and ROI before fitting. Record splits, raters, versions,

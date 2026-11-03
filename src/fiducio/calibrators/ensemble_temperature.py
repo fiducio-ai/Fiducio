@@ -49,6 +49,16 @@ class EnsembleTemperatureScaling(Calibrator):
     input_type, ignore_index, device:
         See :class:`fiducio.Calibrator`.
 
+    Notes
+    -----
+    Class ordering is preserved in exact arithmetic: each mixture component is
+    monotone in the input scores and the weights are non-negative, so the
+    calibrated probabilities never strictly invert the input order. In float32
+    the mixture can round to exact ties, most visibly once ``w2`` (the uniform
+    component) dominates; ``argmax`` then resolves ties by class index and may
+    differ from the uncalibrated argmax. Treat the guarantee as order
+    preservation up to floating-point ties.
+
     References
     ----------
     Adapted from Zhang et al. (2020), *Mix-n-Match: Ensemble and Compositional
@@ -213,10 +223,3 @@ class EnsembleTemperatureScaling(Calibrator):
         weights = state.get("weights")
         if weights is not None:
             self.weights = torch.as_tensor(weights, device=self.device).float()
-
-    def __repr__(self) -> str:
-        w = self.weights.tolist()
-        return (
-            f"EnsembleTemperatureScaling(temperature={self.temperature:.4f}, "
-            f"weights=[{w[0]:.3f}, {w[1]:.3f}, {w[2]:.3f}], device={self.device})"
-        )

@@ -8,6 +8,7 @@ import torch
 from conftest import make_calibrator, synthetic_logits, to_probs
 from fiducio import (
     ArgmaxPreservingMatrixScaling,
+    EnsembleTemperatureScaling,
     OrderPreservingMatrixScaling,
 )
 
@@ -82,6 +83,42 @@ def test_cmsop_preserves_order_on_unrelated_random_inputs():
     raw_order = to_probs(test_logits).movedim(1, -1).reshape(-1, c).argsort(dim=1)
     cal_order = out.movedim(1, -1).reshape(-1, c).argsort(dim=1)
     assert torch.equal(raw_order, cal_order)
+
+
+@pytest.mark.parametrize("seed", range(3))
+@pytest.mark.parametrize("num_classes", [2, 3, 5])
+def test_ets_never_strictly_inverts_the_class_order(seed, num_classes):
+    # Exact-arithmetic guarantee: a non-negative mixture of monotone maps cannot
+    # invert an order. float32 rounding may merge neighbouring scores into ties,
+    # so the calibrated order must be non-decreasing, not necessarily strict.
+    # Uniform-noise labels let the mixture collapse towards the uniform component,
+    # the regime where float32 ties are most likely.
+    g = torch.Generator().manual_seed(seed)
+    logits = torch.randn(3, num_classes, 6, 6, generator=g) * 0.5
+    labels = torch.randint(0, num_classes, (3, 6, 6), generator=g)
+    cal = EnsembleTemperatureScaling(device="cpu").fit(logits, labels)
+    # Near-tie inputs (gaps comparable to float32 mixture resolution).
+    test = torch.randn(2, num_classes, 6, 6, generator=g) * 1e-3
+    out = cal.transform(test)
+    raw = test.movedim(1, -1).reshape(-1, num_classes)
+    calibrated = out.movedim(1, -1).reshape(-1, num_classes)
+    strict = raw.unsqueeze(1) > raw.unsqueeze(2)
+    assert not (strict & (calibrated.unsqueeze(1) < calibrated.unsqueeze(2))).any()
+
+
+def test_ets_uniform_collapse_ties_resolve_by_class_index():
+    # The documented float32 qualification: with w = [0, 0, 1] every calibrated
+    # probability is exactly 1/C, so argmax ignores the input ranking and picks
+    # the first class. This is a tie, not an order inversion.
+    cal = EnsembleTemperatureScaling(device="cpu")
+    cal._set_state({"temperature": torch.tensor(1.0), "weights": torch.tensor([0.0, 0.0, 1.0])})
+    cal._num_classes = 3
+    cal._fitted = True
+    logits = torch.tensor([[0.0, 1.0, 2.0]])
+    out = cal.transform(logits)
+    assert torch.equal(out, torch.full((1, 3), 1 / 3))
+    assert logits.argmax(1).item() == 2
+    assert out.argmax(1).item() == 0
 
 
 @pytest.mark.parametrize(

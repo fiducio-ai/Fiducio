@@ -137,6 +137,62 @@ def test_reduces_nll_on_overconfident_data(calibrator_id):
     assert negative_log_likelihood(out, labels) < negative_log_likelihood(raw, labels) - 1e-3
 
 
+@pytest.mark.parametrize(
+    "calibrator_id",
+    [
+        "temperature_scaling",
+        "ensemble_temperature_scaling",
+        "translation_invariant_matrix_scaling",
+        "dirichlet_calibration",
+        "class_conditional_matrix_scaling",
+        "argmax_preserving_matrix_scaling",
+        "order_preserving_matrix_scaling",
+    ],
+)
+def test_probs_input_fit_matches_the_equivalent_logits_fit(calibrator_id):
+    # For these families the map is mathematically identical whether the input is
+    # z or softmax(z): the canonical score differs only by a per-voxel constant
+    # (TS/ETS/MSc) or is the same log-probability (DC/CMS). float32
+    # canonicalisation (log(softmax(z)) vs z) perturbs the optimizer trajectory,
+    # hence the tolerance; a semantic mismatch would be far larger.
+    logits, labels = synthetic_logits((3, 4, 6, 6), seed=120)
+    probs = to_probs(logits)
+    from_logits = make_calibrator(calibrator_id).fit(logits, labels)
+    from_probs = make_calibrator(calibrator_id, input_type="probs").fit(probs, labels)
+    torch.testing.assert_close(
+        from_probs.transform(probs), from_logits.transform(logits), atol=1e-3, rtol=1e-3
+    )
+
+
+@pytest.mark.parametrize("calibrator_id", ALL_CALIBRATOR_IDS)
+def test_excluded_voxels_do_not_affect_the_fit(calibrator_id):
+    # mask and ignore_index must remove voxels entirely: only the values at
+    # excluded positions differ between the two fits.
+    logits, labels = synthetic_logits((3, 4, 6, 6), seed=121)
+    mask = torch.ones_like(labels, dtype=torch.bool)
+    mask[:, :3] = False
+    labels = labels.clone()
+    labels[:, 4] = -100
+    ignored = labels == -100
+
+    first = logits.clone()
+    first[~mask.unsqueeze(1).expand_as(logits)] = float("nan")  # allowed under mask
+    first[ignored.unsqueeze(1).expand_as(logits)] = 0.0  # finite where only ignore_index applies
+    second = logits.clone()
+    second[(~mask | ignored).unsqueeze(1).expand_as(logits)] = 1e4
+
+    a = make_calibrator(calibrator_id, max_iter=15).fit(first, labels, mask=mask)
+    b = make_calibrator(calibrator_id, max_iter=15).fit(second, labels, mask=mask)
+    state_a, state_b = a._get_state(), b._get_state()
+    assert state_a.keys() == state_b.keys()
+    for key, value in state_a.items():
+        other = state_b[key]
+        if value is None:
+            assert other is None
+        else:
+            assert torch.equal(value, other), key
+
+
 def test_ets_stage2_starts_next_to_temperature_scaling(monkeypatch):
     import fiducio.calibrators.ensemble_temperature as ets_module
 

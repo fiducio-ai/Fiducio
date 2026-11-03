@@ -67,7 +67,8 @@ JSON-serializable dictionary.
 
 - **Intervals** are 95% bootstrap intervals over **images**, not voxels. Voxels of
   one image are strongly correlated, so the uncertainty comes from the number of
-  images. With a single image there is no interval.
+  images. With a single image there is no interval, and `n_boot=1` also gives none:
+  an interval needs at least two resamples.
 - The **ECE** interval is approximate. ECE has a finite-sample noise floor that
   resampling raises further, so for a well-calibrated model the interval can sit
   slightly above the estimate (in a simulation of 100 calibrated models of 24 images it
@@ -93,7 +94,10 @@ JSON-serializable dictionary.
   an image where the model predicts a single class can keep a mean Dice above the
   threshold and not count as failed; the per-class failure table still shows it.
   A class absent from both labels and prediction has an undefined Dice and is not a
-  failure; a class predicted where it is absent is counted as *spurious*.
+  failure; a class predicted where it is absent is counted as *spurious*. If
+  `background_class` leaves none of the classes present in the labels (for example
+  when every label is the background), the per-image mean Dice is undefined: the
+  report warns and counts no image as failed.
 - The report gives the ECE with and without the failed images, since they enter the
   fit of any calibrator.
 
@@ -101,7 +105,8 @@ JSON-serializable dictionary.
     The report describes the calibration set, using its labels. It does not predict
     which new images will fail, and it does not choose a calibrator. Warning
     thresholds (`min_images`, `min_class_fraction`, `min_class_voxels`) are
-    heuristics; adjust them to your data.
+    heuristics; adjust them to your data. `min_images` and `min_class_voxels`
+    must be non-negative integers, and `min_class_fraction` must lie in `[0, 1]`.
 
 `logits` must have a spatial axis: a `(N, C)` table of voxels is rejected, since
 `diagnose` works per image.

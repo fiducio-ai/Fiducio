@@ -39,6 +39,7 @@ nav:
   - Multi-rater calibration: multi_rater.md
   - Calibrators: calibrators.md
   - Reliability diagnostics: diagnostics.md
+  - Benchmark: benchmark.md
   - Examples: examples.md
   - Tutorial (Oxford Pets): tutorial.md
   - Plotting: plots.md
@@ -47,6 +48,7 @@ nav:
       - Metrics & helpers: api/metrics.md
       - Plotting: api/plots.md
       - Persistence: api/persistence.md
+  - Releasing: releasing.md
 
 markdown_extensions:
   - admonition

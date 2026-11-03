@@ -207,6 +207,51 @@ def test_invalid_arguments(kwargs, match):
         diagnose(logits, labels, **kwargs)
 
 
+@pytest.mark.parametrize(
+    ("kwargs", "match"),
+    [
+        ({"n_boot": 1.5}, "n_boot"),
+        ({"n_boot": True}, "n_boot"),
+        ({"n_worst": 1.5}, "n_worst"),
+        ({"min_images": -1}, "min_images"),
+        ({"min_images": float("nan")}, "min_images"),
+        ({"min_images": 1.5}, "min_images"),
+        ({"min_images": True}, "min_images"),
+        ({"min_class_voxels": -1}, "min_class_voxels"),
+        ({"min_class_voxels": float("nan")}, "min_class_voxels"),
+        ({"min_class_fraction": float("nan")}, "min_class_fraction"),
+        ({"min_class_fraction": -0.1}, "min_class_fraction"),
+        ({"min_class_fraction": 1.5}, "min_class_fraction"),
+        ({"min_class_fraction": True}, "min_class_fraction"),
+    ],
+)
+def test_invalid_thresholds_and_resample_counts(kwargs, match):
+    logits, labels = noisy_logits(n_images=4, scale=1.0)
+    with pytest.raises(ValueError, match=match):
+        diagnose(logits, labels, **{"n_boot": 0, **kwargs})
+
+
+def test_threshold_boundaries_are_accepted():
+    logits, labels = noisy_logits(n_images=4, scale=1.0)
+    diagnose(logits, labels, n_boot=0, min_images=0, min_class_voxels=0, min_class_fraction=0.0)
+    diagnose(logits, labels, n_boot=0, min_class_fraction=1.0)
+    diagnose(logits, labels, n_worst=0)
+
+
+def test_background_class_excluding_every_present_class_warns():
+    logits, labels = noisy_logits(n_images=4, scale=1.0)
+    labels[:] = 0  # every label is the background class
+    logits[:] = 0.0
+    logits[:, 0] = 10.0
+    report = diagnose(logits, labels, background_class=0, n_boot=0)
+    assert report.failures.n_failed == 0
+    assert report.failures.worst == []
+    assert any("failure statistics are undefined" in w for w in report.warnings)
+    # The report still renders and serialises with undefined failure statistics.
+    assert "0/4" in report.summary()
+    json.loads(json.dumps(report.to_dict(), allow_nan=False))
+
+
 def test_soft_targets_and_empty_inputs_are_rejected():
     logits, labels = noisy_logits(n_images=2, scale=1.0)
     with pytest.raises(ValueError, match="hard integer labels"):
@@ -272,6 +317,61 @@ def test_class_and_routed_statistics_match_the_reference_metrics():
 def test_ignore_index_must_be_an_int():
     with pytest.raises(TypeError, match="ignore_index"):
         diagnose(torch.randn(2, 3, 4, 4), torch.zeros(2, 4, 4, dtype=torch.long), ignore_index=None)
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "match"),
+    [
+        ({"seed": True}, "seed"),
+        ({"seed": 1.5}, "seed"),
+        ({"seed": "1"}, "seed"),
+        ({"dice_failure_threshold": True}, "dice_failure_threshold"),
+        ({"dice_failure_threshold": "0.5"}, "dice_failure_threshold"),
+        ({"dice_failure_threshold": None}, "dice_failure_threshold"),
+        ({"dice_failure_threshold": 1j}, "dice_failure_threshold"),
+        ({"background_class": True}, "background_class"),
+        ({"background_class": 1.0}, "background_class"),
+        ({"background_class": "1"}, "background_class"),
+        ({"class_names": "ab"}, "class_names"),
+        ({"class_names": ["a", 1, "c"]}, "class_names"),
+        ({"image_ids": "abc"}, "image_ids"),
+        ({"image_ids": ["a", 1, "c", "d"]}, "image_ids"),
+        ({"ignore_index": True}, "ignore_index"),
+    ],
+)
+def test_invalid_argument_types(kwargs, match):
+    logits, labels = noisy_logits(n_images=4, scale=1.0)
+    with pytest.raises((TypeError, ValueError), match=match):
+        diagnose(logits, labels, n_boot=0, **kwargs)
+
+
+def test_numpy_integer_arguments_accepted():
+    import numpy as np
+
+    logits, labels = noisy_logits(n_images=4, scale=1.0)
+    report = diagnose(
+        logits,
+        labels,
+        n_boot=np.int64(2),
+        seed=np.int64(1),
+        ignore_index=np.int64(-100),
+        background_class=np.int64(0),
+    )
+    assert report.n_images == 4
+
+
+def test_nan_predictions_at_ignore_index_voxels_are_excluded():
+    logits, labels = noisy_logits(n_images=4, scale=1.0)
+    ignored = labels.clone()
+    ignored[0, 0, 0] = -100
+    contaminated = logits.clone()
+    contaminated[0, :, 0, 0] = float("nan")
+    clean = diagnose(logits, ignored, n_boot=0)
+    padded = diagnose(contaminated, ignored, n_boot=0)
+    assert padded.to_dict() == clean.to_dict()
+    # A NaN at a voxel that is actually labelled still fails validation.
+    with pytest.raises(ValueError, match="non-finite"):
+        diagnose(contaminated, labels, n_boot=0)
 
 
 def test_perfect_model_lists_no_worst_images():

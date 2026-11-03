@@ -107,6 +107,13 @@ with few routed voxels being drowned out by the joint loss, at the cost of
 `C` times the optimizer work (one full `max_iter`-step fit per class instead
 of one shared fit across all classes).
 
+The preserving variants (`ArgmaxPreservingMatrixScaling`,
+`OrderPreservingMatrixScaling`) also accept `init_alpha` (default `1.0`) and
+`init_floor` (default `1e-6`): their positive margin/gap parameters start at
+`init_floor`, except the diagonal entries, which start at `init_alpha`. These
+are constructor-only starting values, not learned parameters; the unconstrained
+`ClassConditionalMatrixScaling` does not use them.
+
 ## Choosing a calibrator
 
 A practical decision guide:
@@ -160,7 +167,8 @@ mean is taken over experts for the class-conditional family). Both terms are
 means, matching Kull et al.'s (2019) normalized ODIR (their code with
 `reg_norm=True`); values from un-normalized settings are not transferable.
 
-`VectorScaling`'s `lambda_reg` pulls the scale vector towards 1. Start at `0` and
+`VectorScaling`'s `lambda_reg` pulls the scale vector towards 1 and its
+`mu_reg` penalizes the bias. Start at `0` and
 increase if the calibrator overfits a small calibration set.
 
 MSc optimizes `C-1` free columns and a learned common row sum; the final column

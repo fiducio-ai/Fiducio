@@ -14,4 +14,10 @@ default files are read with `weights_only=True` and onto CPU.
 
 ::: fiducio.load_calibrator
 
+## Registry
+
 ::: fiducio.registered_ids
+
+::: fiducio.get_calibrator_class
+
+::: fiducio.registry.register_calibrator

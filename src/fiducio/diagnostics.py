@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import dataclasses
 import math
+import numbers
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -27,7 +28,7 @@ from .metrics.calibration import (
 )
 from .plots import _draw_reliability, _require_matplotlib
 from .utils import to_tensor, validate_predictions, validate_targets
-from .utils.tensors import prepare_targets
+from .utils.tensors import prepare_targets, validation_positions
 
 __all__ = ["ClassStats", "FailureStats", "ReliabilityReport", "diagnose"]
 
@@ -285,6 +286,19 @@ def _dice_summary(values: torch.Tensor) -> tuple[float, float, float]:
     return float(q[0]), float(q[1]), float(values.min())
 
 
+def _string_sequence(value: Any, name: str) -> list[str]:
+    """Materialise a sequence of strings without exploding a bare string."""
+    if isinstance(value, str):
+        raise ValueError(f"{name} must be a sequence of strings, not a single string")
+    try:
+        items = list(value)
+    except TypeError as exc:
+        raise ValueError(f"{name} must be a sequence of strings") from exc
+    if not all(isinstance(item, str) for item in items):
+        raise ValueError(f"{name} must contain only strings")
+    return items
+
+
 def diagnose(
     logits: Any,
     labels: Any,
@@ -326,8 +340,9 @@ def diagnose(
     n_worst:
         Number of lowest-Dice images listed.
     n_boot, seed:
-        Bootstrap resamples over images for the 95% intervals (``0`` disables them)
-        and the seed of the resampling.
+        Bootstrap resamples over images for the 95% intervals (``0`` disables them;
+        an interval needs at least two resamples, so ``1`` yields NaN) and the seed
+        of the resampling.
     min_images, min_class_fraction, min_class_voxels:
         Thresholds of the warnings. They are heuristics, not statistical guarantees.
 
@@ -345,14 +360,34 @@ def diagnose(
     plus a few passes for NLL, Brier and the confusion matrix. Classes absent from both
     labels and prediction have an undefined Dice and are never counted as failures.
     """
-    if not isinstance(ignore_index, int):
+    if isinstance(ignore_index, bool) or not isinstance(ignore_index, numbers.Integral):
         raise TypeError(f"ignore_index must be an int, got {ignore_index!r}")
+    ignore_index = int(ignore_index)
     if input_type not in ("logits", "probs"):
         raise ValueError(f"input_type must be 'logits' or 'probs', got {input_type!r}")
-    if n_boot < 0 or n_worst < 0:
-        raise ValueError("n_boot and n_worst must be >= 0")
-    if not 0.0 <= dice_failure_threshold <= 1.0:
-        raise ValueError("dice_failure_threshold must lie in [0, 1]")
+    for name, value in (
+        ("n_boot", n_boot),
+        ("n_worst", n_worst),
+        ("min_images", min_images),
+        ("min_class_voxels", min_class_voxels),
+    ):
+        if isinstance(value, bool) or not isinstance(value, numbers.Integral) or value < 0:
+            raise ValueError(f"{name} must be an integer >= 0")
+    if isinstance(seed, bool) or not isinstance(seed, numbers.Integral):
+        raise ValueError("seed must be an integer")
+    seed = int(seed)
+    if (
+        isinstance(min_class_fraction, bool)
+        or not isinstance(min_class_fraction, numbers.Real)
+        or not 0.0 <= min_class_fraction <= 1.0
+    ):
+        raise ValueError("min_class_fraction must be a number in [0, 1]")
+    if (
+        isinstance(dice_failure_threshold, bool)
+        or not isinstance(dice_failure_threshold, numbers.Real)
+        or not 0.0 <= dice_failure_threshold <= 1.0
+    ):
+        raise ValueError("dice_failure_threshold must be a number in [0, 1]")
 
     x = to_tensor(logits).detach()
     if not x.is_floating_point():
@@ -362,20 +397,34 @@ def diagnose(
         raise ValueError(
             f"logits must have shape (B, C, *spatial) with at least one spatial axis; got {tuple(x.shape)}"
         )
-    num_classes = validate_predictions(x, input_type=input_type, mask=m)
     y = prepare_targets(x, labels)
     if y.shape == x.shape:
         raise ValueError("diagnose supports hard integer labels only, not class distributions")
+    num_classes = validate_predictions(
+        x, input_type=input_type, mask=validation_positions(x, y, m, ignore_index)
+    )
     validate_targets(x, y, m, num_classes=num_classes, ignore_index=ignore_index)
     n_images = int(x.shape[0])
     if n_images == 0:
         raise ValueError("at least one image is required")
-    names = list(class_names) if class_names is not None else [str(c) for c in range(num_classes)]
-    ids = list(image_ids) if image_ids is not None else [str(i) for i in range(n_images)]
+    names = (
+        _string_sequence(class_names, "class_names")
+        if class_names is not None
+        else [str(c) for c in range(num_classes)]
+    )
+    ids = (
+        _string_sequence(image_ids, "image_ids")
+        if image_ids is not None
+        else [str(i) for i in range(n_images)]
+    )
     if len(names) != num_classes or len(ids) != n_images:
         raise ValueError("class_names must have one name per class and image_ids one per image")
-    if background_class is not None and not 0 <= background_class < num_classes:
-        raise ValueError(f"background_class must lie in [0, {num_classes - 1}]")
+    if background_class is not None:
+        if isinstance(background_class, bool) or not isinstance(background_class, numbers.Integral):
+            raise ValueError(f"background_class must be an integer in [0, {num_classes - 1}]")
+        background_class = int(background_class)
+        if not 0 <= background_class < num_classes:
+            raise ValueError(f"background_class must lie in [0, {num_classes - 1}]")
 
     # --- per-image sufficient statistics --------------------------------------------------
     top, per_class, routed, confusion = [], [], [], []
@@ -544,6 +593,12 @@ def diagnose(
         warnings=[],
     )
     report.warnings = _warnings(report, min_images, min_class_fraction, min_class_voxels)
+    if bool(mean_dice.isnan().all()):
+        report.warnings.insert(
+            0,
+            "background_class leaves no class in the per-image Dice; "
+            "image failure statistics are undefined",
+        )
     return report
 
 

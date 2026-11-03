@@ -1,7 +1,15 @@
 # Python 3.12 or 3.13 (dirichletcal needs >= 3.12, torch-uncertainty < 3.14).
 # Not an extra of the package: these ranges do not fit its 3.10-3.14 lock.
+# Install from this directory: `-e ..` is relative to the working directory.
+# torch-uncertainty's `cpu` extra supplies the torchvision and lightning imports
+# its top-level package needs; they are not base dependencies. The CPU index
+# provides a torchvision build matching the CPU PyTorch used for the timings.
+--extra-index-url https://download.pytorch.org/whl/cpu
 -e ..
 netcal==1.4.0
-torch-uncertainty==0.13.0
+torch-uncertainty[cpu]==0.13.0
+torchvision==0.29.1+cpu
 dirichletcal==0.5.3
-pandas
+pandas==3.1.0
+matplotlib==3.11.1
+scikit-learn==1.9.1

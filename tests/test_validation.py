@@ -145,6 +145,82 @@ def test_numpy_inputs_accepted():
     assert out.shape == to_probs(logits).shape
 
 
+def test_read_only_numpy_arrays_accepted_under_warnings_as_errors():
+    import warnings
+
+    logits, labels = synthetic_logits((2, 3, 5, 5), seed=70)
+    x, y = logits.numpy(), labels.numpy()
+    probs = to_probs(logits).numpy()
+    for array in (x, y, probs):
+        array.setflags(write=False)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        cal = TemperatureScaling(max_iter=5, device="cpu").fit(x, y)
+        assert cal.transform(x).shape == logits.shape
+        assert math.isfinite(negative_log_likelihood(probs, y))
+        assert math.isfinite(reliability_curve(probs, y, n_bins=5).ece)
+
+
+@pytest.mark.parametrize("dtype", [torch.float16, torch.bfloat16, torch.float32, torch.float64])
+def test_safe_log_preserves_the_documented_floor_in_low_precision(dtype):
+    from fiducio.utils import safe_log
+
+    out = safe_log(torch.tensor([0.0], dtype=dtype))
+    assert torch.isfinite(out).all()
+    assert float(out) == pytest.approx(math.log(1e-12), abs=0.05)
+    assert float(safe_log(torch.tensor([1.0], dtype=dtype))) == 0.0
+
+
+def test_complex_predictions_are_rejected_not_silently_cast():
+    logits, labels = synthetic_logits((2, 3, 4, 4), seed=71)
+    complex_logits = logits.to(torch.complex64)
+    with pytest.raises(TypeError, match="complex"):
+        TemperatureScaling(max_iter=1, device="cpu").fit(complex_logits, labels)
+    with pytest.raises(TypeError, match="complex"):
+        TemperatureScaling(max_iter=1, device="cpu").fit(
+            logits.numpy().astype(np.complex64), labels
+        )
+    complex_probs = to_probs(logits).to(torch.complex64)
+    with pytest.raises(TypeError, match="complex"):
+        negative_log_likelihood(complex_probs, labels)
+    with pytest.raises(TypeError, match="complex"):
+        reliability_curve(complex_probs, labels)
+
+
+def test_ignore_index_voxels_are_not_validated():
+    z = torch.randn(1, 3, 2, 2)
+    y = torch.zeros(1, 2, 2, dtype=torch.long)
+    y[0, 0, 0] = -100
+    z[0, :, 0, 0] = float("nan")
+    cal = TemperatureScaling(max_iter=2, device="cpu").fit(z, y)
+    assert cal.is_fitted
+    # The same voxel is validated once it carries a real label.
+    y[0, 0, 0] = 0
+    with pytest.raises(ValueError, match="non-finite"):
+        TemperatureScaling(max_iter=2, device="cpu").fit(z, y)
+
+
+def test_ignore_index_voxels_are_not_validated_in_validation_data():
+    logits, labels = synthetic_logits((2, 3, 4, 4), seed=72)
+    val_predictions = logits.clone()
+    val_targets = labels.clone()
+    val_targets[0, 0, 0] = -100
+    val_predictions[0, :, 0, 0] = float("nan")
+    TemperatureScaling(max_iter=5, patience=2, device="cpu").fit(
+        logits, labels, val_predictions=val_predictions, val_targets=val_targets
+    )
+
+
+def test_isotonic_validation_data_has_a_class_specific_message():
+    from fiducio import BinaryIsotonicCalibration
+
+    logits, labels = synthetic_logits((2, 2, 4, 4), seed=73)
+    with pytest.raises(ValueError, match="BinaryIsotonicCalibration.*early stopping"):
+        BinaryIsotonicCalibration(device="cpu").fit(
+            logits, labels, val_predictions=logits, val_targets=labels
+        )
+
+
 def test_masked_transform_output_is_valid_probs_input():
     logits, labels = synthetic_logits((2, 3, 6, 6), seed=26)
     mask = torch.ones(2, 6, 6, dtype=torch.bool)
@@ -255,3 +331,36 @@ def test_max_iter_accepts_numpy_integers_only():
             TemperatureScaling(max_iter=bad)
     with pytest.raises(ValueError, match="> 0"):
         TemperatureScaling(max_iter=-1)
+
+
+def test_integer_probabilities_validate_like_floats():
+    """Integer 0/1 probabilities are valid input; finfo is only for float dtypes."""
+    from fiducio.utils import validate_predictions
+
+    one_hot = torch.tensor([[1, 0], [0, 1]])
+    assert validate_predictions(one_hot, input_type="probs") == 2
+    assert validate_predictions(one_hot.to(torch.bool), input_type="probs") == 2
+    with pytest.raises(ValueError, match=r"outside \[0, 1\]"):
+        validate_predictions(torch.tensor([[2, 0]]), input_type="probs")
+
+
+def test_uint64_labels_beyond_int64_are_rejected_not_wrapped():
+    from fiducio.utils.tensors import integer_targets
+
+    huge = torch.tensor([2**63], dtype=torch.uint64)
+    with pytest.raises(ValueError, match="representable in int64"):
+        integer_targets(huge, device=torch.device("cpu"))
+    # 2**64 - 100 wraps to -100, which a metric would silently drop as ignore_index.
+    wrapped = torch.tensor([[2**64 - 100]], dtype=torch.uint64)
+    with pytest.raises(ValueError, match="integer labels"):
+        negative_log_likelihood(torch.tensor([[[1.0], [0.0]]]), wrapped)
+
+
+def test_validate_targets_rejects_fractional_and_nonfinite_float_labels():
+    from fiducio.utils import validate_targets
+
+    probs = torch.tensor([[0.5, 0.5]])
+    for bad in (1.5, float("nan"), float("inf")):
+        with pytest.raises(ValueError, match="integer labels"):
+            validate_targets(probs, torch.tensor([bad]), None, num_classes=2, ignore_index=-100)
+    validate_targets(probs, torch.tensor([1.0]), None, num_classes=2, ignore_index=-100)

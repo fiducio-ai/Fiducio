@@ -198,33 +198,41 @@ def scaling(a):
 
 FEATURES = """| | Fiducio | netcal | torch-uncertainty | dirichletcal |
 |---|:-:|:-:|:-:|:-:|
-| Native `(B, C, *spatial)` input, 2D and 3D | yes | no (flatten to `(N, C)`) | not evaluated | no (flatten to `(N, C)`) |
-| `mask` and `ignore_index` | yes | no (index before `fit`) | not evaluated | no (index before `fit`) |
+| Native `(B, C, *spatial)` input, 2D and 3D | yes | no (flatten to `(N, C)`) | temperature only (other scalers need `(N, C)`) | no (flatten to `(N, C)`) |
+| `mask` and `ignore_index` | yes | no (index before `fit`) | no mask (`-100` ignored by the loss) | no (index before `fit`) |
 | Logits as input | yes | no, probabilities only | yes | no, probabilities only |
-| Save and reload a fitted calibrator | yes | yes (`save_model`) | not evaluated | not evaluated |
+| Save and reload a fitted calibrator | yes | yes (`save_model`) | manual (`state_dict` + `set_model`) | not evaluated |
+| Per-class bias in vector scaling | yes | n/a | no | n/a |
 | Class-conditional calibrators (CDC, CMSap, CMSop) | yes | none among the methods tested | none among the methods tested | none among the methods tested |
 
 "Flatten" means the adapter used here, not a limitation proven in the library; "not evaluated"
-means the capability was not tested for this page.
+means the capability was not tested for this page; "n/a" means no vector-scaling method was
+tested for that library.
 """
 
 NOTES = """## Reading these results
 
 * **Synthetic data only.** Labels are drawn from `softmax(z)`; the model sees `a_i * z` (plus a class
   bias in `bias`), with `a_i` varying per case. A scenario with a known oracle lets the
-  temperature scalers be checked against the exact optimum. It says nothing about nnU-Net logits.
+  temperature scalers be checked against a Bayes oracle (a lower bound); with `jitter=0`, TS
+  recovers `T* = a` up to finite-sample error. It says nothing about nnU-Net logits.
 * **One metric implementation.** NLL, ECE and ACE come from `fiducio.metrics` (15 uniform bins,
   pooled over voxels) for every method. ACE here is the unweighted mean over non-empty bins,
   not the adaptive ACE of other work. Cross-check against netcal's ECE (4 classes only: its binary
   ECE measures P(class 1), a different quantity) and scikit-learn's log loss on the same probabilities: max |ΔECE| = {dece:.2e}, max |ΔNLL| = {dnll:.2e}.
 * **Differences are paired**: same seed, same cases. The interval is 1.96 standard errors over
-  seeds; each seed redraws all cases, so it covers case-to-case variance.
+  seeds (a normal approximation; with 10 seeds the exact t multiplier is 2.26); each seed
+  redraws all cases, so it covers case-to-case variance.
 * **Input contract.** Fiducio and torch-uncertainty receive logits; netcal and dirichletcal receive
   `softmax(z)` in float64. dirichletcal runs on JAX, which computes in float32 unless x64 is
-  enabled (probabilities differ by about 2e-6 between the two modes).
+  enabled (probabilities differ by a few 1e-6 between the two modes, 3.16e-6 measured).
 * **netcal pitfall.** With float32 probabilities `TemperatureScaling.fit` leaves T = 1 without a
   warning; the adapter casts to float64. Its `T` multiplies the logits, Fiducio's divides them.
 * **Defaults.** Each library runs with its default optimiser budget; no per-library tuning.
+* **Downstream metrics.** The class-conditional calibrators (CDC, CMSap, CMSop) are not
+  benchmarked here. They preserve the decision or its ordering, so Dice and IoU are unchanged by
+  construction (the tutorial shows this); ECE gains need not translate into volume or MAE gains.
+  On SCaLE, ECE halved while volumetric MAE degraded.
 * **Timings** are medians of fit and transform measured separately, each (method, N) in a fresh
   process with a timeout. `timeout`, `oom` and `error` are results, not omissions.
 """
@@ -241,7 +249,11 @@ def figure(name, alt):
 
 
 def fmt(mean, ci, p=4):
-    return f"{mean:.{p}f} ± {ci:.{p}f}"
+    def one(x):
+        s = f"{x:.{p}f}"
+        return s[1:] if s.startswith("-") and abs(x) < 0.5 * 10**-p else s
+
+    return f"{one(mean)} ± {one(ci)}"
 
 
 def report(a):
@@ -279,8 +291,9 @@ def report(a):
             "calibration",
             "Dot plots of NLL excess over the oracle and ECE for each scenario with 4 classes",
         ),
-        "NLL, ECE and ECE of the last class (the rare one in `rare`), mean ± 95% CI over seeds. "
-        "Δ NLL is paired against the matching Fiducio method.",
+        "The figure shows NLL excess and ECE; the tables also report NLL, ECE and ECE of the last "
+        "class (the rare one in `rare`), mean ± 95% CI over seeds. Δ NLL is paired against the "
+        "matching Fiducio method.",
         "",
     ]
     for scenario in data.SCENARIOS:
@@ -306,6 +319,13 @@ def report(a):
                     f"| {C} | {name} | {fmt(g.nll.mean(), ci(g.nll))} | {fmt(g.ece.mean(), ci(g.ece))} | {fmt(g.ece_rare.mean(), ci(g.ece_rare))} | {delta} |"
                 )
         out.append("")
+    out += [
+        "Δ NLL compares each method with the matching Fiducio calibrator. In `bias`, Fiducio's "
+        "vector scaling fits a per-class bias (regularised by `mu_reg`) while torch-uncertainty's "
+        "`VectorScaler` has none, so its Δ NLL in that scenario measures capacity, not "
+        "implementation quality.",
+        "",
+    ]
     bad = cal[cal["error"].notna()] if "error" in cal else cal.iloc[:0]
     if len(bad):
         out += ["Failures: " + ", ".join(sorted(set(bad.method))) + " (tracebacks in the CSV).", ""]
@@ -315,6 +335,11 @@ def report(a):
         figure("tradeoff", "Fit time against peak memory at one million voxels"),
         figure("scaling", "Fit time and peak memory from 100 thousand to one million voxels"),
         "Scenario `over`, 4 classes, one process per row.",
+        "",
+        "Fit times reflect each library's default optimiser budget: Fiducio's temperature scaling "
+        "uses Adam with `max_iter=200`, which gives the ~12 s in the table, while "
+        '`optimizer="lbfgs"` reaches the same optimum in 0.41 s at 1M voxels (T 2.498649 vs '
+        "2.498665); netcal takes 0.60 s.",
         "",
         "| N | method | status | fit (s) | transform (s) | peak RSS (MB) |",
         "|--:|---|---|--:|--:|--:|",
@@ -332,8 +357,9 @@ def report(a):
         "## Reproduce",
         "",
         "```bash",
-        "pip install -r benchmarks/requirements.txt  # Python 3.12 or 3.13",
-        "python benchmarks/run.py calibration && python benchmarks/run.py scaling && python benchmarks/run.py report",
+        "cd benchmarks",
+        "pip install -r requirements.txt  # Python 3.12 or 3.13",
+        "python run.py calibration && python run.py scaling && python run.py report",
         "```",
         "",
     ]

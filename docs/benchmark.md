@@ -8,19 +8,25 @@ Versions: dirichletcal 0.5.3, fiducio 0.3.1, netcal 1.4.0, torch-uncertainty 0.1
 
 * **Synthetic data only.** Labels are drawn from `softmax(z)`; the model sees `a_i * z` (plus a class
   bias in `bias`), with `a_i` varying per case. A scenario with a known oracle lets the
-  temperature scalers be checked against the exact optimum. It says nothing about nnU-Net logits.
+  temperature scalers be checked against a Bayes oracle (a lower bound); with `jitter=0`, TS
+  recovers `T* = a` up to finite-sample error. It says nothing about nnU-Net logits.
 * **One metric implementation.** NLL, ECE and ACE come from `fiducio.metrics` (15 uniform bins,
   pooled over voxels) for every method. ACE here is the unweighted mean over non-empty bins,
   not the adaptive ACE of other work. Cross-check against netcal's ECE (4 classes only: its binary
   ECE measures P(class 1), a different quantity) and scikit-learn's log loss on the same probabilities: max |ΔECE| = 9.33e-06, max |ΔNLL| = 3.08e-05.
 * **Differences are paired**: same seed, same cases. The interval is 1.96 standard errors over
-  seeds; each seed redraws all cases, so it covers case-to-case variance.
+  seeds (a normal approximation; with 10 seeds the exact t multiplier is 2.26); each seed
+  redraws all cases, so it covers case-to-case variance.
 * **Input contract.** Fiducio and torch-uncertainty receive logits; netcal and dirichletcal receive
   `softmax(z)` in float64. dirichletcal runs on JAX, which computes in float32 unless x64 is
-  enabled (probabilities differ by about 2e-6 between the two modes).
+  enabled (probabilities differ by a few 1e-6 between the two modes, 3.16e-6 measured).
 * **netcal pitfall.** With float32 probabilities `TemperatureScaling.fit` leaves T = 1 without a
   warning; the adapter casts to float64. Its `T` multiplies the logits, Fiducio's divides them.
 * **Defaults.** Each library runs with its default optimiser budget; no per-library tuning.
+* **Downstream metrics.** The class-conditional calibrators (CDC, CMSap, CMSop) are not
+  benchmarked here. They preserve the decision or its ordering, so Dice and IoU are unchanged by
+  construction (the tutorial shows this); ECE gains need not translate into volume or MAE gains.
+  On SCaLE, ECE halved while volumetric MAE degraded.
 * **Timings** are medians of fit and transform measured separately, each (method, N) in a fresh
   process with a timeout. `timeout`, `oom` and `error` are results, not omissions.
 
@@ -29,7 +35,7 @@ Versions: dirichletcal 0.5.3, fiducio 0.3.1, netcal 1.4.0, torch-uncertainty 0.1
 ![Dot plots of NLL excess over the oracle and ECE for each scenario with 4 classes](assets/benchmark/calibration-light.png#only-light)
 ![Dot plots of NLL excess over the oracle and ECE for each scenario with 4 classes](assets/benchmark/calibration-dark.png#only-dark)
 
-NLL, ECE and ECE of the last class (the rare one in `rare`), mean ± 95% CI over seeds. Δ NLL is paired against the matching Fiducio method.
+The figure shows NLL excess and ECE; the tables also report NLL, ECE and ECE of the last class (the rare one in `rare`), mean ± 95% CI over seeds. Δ NLL is paired against the matching Fiducio method.
 
 ### over
 
@@ -56,7 +62,7 @@ NLL, ECE and ECE of the last class (the rare one in `rare`), mean ± 95% CI over
 | 4 | torch-uncertainty TS | 0.9315 ± 0.0022 | 0.0115 ± 0.0033 | 0.0066 ± 0.0016 | 0.00001 ± 0.00002 |
 | 4 | torch-uncertainty VS | 0.9315 ± 0.0022 | 0.0114 ± 0.0033 | 0.0068 ± 0.0017 | 0.00001 ± 0.00002 |
 | 4 | torch-uncertainty MS | 0.9316 ± 0.0022 | 0.0116 ± 0.0033 | 0.0068 ± 0.0017 | 0.00001 ± 0.00001 |
-| 4 | dirichletcal DC | 0.9315 ± 0.0022 | 0.0115 ± 0.0033 | 0.0068 ± 0.0017 | -0.00000 ± 0.00001 |
+| 4 | dirichletcal DC | 0.9315 ± 0.0022 | 0.0115 ± 0.0033 | 0.0068 ± 0.0017 | 0.00000 ± 0.00001 |
 
 ### under
 
@@ -72,7 +78,7 @@ NLL, ECE and ECE of the last class (the rare one in `rare`), mean ± 95% CI over
 | 2 | torch-uncertainty TS | 0.4513 ± 0.0011 | 0.0092 ± 0.0024 | 0.0093 ± 0.0024 | -0.00001 ± 0.00001 |
 | 2 | torch-uncertainty VS | 0.4513 ± 0.0011 | 0.0092 ± 0.0024 | 0.0092 ± 0.0023 | -0.00001 ± 0.00001 |
 | 2 | torch-uncertainty MS | 0.4513 ± 0.0011 | 0.0093 ± 0.0024 | 0.0093 ± 0.0024 | -0.00001 ± 0.00001 |
-| 2 | dirichletcal DC | 0.4513 ± 0.0011 | 0.0093 ± 0.0024 | 0.0093 ± 0.0024 | -0.00000 ± 0.00000 |
+| 2 | dirichletcal DC | 0.4513 ± 0.0011 | 0.0093 ± 0.0024 | 0.0093 ± 0.0024 | 0.00000 ± 0.00000 |
 | 4 | oracle | 0.9250 ± 0.0013 | 0.0036 ± 0.0006 | 0.0036 ± 0.0004 |  |
 | 4 | identity | 1.0123 ± 0.0036 | 0.1569 ± 0.0040 | 0.0793 ± 0.0022 |  |
 | 4 | fiducio TS | 0.9315 ± 0.0022 | 0.0114 ± 0.0033 | 0.0066 ± 0.0016 |  |
@@ -106,11 +112,11 @@ NLL, ECE and ECE of the last class (the rare one in `rare`), mean ± 95% CI over
 | 4 | fiducio VS | 0.9315 ± 0.0022 | 0.0114 ± 0.0033 | 0.0067 ± 0.0017 |  |
 | 4 | fiducio MS | 0.9315 ± 0.0022 | 0.0116 ± 0.0033 | 0.0068 ± 0.0017 |  |
 | 4 | fiducio DC | 0.9315 ± 0.0022 | 0.0115 ± 0.0033 | 0.0067 ± 0.0017 |  |
-| 4 | netcal TS | 0.9473 ± 0.0021 | 0.0106 ± 0.0030 | 0.0514 ± 0.0010 | -0.00000 ± 0.00000 |
+| 4 | netcal TS | 0.9473 ± 0.0021 | 0.0106 ± 0.0030 | 0.0514 ± 0.0010 | 0.00000 ± 0.00000 |
 | 4 | torch-uncertainty TS | 0.9473 ± 0.0021 | 0.0107 ± 0.0030 | 0.0514 ± 0.0010 | 0.00001 ± 0.00002 |
 | 4 | torch-uncertainty VS | 0.9426 ± 0.0022 | 0.0102 ± 0.0036 | 0.0334 ± 0.0012 | 0.01114 ± 0.00058 |
-| 4 | torch-uncertainty MS | 0.9315 ± 0.0022 | 0.0115 ± 0.0033 | 0.0068 ± 0.0017 | -0.00000 ± 0.00001 |
-| 4 | dirichletcal DC | 0.9315 ± 0.0022 | 0.0115 ± 0.0033 | 0.0067 ± 0.0017 | -0.00000 ± 0.00000 |
+| 4 | torch-uncertainty MS | 0.9315 ± 0.0022 | 0.0115 ± 0.0033 | 0.0068 ± 0.0017 | 0.00000 ± 0.00001 |
+| 4 | dirichletcal DC | 0.9315 ± 0.0022 | 0.0115 ± 0.0033 | 0.0067 ± 0.0017 | 0.00000 ± 0.00000 |
 
 ### rare
 
@@ -123,10 +129,10 @@ NLL, ECE and ECE of the last class (the rare one in `rare`), mean ± 95% CI over
 | 2 | fiducio MS | 0.0414 ± 0.0005 | 0.0014 ± 0.0003 | 0.0014 ± 0.0003 |  |
 | 2 | fiducio DC | 0.0416 ± 0.0005 | 0.0016 ± 0.0004 | 0.0017 ± 0.0004 |  |
 | 2 | netcal TS | 0.0417 ± 0.0004 | 0.0016 ± 0.0004 | 0.0016 ± 0.0004 | 0.00000 ± 0.00000 |
-| 2 | torch-uncertainty TS | 0.0417 ± 0.0004 | 0.0016 ± 0.0004 | 0.0016 ± 0.0004 | -0.00000 ± 0.00000 |
+| 2 | torch-uncertainty TS | 0.0417 ± 0.0004 | 0.0016 ± 0.0004 | 0.0016 ± 0.0004 | 0.00000 ± 0.00000 |
 | 2 | torch-uncertainty VS | 0.0417 ± 0.0004 | 0.0016 ± 0.0004 | 0.0017 ± 0.0004 | 0.00022 ± 0.00006 |
-| 2 | torch-uncertainty MS | 0.0414 ± 0.0005 | 0.0014 ± 0.0003 | 0.0014 ± 0.0003 | -0.00000 ± 0.00000 |
-| 2 | dirichletcal DC | 0.0416 ± 0.0005 | 0.0016 ± 0.0004 | 0.0017 ± 0.0004 | -0.00000 ± 0.00000 |
+| 2 | torch-uncertainty MS | 0.0414 ± 0.0005 | 0.0014 ± 0.0003 | 0.0014 ± 0.0003 | 0.00000 ± 0.00000 |
+| 2 | dirichletcal DC | 0.0416 ± 0.0005 | 0.0016 ± 0.0004 | 0.0017 ± 0.0004 | 0.00000 ± 0.00000 |
 | 4 | oracle | 0.7666 ± 0.0017 | 0.0035 ± 0.0005 | 0.0007 ± 0.0001 |  |
 | 4 | identity | 1.0527 ± 0.0132 | 0.1729 ± 0.0027 | 0.0118 ± 0.0002 |  |
 | 4 | fiducio TS | 0.7727 ± 0.0024 | 0.0102 ± 0.0029 | 0.0012 ± 0.0006 |  |
@@ -137,7 +143,9 @@ NLL, ECE and ECE of the last class (the rare one in `rare`), mean ± 95% CI over
 | 4 | torch-uncertainty TS | 0.7727 ± 0.0024 | 0.0103 ± 0.0029 | 0.0012 ± 0.0006 | 0.00001 ± 0.00001 |
 | 4 | torch-uncertainty VS | 0.7727 ± 0.0024 | 0.0103 ± 0.0029 | 0.0012 ± 0.0005 | 0.00004 ± 0.00004 |
 | 4 | torch-uncertainty MS | 0.7727 ± 0.0023 | 0.0105 ± 0.0029 | 0.0013 ± 0.0005 | 0.00003 ± 0.00002 |
-| 4 | dirichletcal DC | 0.7727 ± 0.0023 | 0.0101 ± 0.0030 | 0.0013 ± 0.0004 | -0.00000 ± 0.00000 |
+| 4 | dirichletcal DC | 0.7727 ± 0.0023 | 0.0101 ± 0.0030 | 0.0013 ± 0.0004 | 0.00000 ± 0.00000 |
+
+Δ NLL compares each method with the matching Fiducio calibrator. In `bias`, Fiducio's vector scaling fits a per-class bias (regularised by `mu_reg`) while torch-uncertainty's `VectorScaler` has none, so its Δ NLL in that scenario measures capacity, not implementation quality.
 
 ## Scaling
 
@@ -148,6 +156,8 @@ NLL, ECE and ECE of the last class (the rare one in `rare`), mean ± 95% CI over
 ![Fit time and peak memory from 100 thousand to one million voxels](assets/benchmark/scaling-dark.png#only-dark)
 
 Scenario `over`, 4 classes, one process per row.
+
+Fit times reflect each library's default optimiser budget: Fiducio's temperature scaling uses Adam with `max_iter=200`, which gives the ~12 s in the table, while `optimizer="lbfgs"` reaches the same optimum in 0.41 s at 1M voxels (T 2.498649 vs 2.498665); netcal takes 0.60 s.
 
 | N | method | status | fit (s) | transform (s) | peak RSS (MB) |
 |--:|---|---|--:|--:|--:|
@@ -176,18 +186,21 @@ Scenario `over`, 4 classes, one process per row.
 
 | | Fiducio | netcal | torch-uncertainty | dirichletcal |
 |---|:-:|:-:|:-:|:-:|
-| Native `(B, C, *spatial)` input, 2D and 3D | yes | no (flatten to `(N, C)`) | not evaluated | no (flatten to `(N, C)`) |
-| `mask` and `ignore_index` | yes | no (index before `fit`) | not evaluated | no (index before `fit`) |
+| Native `(B, C, *spatial)` input, 2D and 3D | yes | no (flatten to `(N, C)`) | temperature only (other scalers need `(N, C)`) | no (flatten to `(N, C)`) |
+| `mask` and `ignore_index` | yes | no (index before `fit`) | no mask (`-100` ignored by the loss) | no (index before `fit`) |
 | Logits as input | yes | no, probabilities only | yes | no, probabilities only |
-| Save and reload a fitted calibrator | yes | yes (`save_model`) | not evaluated | not evaluated |
+| Save and reload a fitted calibrator | yes | yes (`save_model`) | manual (`state_dict` + `set_model`) | not evaluated |
+| Per-class bias in vector scaling | yes | n/a | no | n/a |
 | Class-conditional calibrators (CDC, CMSap, CMSop) | yes | none among the methods tested | none among the methods tested | none among the methods tested |
 
 "Flatten" means the adapter used here, not a limitation proven in the library; "not evaluated"
-means the capability was not tested for this page.
+means the capability was not tested for this page; "n/a" means no vector-scaling method was
+tested for that library.
 
 ## Reproduce
 
 ```bash
-pip install -r benchmarks/requirements.txt  # Python 3.12 or 3.13
-python benchmarks/run.py calibration && python benchmarks/run.py scaling && python benchmarks/run.py report
+cd benchmarks
+pip install -r requirements.txt  # Python 3.12 or 3.13
+python run.py calibration && python run.py scaling && python run.py report
 ```

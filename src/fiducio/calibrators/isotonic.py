@@ -49,6 +49,8 @@ class BinaryIsotonicCalibration(Calibrator):
     ``decision_function`` returns log-probabilities, including -inf at zeros.
     """
 
+    _supports_early_stopping = False
+
     def __init__(
         self,
         *,

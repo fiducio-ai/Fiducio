@@ -48,6 +48,7 @@ nav:
       - Metrics & helpers: api/metrics.md
       - Plotting: api/plots.md
       - Persistence: api/persistence.md
+  - Releasing: releasing.md
 
 markdown_extensions:
   - admonition

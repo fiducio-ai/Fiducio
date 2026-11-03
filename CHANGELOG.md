@@ -17,6 +17,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   calibration set (class balance, global calibration with bootstrap intervals over
   images, per-class and routed calibration as point estimates, Dice failures by image
   and class, factual warnings), with a text summary, a 2x2 figure and `to_dict()`.
+- A benchmark page and harness (`benchmarks/`) comparing Fiducio with netcal,
+  torch-uncertainty and dirichletcal on synthetic voxels: calibration metrics
+  cross-checked against netcal and scikit-learn, fit time and peak memory, and
+  committed results with generated figures.
+
+### Fixed
+
+- `diagnose` validates `n_boot`, `n_worst`, `min_images`, `min_class_fraction`
+  and `min_class_voxels`, and warns when `background_class` leaves no class in
+  the per-image Dice.
+- `validate_predictions` accepts integer probability tensors instead of raising
+  a raw `torch.finfo` `TypeError`; `integer_targets` rejects `uint64` labels
+  beyond the `int64` range instead of wrapping them; `validate_targets` rejects
+  fractional or non-finite hard labels when called directly.
 
 ### Documentation
 

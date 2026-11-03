@@ -122,6 +122,3 @@ class TemperatureScaling(Calibrator):
         value = state.get("temperature")
         if value is not None:
             self.temperature = float(torch.as_tensor(value).item())
-
-    def __repr__(self) -> str:
-        return f"TemperatureScaling(temperature={self.temperature:.4f}, device={self.device})"

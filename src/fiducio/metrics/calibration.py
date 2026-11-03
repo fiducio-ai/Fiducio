@@ -15,8 +15,13 @@ from typing import Any
 
 import torch
 
-from ..utils import safe_log, to_tensor, validate_predictions, validate_targets
-from ..utils.tensors import prepare_targets
+from ..utils import (
+    safe_log,
+    to_tensor,
+    validate_predictions,
+    validate_targets,
+)
+from ..utils.tensors import prepare_targets, validation_positions
 
 
 def _voxels(
@@ -28,23 +33,24 @@ def _voxels(
     """Validate inputs and return ``(probs, labels, valid)`` in their spatial layout.
 
     Metrics reduce over the class axis before selecting valid voxels, so large
-    volumes are never copied into ``(N, C)`` rows. Labels at invalid voxels are
-    replaced by 0 so they can be used as gather indices; ``valid`` is ``None``
-    when every voxel is valid.
+    volumes are never copied into ``(N, C)`` rows. Predictions are validated
+    only at unmasked positions that are not ``ignore_index`` for hard labels.
+    Labels at invalid voxels are replaced by 0 so they can be used as gather
+    indices; ``valid`` is ``None`` when every voxel is valid.
     """
     p = to_tensor(probs).detach()
     if not p.is_floating_point():
         p = p.float()
     m = None if mask is None else to_tensor(mask, device=p.device).bool()
-    c = validate_predictions(p, input_type="probs", mask=m, context="metrics")
     y = prepare_targets(p, targets)
+    soft = y.shape == p.shape
+    valid = validation_positions(p, y, m, ignore_index)
+    c = validate_predictions(p, input_type="probs", mask=valid, context="metrics")
     validate_targets(p, y, m, num_classes=c, ignore_index=ignore_index)
     if p.dtype not in (torch.float32, torch.float64):
         p = p.float()
-    soft = y.shape == p.shape
-    valid = torch.ones_like(p[:, 0], dtype=torch.bool) if soft else y != ignore_index
-    if m is not None:
-        valid &= m
+    if valid is None:
+        valid = torch.ones_like(p[:, 0], dtype=torch.bool)
     if bool(valid.all()):
         return p, y, None
     return p, y.masked_fill(~valid.unsqueeze(1) if soft else ~valid, 0), valid

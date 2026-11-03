@@ -84,7 +84,7 @@ class TorchUncertainty:
 
 
 class Dirichletcal:
-    lib, dtype = "dirichletcal", "float64"  # JAX runs float32 unless x64 is enabled (diff < 2e-6)
+    lib, dtype = "dirichletcal", "float64"  # JAX is float32 unless x64 (diff a few 1e-6)
 
     def __init__(self, C):
         from dirichletcal import FullDirichletCalibrator

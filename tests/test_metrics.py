@@ -92,3 +92,24 @@ def test_empty_valid_returns_nan():
     assert math.isnan(expected_calibration_error(probs, labels))
     assert math.isnan(average_calibration_error(probs, labels))
     assert math.isnan(brier_score(probs, labels))
+    # Non-finite predictions at ignored voxels do not turn that NaN into an error.
+    probs[0, 0, 0, 0] = float("nan")
+    assert math.isnan(negative_log_likelihood(probs, labels))
+
+
+def test_nan_predictions_at_ignore_index_voxels_are_excluded():
+    logits, labels = synthetic_logits((2, 3, 6, 6), seed=41)
+    probs = to_probs(logits)
+    ignored = labels.clone()
+    ignored[0, 0, 0] = -100
+    contaminated = probs.clone()
+    contaminated[0, :, 0, 0] = float("nan")
+    assert negative_log_likelihood(contaminated, ignored) == pytest.approx(
+        negative_log_likelihood(probs, ignored)
+    )
+    assert reliability_curve(contaminated, ignored, n_bins=5).ece == pytest.approx(
+        reliability_curve(probs, ignored, n_bins=5).ece
+    )
+    # A NaN at a voxel that is actually labelled still fails validation.
+    with pytest.raises(ValueError, match="non-finite"):
+        negative_log_likelihood(contaminated, labels)

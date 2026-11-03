@@ -44,13 +44,23 @@ def to_tensor(
     dtype: torch.dtype | None = None,
     device: torch.device | None = None,
 ) -> torch.Tensor:
-    """Convert array-like input to a tensor without unnecessary copies."""
+    """Convert array-like input to a tensor without unnecessary copies.
+
+    Read-only NumPy arrays are copied first: ``torch.from_numpy`` warns on
+    non-writeable buffers, which is fatal under the project's
+    warnings-as-errors test configuration. Complex inputs are rejected rather
+    than silently cast to real.
+    """
     if isinstance(x, np.ndarray):
+        if not x.flags.writeable:
+            x = x.copy()
         tensor = torch.from_numpy(x)
     elif torch.is_tensor(x):
         tensor = x
     else:
         raise TypeError(f"Expected a torch.Tensor or numpy.ndarray, got {type(x)!r}")
+    if tensor.is_complex():
+        raise TypeError(f"complex tensors are not supported; got dtype {tensor.dtype}")
     if dtype is not None:
         tensor = tensor.to(dtype=dtype)
     if device is not None:
@@ -66,6 +76,10 @@ def safe_log(probs: torch.Tensor, eps: float = 1e-12) -> torch.Tensor:
     ``inf`` and probability-space calibrators map ``p = 0`` to a small non-zero
     probability.
     """
+    if probs.dtype in (torch.float16, torch.bfloat16):
+        # 1e-12 is subnormal (fp16) or rounds to zero (bf16): clamp in float32
+        # so the documented floor survives, then cast back.
+        return torch.log(probs.float().clamp_min(eps)).to(probs.dtype)
     return torch.log(probs.clamp_min(eps))
 
 
@@ -98,7 +112,12 @@ def integer_targets(targets: ArrayLike, *, device: torch.device) -> torch.Tensor
         not torch.equal(y, y.trunc()) or (y >= 2**63).any() or (y < -(2**63)).any()
     ):
         raise ValueError("targets must contain integer labels representable in int64")
-    return y.long()
+    converted = y.long()
+    # uint64 is the only integer dtype whose range exceeds int64; values above
+    # 2**63 - 1 wrap to negative labels (possibly onto ignore_index).
+    if y.dtype == torch.uint64 and bool((converted < 0).any()):
+        raise ValueError("targets must contain integer labels representable in int64")
+    return converted
 
 
 def prepare_targets(predictions: torch.Tensor, targets: ArrayLike) -> torch.Tensor:
@@ -142,6 +161,32 @@ def mean_human_response(
     return proportions, counts > 0
 
 
+def validation_positions(
+    predictions: torch.Tensor,
+    targets: torch.Tensor,
+    mask: torch.Tensor | None,
+    ignore_index: int,
+) -> torch.Tensor | None:
+    """Return the positions whose predictions must be validated.
+
+    Soft targets (same shape as ``predictions``) are selected by ``mask`` only.
+    Hard labels additionally drop positions equal to ``ignore_index``.
+    """
+    if targets.shape == predictions.shape:
+        return mask
+    expected = (predictions.shape[0], *predictions.shape[2:])
+    # Malformed targets or masks are reported by validate_predictions /
+    # validate_targets with their established messages; do not broadcast here.
+    if tuple(targets.shape) != expected:
+        return mask
+    if mask is not None and tuple(mask.shape) != expected:
+        return mask
+    positions = targets != ignore_index
+    if mask is not None:
+        positions = positions & mask.to(torch.bool)
+    return positions
+
+
 def validate_mask(predictions: torch.Tensor, mask: torch.Tensor | None) -> None:
     """Require the exact spatial layout, never implicit broadcasting."""
     expected = (predictions.shape[0], *predictions.shape[2:])
@@ -160,7 +205,9 @@ def validate_predictions(
     """Validate a predictions tensor and return the number of classes.
 
     When ``mask`` is given, values are only checked at valid (``True``)
-    positions, so masked-out padding may hold anything, including NaN. For
+    positions, so masked-out padding may hold anything, including NaN. Callers
+    that have hard labels should pass :func:`validation_positions` so that
+    ``ignore_index`` voxels are skipped too. For
     ``input_type="probs"`` the sum-to-1 tolerance is ``1e-3``, widened for
     half-precision inputs to cover their rounding error.
 
@@ -229,7 +276,11 @@ def validate_predictions(
                 "input_type='probs' but values fall outside [0, 1]; "
                 "pass input_type='logits' for unnormalised scores"
             )
-        atol = max(_PROB_SUM_ATOL, 2 * torch.finfo(predictions.dtype).eps)
+        atol = max(
+            _PROB_SUM_ATOL,
+            2
+            * (torch.finfo(predictions.dtype).eps if predictions.dtype.is_floating_point else 0.0),
+        )
         if float(sums.sub_(1.0).abs_().max()) > atol:
             if context == "targets":
                 raise ValueError("soft targets must sum to 1 along the class axis (dimension 1)")
@@ -263,6 +314,10 @@ def validate_targets(
             f"class axis); got {tuple(targets.shape)}"
         )
     validate_mask(predictions, mask)
+    # Production paths pass int64 labels already; other dtypes (float, uint64) are
+    # converted here so direct callers cannot smuggle fractional or wrapped labels.
+    if targets.dtype != torch.int64:
+        targets = integer_targets(targets, device=targets.device)
     valid = targets != ignore_index
     if mask is not None:
         valid = valid & mask.to(torch.bool)

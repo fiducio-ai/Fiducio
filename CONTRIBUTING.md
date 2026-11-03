@@ -56,7 +56,7 @@ Calibrators subclass `fiducio.Calibrator` (or a shared helper base) and must:
 2. register a **stable** `calibrator_id` via `@register_calibrator(...)` so that
    `save` / `load_calibrator` round-trips work;
 3. implement `get_config`, `_get_state` and `_set_state` for persistence;
-4. ship type annotations and Google-style docstrings;
+4. ship type annotations and NumPy-style docstrings;
 5. come with tests covering 2D/3D, logits/probabilities, masks, `ignore_index`,
    save/load and any invariants the calibrator claims (e.g. argmax preservation).
 

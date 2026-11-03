@@ -20,7 +20,7 @@ from .utils import (
     validate_targets,
 )
 from .utils.stopping import StoppingRule, resolve_stopping
-from .utils.tensors import prepare_targets
+from .utils.tensors import prepare_targets, validation_positions
 
 DeviceLike = str | torch.device
 
@@ -77,6 +77,8 @@ class Calibrator(ABC):
     calibrator_id: str = ""
     #: Representation the calibration math consumes: ``"logits"`` or ``"logprobs"``.
     _input_space: str = "logits"
+    #: Whether ``fit`` accepts validation data for early stopping.
+    _supports_early_stopping: bool = True
 
     def __init__(
         self,
@@ -155,7 +157,11 @@ class Calibrator(ABC):
         """
         preds, tgts, msk = self._prepare(predictions, targets, mask, with_targets=True)
         assert tgts is not None  # guaranteed by with_targets=True
-        num_classes = validate_predictions(preds, input_type=self.input_type, mask=msk)
+        num_classes = validate_predictions(
+            preds,
+            input_type=self.input_type,
+            mask=validation_positions(preds, tgts, msk, self.ignore_index),
+        )
         validate_targets(preds, tgts, msk, num_classes=num_classes, ignore_index=self.ignore_index)
         canonical = self._to_canonical(preds)
         z_flat, y_flat = flatten_valid(canonical, tgts, msk, self.ignore_index)
@@ -339,6 +345,11 @@ class Calibrator(ABC):
             return None
         if val_predictions is None or val_targets is None:
             raise ValueError("val_predictions and val_targets must be given together")
+        if not self._supports_early_stopping:
+            raise ValueError(
+                f"{type(self).__name__} does not support early stopping; "
+                "omit val_predictions and val_targets"
+            )
         if self._stopping is None:
             raise ValueError(
                 "validation data was given but early stopping is not configured; set "
@@ -346,7 +357,11 @@ class Calibrator(ABC):
             )
         preds, tgts, msk = self._prepare(val_predictions, val_targets, val_mask, with_targets=True)
         assert tgts is not None
-        val_classes = validate_predictions(preds, input_type=self.input_type, mask=msk)
+        val_classes = validate_predictions(
+            preds,
+            input_type=self.input_type,
+            mask=validation_positions(preds, tgts, msk, self.ignore_index),
+        )
         if val_classes != num_classes:
             raise ValueError(
                 f"validation predictions have {val_classes} classes, expected {num_classes}"

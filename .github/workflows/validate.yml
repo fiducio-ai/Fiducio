@@ -109,7 +109,7 @@ jobs:
           cd "$RUNNER_TEMP"
           "$python" -c 'import os, fiducio; from pathlib import Path; assert "site-packages" in Path(fiducio.__file__).parts; assert fiducio.__version__ == os.environ["EXPECTED_VERSION"], (fiducio.__version__, os.environ["EXPECTED_VERSION"])'
           "$python" -m pytest "$GITHUB_WORKSPACE/tests" -c "$GITHUB_WORKSPACE/pyproject.toml" --cov=fiducio --cov-report=term-missing
-          for example in basic_segmentation_calibration pytorch_model_calibration reliability_diagram ensemble_pooling multi_rater_calibration; do
+          for example in basic_segmentation_calibration pytorch_model_calibration reliability_diagram ensemble_pooling multi_rater_calibration readme_figure; do
             "$python" "$GITHUB_WORKSPACE/examples/$example.py"
           done
           "$python" "$GITHUB_WORKSPACE/examples/tutorial_oxford_pets.py" --smoke --out "$RUNNER_TEMP/tutorial.png"
@@ -153,10 +153,28 @@ jobs:
               assert all(published.read(name) == rebuilt.read(name) for name in published.namelist())
           PY
 
+  benchmark:
+    name: Benchmark harness (all competitors, Python 3.12)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.12.3"
+          enable-cache: true
+          python-version: "3.12"
+      - run: uv sync --locked
+      - name: Install benchmark dependencies
+        working-directory: benchmarks
+        run: uv pip install --python "$GITHUB_WORKSPACE/.venv/bin/python" -r requirements.txt
+      - run: uv run --no-sync python -m pytest benchmarks/tests -q
+
   checks:
     name: Release checks
     if: always()
-    needs: [build, quality, wheel-tests, docs]
+    needs: [build, quality, wheel-tests, docs, benchmark]
     runs-on: ubuntu-latest
     steps:
       - name: Require every validation job to succeed

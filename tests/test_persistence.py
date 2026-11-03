@@ -161,3 +161,19 @@ def test_invalid_map_location_rejected(tmp_path):
     if not torch.cuda.is_available():
         with pytest.raises(RuntimeError, match="CUDA is not available"):
             load_calibrator(path, map_location="cuda")
+
+
+@pytest.mark.parametrize("location", ["bogus", "meta", "mps"])
+def test_unsupported_map_location_raises_value_error(tmp_path, location):
+    logits, labels = synthetic_logits((2, 3, 5, 5), seed=38)
+    path = tmp_path / "cal.pt"
+    MatrixScaling(device="cpu").fit(logits, labels).save(path)
+    with pytest.raises(ValueError, match="map_location") as exc:
+        load_calibrator(path, map_location=location)
+    assert "cpu" in str(exc.value) and "cuda" in str(exc.value)
+
+
+def test_save_to_existing_directory_raises_value_error(tmp_path):
+    cal = MatrixScaling(device="cpu")
+    with pytest.raises(ValueError, match="is a directory"):
+        cal.save(tmp_path)

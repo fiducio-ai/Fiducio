@@ -163,6 +163,8 @@ def save_calibrator(calibrator: Calibrator, path: PathLike) -> None:
         raise ValueError(
             f"{type(calibrator).__name__} has no registered calibrator_id and cannot be saved"
         )
+    if os.path.isdir(path):
+        raise ValueError(f"calibrator path is a directory: {path}")
     directory = os.path.dirname(os.fspath(path))
     if directory:
         os.makedirs(directory, exist_ok=True)
@@ -218,7 +220,17 @@ def load_calibrator(
     location: MapLocation = "cpu" if map_location is None else map_location
     if not isinstance(location, (str, torch.device)):
         raise TypeError("map_location must be a device string or torch.device")
-    device = torch.device(location)
+    try:
+        device = torch.device(location)
+    except RuntimeError as exc:
+        raise ValueError(
+            f"map_location must name a supported device ('cpu' or 'cuda'); got {location!r}"
+        ) from exc
+    if device.type not in {"cpu", "cuda"}:
+        raise ValueError(
+            "map_location must be 'cpu' or 'cuda' (optionally with an index); "
+            f"got {str(location)!r}"
+        )
     if device.type == "cuda" and not torch.cuda.is_available():
         raise RuntimeError(f"map_location={location!r} but CUDA is not available")
     try:

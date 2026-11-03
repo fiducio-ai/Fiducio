@@ -32,6 +32,11 @@ example, not a result from the paper. Run
 [`examples/reliability_diagram.py`](https://github.com/fiducio-ai/Fiducio/blob/main/examples/reliability_diagram.py)
 from the repository to reproduce it as `outputs/reliability.png`.
 
+The figures on this page are light-background PNGs. A dark-mode variant is not
+shipped because `reliability_diagram` currently uses fixed light-theme colors
+(black markers and bar edges, a white annotation box); a readable dark figure
+needs a plotting-theme option, not only a different background.
+
 The same workflow in a standalone snippet:
 
 ```python

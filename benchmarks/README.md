@@ -1,14 +1,14 @@
 # Benchmark
 
 Compares Fiducio's calibrators with netcal, torch-uncertainty and dirichletcal on
-synthetic voxel logits, and measures fit time and peak memory. The committed results
-are rendered on the [benchmark page](../docs/benchmark.md). The harness is not part of
-the package: neither the wheel nor the sdist includes `benchmarks/`.
+synthetic voxel logits, and measures fit time and peak memory. The committed
+results are rendered on the [benchmark page](../docs/benchmark.md). The harness is
+not part of the package: neither the wheel nor the sdist includes `benchmarks/`.
 
 ## Requirements and install
 
-Python 3.12 or 3.13: dirichletcal needs at least 3.12, torch-uncertainty less than
-3.14. Install the competitors into a virtual environment:
+Python 3.12 or 3.13: dirichletcal needs at least 3.12, torch-uncertainty less
+than 3.14. Install the competitors into a virtual environment:
 
 ```bash
 cd benchmarks
@@ -17,14 +17,14 @@ python3.12 -m venv .venv-bench
 pip install -r requirements.txt
 ```
 
-Run the commands from `benchmarks/`: `requirements.txt` installs the repository with
-`-e ..`, which pip resolves relative to the working directory. `requirements.txt`
-pins the competitor versions, scikit-learn, pandas and matplotlib and uses the PyTorch
+Run the commands from `benchmarks/`: `requirements.txt` installs the repository
+with `-e ..`, which pip resolves relative to the working directory. It pins the
+competitor versions, scikit-learn, pandas and matplotlib, and uses the PyTorch
 CPU index, so the install stays CPU-only. `torch-uncertainty[cpu]` supplies the
 torchvision and lightning imports its top-level package needs; they are not base
-dependencies. The pinned `torchvision` wheel exists for Linux and Windows; on macOS,
-drop that line and use the PyPI build. That is the only platform-specific pin: the
-others install from source or from platform-independent wheels.
+dependencies. The pinned `torchvision` wheel exists for Linux and Windows; on
+macOS, drop that line and use the PyPI build. It is the only platform-specific
+pin.
 
 ## Commands
 
@@ -36,39 +36,43 @@ others install from source or from platform-independent wheels.
 | `python run.py robustness` | runs the saturated, tiny-N, absent-class and float32/float64 cases for every applicable method, 10 seeds, and writes `ok` / `timeout` / `oom` / `error` to `results/robustness.csv` |
 | `python run.py report` | renders `../docs/benchmark.md` and regenerates the figures in `../docs/assets/benchmark/` |
 
-`python run.py child` is internal: `scaling` spawns one per row so that memory and
-time are isolated. Use `--seeds`, `--sizes`, `--reps`, `--threads`, `--timeout`, `--cases`,
-`--methods` and `--out` to shorten a run; the defaults reproduce the committed results.
-`robustness` bounds each fit and transform with an in-process SIGALRM deadline rather
-than a fresh process.
+`python run.py child` is internal: `scaling` spawns one per row so that memory
+and time are isolated. Use `--seeds`, `--sizes`, `--reps`, `--threads`,
+`--timeout`, `--cases`, `--methods` and `--out` to shorten a run; the defaults
+reproduce the committed results. `robustness` bounds each fit-and-transform with
+an in-process SIGALRM deadline rather than a fresh process.
 
-On the eight-core machine used for the committed run, the five commands take about
-30–40 minutes: roughly 18 minutes of fitting in the calibration axis, 6–8 minutes of
-scaling, and the rest in the two new axes, data generation and scoring.
+On the eight-core machine used for the committed run, the five commands take
+about 30–40 minutes.
 
 ## Outputs
 
 - `results/calibration.csv` — one row per scenario, class count, seed and method.
-  It records the scenario, `C`, seed, split sizes, rare-class prevalence, CPU model,
-  core count, torch thread count, torch version, method, library, dtype, library
-  version, fit time, NLL/ECE/ACE/Brier/rare-class ECE, the independent cross-check
-  scores, argmax agreement and the full traceback if a method failed.
-- `results/scaling.csv` — one row per method and voxel count, with library version,
-  repetitions, hardware, `status` (`ok`, `timeout`, `oom`, `error`), median fit and
-  transform times and peak RSS.
+  It records the scenario, `C`, seed, calibration split size, rare-class
+  prevalence, CPU model, core count, torch thread count, torch version, method,
+  library, dtype, library version, fit time, NLL/ECE/ACE/Brier/last-class ECE,
+  the independent cross-check scores, argmax agreement and the traceback if a
+  method failed.
+- `results/scaling.csv` — one row per method and voxel count, with library
+  version, repetitions, hardware, `status` (`ok`, `timeout`, `oom`, `error`),
+  median fit and transform times and peak RSS.
 - `results/downstream.csv` — one row per scenario, seed and Fiducio method, with
-  per-class ECE, per-class volume bias (predicted share minus label share), Dice,
-  paired Δ Dice against identity and the share of changed argmax voxels.
-- `results/robustness.csv` — one row per case, seed and method, always present, with
-  `status` (`ok`, `timeout`, `oom`, `error`), NLL/ECE when successful and the full
-  traceback when not.
-- `docs/benchmark.md` — the generated page. It is committed, so a run that changes
-  the CSVs shows up as a diff; edit `run.py` (including `FEATURES`), not the page.
-- `docs/assets/benchmark/*.png` — light and dark figures, regenerated by `report`.
+  per-class ECE, per-class volume bias (predicted share minus label share),
+  Dice and the share of changed argmax voxels. The report pairs Dice against
+  identity to obtain Δ Dice.
+- `results/robustness.csv` — one row per case, seed and method, always present,
+  with `status` (`ok`, `timeout`, `oom`, `error`), NLL/ECE when successful and
+  the traceback when not.
+- `docs/benchmark.md` — the generated page. It is committed, so a run that
+  changes the CSVs shows up as a diff; edit `run.py` (including `FEATURES`), not
+  the page.
+- `docs/assets/benchmark/*.png` — light and dark figures, regenerated by
+  `report`.
 
-The cross-check recomputes NLL with `sklearn.metrics.log_loss` and ECE with netcal on
-the same probabilities. It validates `fiducio.metrics`, not the calibrators, so the
-page reports the maximum absolute difference over all successful rows.
+The cross-check recomputes NLL with `sklearn.metrics.log_loss` and ECE with
+netcal on the same probabilities. It validates `fiducio.metrics`, not the
+calibrators, so the page reports the maximum absolute difference over all
+successful rows.
 
 ## Tests
 
@@ -76,47 +80,29 @@ page reports the maximum absolute difference over all successful rows.
 python -m pytest benchmarks/tests
 ```
 
-Run from the repository root. The oracle-temperature test needs only Fiducio; each
-competitor test calls `importorskip` and is skipped when that library is not
+Run from the repository root. The oracle-temperature test needs only Fiducio;
+each competitor test calls `importorskip` and is skipped when that library is not
 installed. CI runs the suite with every competitor installed on Python 3.12.
 
 ## Limitations
 
-- Synthetic voxels only: labels are drawn from `softmax(z)` and the model sees
-  `a_i * z` (plus a class bias in `bias`), with `a_i` varying per case. The known
-  oracle is a Bayes oracle (a lower bound); with `jitter=0`, temperature scaling
-  recovers `T* = a` up to finite-sample error, but the results say nothing about real
-  nnU-Net logits.
-- All methods are scored with one implementation, `fiducio.metrics`, with 15
-  uniform bins; ACE is the unweighted mean over non-empty bins, not adaptive ACE.
-  Intervals are 1.96 standard errors (a normal approximation; with 10 seeds the exact
-  t multiplier is 2.26).
-- Fiducio's vector scaling fits a per-class bias (regularised by `mu_reg`);
-  torch-uncertainty's `VectorScaler` does not. The `bias`-scenario Δ NLL between
-  them is a capacity difference, not an implementation-quality one.
-- Fit times include each library's default optimiser budget. Fiducio's temperature
-  scaling uses Adam with `max_iter=200` (~12 s at 1 000 000 voxels);
-  `optimizer="lbfgs"` reaches the same optimum in 0.41 s at that size
-  (T 2.498649 vs 2.498665), while netcal takes 0.60 s.
-- No competitor has a class-conditional calibrator: the downstream axis is Fiducio
-  only, with identity as the reference decision. TS, CMSap and CMSop preserve the
-  argmax (CMSop the full order) in exact arithmetic, so their Dice and argmax change
-  are zero by construction; VS, MS and DC may change both. ECE gains need not
-  translate into volume gains: in these runs CMSap and CMSop cut ECE while keeping
-  identity's volume bias.
-- Robustness cases are small and in-process. A SIGALRM deadline marks a slow fit as
-  `timeout`; `oom` is caught from `MemoryError` / `torch.OutOfMemoryError`. The
-  saturated case scales the logits so `softmax` underflows to exact 0/1; it does not
-  model a specific quantisation scheme. The float32/float64 case is about input dtype;
-  the `netcal TS (raw dtype)` variant exists to show netcal's float32 pitfall, which
-  the main adapter masks by casting to float64.
+Interpretation caveats (synthetic data, one metric implementation, paired
+intervals, default optimiser budgets) are on the generated page. Harness-specific
+limitations:
+
+- Robustness cases are small and in-process. A SIGALRM deadline marks a slow fit
+  as `timeout`; `oom` is caught from `MemoryError` / `torch.OutOfMemoryError`.
+  The saturated case scales the logits so `softmax` underflows to exact 0/1; the
+  float32/float64 case is about input dtype; the `netcal TS (raw dtype)` variant
+  exposes netcal's float32 pitfall, which the main adapter masks by casting to
+  float64.
 - CPU only. Timings depend on the recorded hardware and thread count; peak RSS
-  includes the interpreter and imported libraries, and fit/transform times exclude
-  imports and the warm-up.
-- One process per scaling row, so a row cannot share state with another; this is
-  what makes memory and timeout results meaningful, at the cost of process startup
-  overhead outside the measured window.
+  includes the interpreter and imported libraries, and fit/transform times
+  exclude imports and the warm-up.
+- One process per scaling row: rows cannot share state, which makes memory and
+  timeout results meaningful at the cost of process startup outside the measured
+  window.
 - Versions are pinned: results, cross-check deltas and timings are tied to them.
 - Competitor inputs are adapted: netcal and dirichletcal receive `softmax(z)` in
-  float64 and flattened `(N, C)`; flattening in the adapters is not proof that the
-  library cannot accept spatial tensors.
+  float64 and flattened `(N, C)`; flattening in the adapters is not proof that
+  the library cannot accept spatial tensors.

@@ -13,11 +13,15 @@ import operator
 from collections.abc import Callable
 
 import torch
+import torch.nn.functional as F
 
 from ..utils.stopping import StoppingRule
-from ..utils.tensors import positive_finite
+from ..utils.tensors import inverse_softplus, positive_finite
 
 VALID_OPTIMIZERS = ("adam", "lbfgs")
+
+#: Floor applied to every fitted temperature (and the initial value).
+_T_EPS = 1e-6
 
 
 def resolve_optimizer(
@@ -25,10 +29,10 @@ def resolve_optimizer(
     lr: float | None,
     max_iter: int | None,
     *,
-    adam_lr: float,
-    lbfgs_lr: float,
-    adam_max_iter: int,
-    lbfgs_max_iter: int,
+    adam_lr: float = 0.1,
+    lbfgs_lr: float = 1.0,
+    adam_max_iter: int = 200,
+    lbfgs_max_iter: int = 100,
 ) -> tuple[str, float, int]:
     """Validate ``optimizer`` and fill ``lr`` / ``max_iter`` defaults.
 
@@ -161,3 +165,44 @@ def minimize(
     with torch.no_grad():
         for p, best in zip(params, best_state, strict=True):
             p.copy_(best)
+
+
+def fit_temperature(
+    z_flat: torch.Tensor,
+    y_flat: torch.Tensor,
+    *,
+    init_temperature: float,
+    optimizer: str,
+    lr: float,
+    max_iter: int,
+    val: tuple[torch.Tensor, torch.Tensor] | None,
+    stopping: StoppingRule | None,
+) -> float:
+    """Fit one scalar temperature by NLL and return it.
+
+    ``val`` and ``stopping`` follow :func:`minimize`: validation NLL is
+    monitored only when both are given.
+    """
+    init = max(init_temperature, _T_EPS)
+    raw_t = inverse_softplus(init, z_flat.device).requires_grad_(True)
+
+    def loss_fn() -> torch.Tensor:
+        return F.cross_entropy(z_flat / (F.softplus(raw_t) + _T_EPS), y_flat)
+
+    val_fn = None
+    if val is not None:
+        z_val, y_val = val
+
+        def val_fn() -> torch.Tensor:
+            return F.cross_entropy(z_val / (F.softplus(raw_t) + _T_EPS), y_val)
+
+    minimize(
+        optimizer,
+        [raw_t],
+        loss_fn,
+        lr=lr,
+        max_iter=max_iter,
+        val_fn=val_fn,
+        stopping=stopping,
+    )
+    return float((F.softplus(raw_t) + _T_EPS).detach().cpu().item())

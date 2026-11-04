@@ -23,9 +23,9 @@ import torch
 
 from .metrics.calibration import (
     ReliabilityCurve,
+    _binned_curve,
     brier_score,
     negative_log_likelihood,
-    reliability_curve,
 )
 from .plots import _draw_reliability, _require_matplotlib
 from .utils import to_tensor, validate_predictions, validate_targets
@@ -254,9 +254,9 @@ class ReliabilityReport:
 
         ax = axes[1, 1]
         dice = self.image_dice.cpu().numpy()
+        # Deterministic jitter so that points of one class do not overlap.
+        jitter = ((torch.arange(dice.shape[0]) * 0.618) % 1 - 0.5).numpy() * 0.4
         for c in range(dice.shape[1]):
-            # Deterministic jitter so that points of one class do not overlap.
-            jitter = ((torch.arange(dice.shape[0]) * 0.618) % 1 - 0.5).numpy() * 0.4
             ax.scatter(c + jitter, dice[:, c], s=8, alpha=0.6)
         ax.axhline(self.failures.threshold, color="red", linestyle="--", label="failure threshold")
         ax.set_xticks(range(len(names)), [c.name for c in self.classes])
@@ -414,13 +414,11 @@ class _Accumulator:
         if valid is None:
             valid = torch.ones(xi.shape[0], *xi.shape[2:], dtype=torch.bool, device=xi.device)
         pred = p.argmax(dim=1)
-        self.top.append(_bin_stats(reliability_curve(p, yi, mi, self.ignore_index, self.n_bins)))
+        self.top.append(_bin_stats(_binned_curve(p, yi, valid, self.n_bins, None)))
         self.per_class.append(
             torch.stack(
                 [
-                    _bin_stats(
-                        reliability_curve(p, yi, mi, self.ignore_index, self.n_bins, class_index=c)
-                    )
+                    _bin_stats(_binned_curve(p, yi, valid, self.n_bins, c))
                     for c in range(self.num_classes)
                 ]
             )
@@ -428,11 +426,7 @@ class _Accumulator:
         self.routed.append(
             torch.stack(
                 [
-                    _bin_stats(
-                        reliability_curve(
-                            p, yi, valid & (pred == c), self.ignore_index, self.n_bins
-                        )
-                    )
+                    _bin_stats(_binned_curve(p, yi, valid & (pred == c), self.n_bins, None))
                     for c in range(self.num_classes)
                 ]
             )
@@ -464,6 +458,26 @@ class _Accumulator:
         routed = torch.stack(self.routed).cpu()
         confusion = None if self.soft else torch.stack(self.confusion).cpu().double()
         return top, per_class, routed, confusion
+
+
+def _prepare_batch(
+    x: torch.Tensor,
+    targets: Any,
+    mask: torch.Tensor | None,
+    input_type: str,
+    ignore_index: int,
+    expected_num_classes: int | None = None,
+) -> tuple[torch.Tensor, int]:
+    """Prepare targets and validate one batch, returning them and the class count."""
+    y = prepare_targets(x, targets)
+    num_classes = validate_predictions(
+        x,
+        input_type=input_type,
+        mask=validation_positions(x, y, mask, ignore_index),
+        expected_num_classes=expected_num_classes,
+    )
+    validate_targets(x, y, mask, num_classes=num_classes, ignore_index=ignore_index)
+    return y, num_classes
 
 
 def _string_sequence(value: Any, name: str) -> list[str]:
@@ -640,19 +654,16 @@ def diagnose(
                     f"spatial axis; got {tuple(xb.shape)}"
                 )
             mb = None if batch_mask is None else to_tensor(batch_mask, device=xb.device).bool()
-            yb = prepare_targets(xb, target)
-            positions = validation_positions(xb, yb, mb, ignore_index)
+            yb, num_classes = _prepare_batch(
+                xb,
+                target,
+                mb,
+                input_type,
+                ignore_index,
+                None if acc is None else acc.num_classes,
+            )
             if acc is None:
-                num_classes = validate_predictions(xb, input_type=input_type, mask=positions)
                 acc = _Accumulator(num_classes, n_bins, input_type, ignore_index)
-            else:
-                validate_predictions(
-                    xb,
-                    input_type=input_type,
-                    mask=positions,
-                    expected_num_classes=acc.num_classes,
-                )
-            validate_targets(xb, yb, mb, num_classes=acc.num_classes, ignore_index=ignore_index)
             acc.add(xb, yb, mb)
         if acc is None or acc.n_images == 0:
             raise ValueError("at least one image is required")
@@ -667,11 +678,7 @@ def diagnose(
             )
         if x.shape[0] == 0:
             raise ValueError("at least one image is required")
-        y = prepare_targets(x, labels)
-        num_classes = validate_predictions(
-            x, input_type=input_type, mask=validation_positions(x, y, m, ignore_index)
-        )
-        validate_targets(x, y, m, num_classes=num_classes, ignore_index=ignore_index)
+        y, num_classes = _prepare_batch(x, labels, m, input_type, ignore_index)
         acc = _Accumulator(num_classes, n_bins, input_type, ignore_index)
         acc.add(x, y, m)
 
@@ -746,14 +753,10 @@ def diagnose(
     if soft:
         # Hard-label Dice is undefined for class distributions; do not invent a soft Dice.
         dice = torch.full((n_images, num_classes), float("nan"))
-        present = torch.zeros((n_images, num_classes), dtype=torch.bool)
-        failed_cls, spurious, considered = present.clone(), present.clone(), present.clone()
         mean_dice = torch.full((n_images,), float("nan"))
-        failed_img = torch.zeros(n_images, dtype=torch.bool)
         pooled_dice = torch.full((num_classes,), float("nan"))
         label_totals = torch.stack(acc.label_counts).sum(0)  # (C,) expected mass
         pred_totals = routed_s[..., 0].sum(dim=(0, 2))  # (C,) argmax counts
-        tp = lab = prd = None
     else:
         assert conf is not None
         tp = conf.diagonal(dim1=1, dim2=2)  # (B, C)
@@ -768,10 +771,11 @@ def diagnose(
         mean_dice = dice.masked_fill(~considered, float("nan")).nanmean(dim=1)  # (B,)
         failed_img = mean_dice < dice_failure_threshold
         pooled_conf = conf.sum(0)
-        pooled_dice = 2 * pooled_conf.diagonal() / (pooled_conf.sum(1) + pooled_conf.sum(0))
+        label_totals, pred_totals = pooled_conf.sum(1), pooled_conf.sum(0)
+        pooled_dice = 2 * pooled_conf.diagonal() / (label_totals + pred_totals)
 
     dice_ci: list[tuple[float, float]] = [NAN_CI] * num_classes
-    if boot_w is not None and tp is not None and lab is not None and prd is not None:
+    if boot_w is not None and not soft:
         for c in range(num_classes):
             if int(present[:, c].sum()) < 2:
                 continue
@@ -789,10 +793,9 @@ def diagnose(
             dice_c = median = p10 = lowest = float("nan")
             n_present = n_failed = n_spurious = 0
         else:
-            assert conf is not None
             d_c = dice[:, c][present[:, c]]
             median, p10, lowest = _dice_summary(d_c)
-            label_vox, pred_vox = int(pooled_conf[c].sum()), int(pooled_conf[:, c].sum())
+            label_vox, pred_vox = int(label_totals[c]), int(pred_totals[c])
             dice_c = float(pooled_dice[c])
             n_present = int(present[:, c].sum())
             n_failed = int(failed_cls[:, c].sum())
@@ -829,7 +832,6 @@ def diagnose(
             confidence_rest=float("nan"),
         )
     else:
-        assert conf is not None
 
         def mean_conf(sel: torch.Tensor) -> float:
             s = top_s[sel].sum(0)

@@ -12,7 +12,6 @@ import torch.nn.functional as F
 from .utils import (
     apply_mask_to_probabilities,
     flatten_valid,
-    get_logger,
     resolve_device,
     safe_log,
     to_tensor,
@@ -95,7 +94,6 @@ class Calibrator(ABC):
         self._num_classes: int | None = None
         self._fitted: bool = False
         self._val: tuple[torch.Tensor, torch.Tensor] | None = None
-        self._logger = get_logger(type(self).__name__)
 
     # ------------------------------------------------------------------ public
 
@@ -107,6 +105,8 @@ class Calibrator(ABC):
     _stopping: StoppingRule | None = None
     #: set by gradient-fitted subclasses; read by :meth:`_refresh_stopping`.
     optimizer: str = "adam"
+    lr: float
+    max_iter: int
 
     @property
     def is_fitted(self) -> bool:
@@ -296,6 +296,10 @@ class Calibrator(ABC):
     def _constructor_config(self) -> dict[str, Any]:
         """Return subclass-specific constructor kwargs. Override as needed."""
         return {}
+
+    def _optimizer_config(self) -> dict[str, Any]:
+        """Return the optimizer constructor kwargs shared by gradient-fitted subclasses."""
+        return {"optimizer": self.optimizer, "lr": self.lr, "max_iter": self.max_iter}
 
     # --------------------------------------------------------------- internals
 

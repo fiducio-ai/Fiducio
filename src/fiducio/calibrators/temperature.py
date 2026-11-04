@@ -5,14 +5,11 @@ from __future__ import annotations
 from typing import Any
 
 import torch
-import torch.nn.functional as F
 
 from ..base import Calibrator, DeviceLike
 from ..registry import register_calibrator
-from ..utils.tensors import inverse_softplus, positive_finite
-from ._optim import minimize, resolve_optimizer
-
-_T_EPS = 1e-6
+from ..utils.tensors import positive_finite
+from ._optim import _T_EPS, fit_temperature, resolve_optimizer
 
 
 @register_calibrator("temperature_scaling")
@@ -64,56 +61,28 @@ class TemperatureScaling(Calibrator):
     ) -> None:
         super().__init__(input_type=input_type, ignore_index=ignore_index, device=device)
         self.init_temperature = positive_finite(init_temperature, "init_temperature")
-        self.optimizer, self.lr, self.max_iter = resolve_optimizer(
-            optimizer,
-            lr,
-            max_iter,
-            adam_lr=0.1,
-            lbfgs_lr=1.0,
-            adam_max_iter=200,
-            lbfgs_max_iter=100,
-        )
+        self.optimizer, self.lr, self.max_iter = resolve_optimizer(optimizer, lr, max_iter)
         self._init_stopping(self.optimizer, patience, min_delta, lr_patience, lr_factor)
         self.temperature: float = float(init_temperature)
 
     def _fit_core(self, z_flat: torch.Tensor, y_flat: torch.Tensor, num_classes: int) -> None:
-        init = max(self.init_temperature, _T_EPS)
-        raw = inverse_softplus(init, self.device)
-        raw_t = raw.clone().requires_grad_(True)
-
-        def loss_fn() -> torch.Tensor:
-            temperature = F.softplus(raw_t) + _T_EPS
-            return F.cross_entropy(z_flat / temperature, y_flat)
-
-        val_fn = None
-        if self._val is not None:
-            z_val, y_val = self._val
-
-            def val_fn() -> torch.Tensor:
-                return F.cross_entropy(z_val / (F.softplus(raw_t) + _T_EPS), y_val)
-
-        minimize(
-            self.optimizer,
-            [raw_t],
-            loss_fn,
+        self.temperature = fit_temperature(
+            z_flat,
+            y_flat,
+            init_temperature=self.init_temperature,
+            optimizer=self.optimizer,
             lr=self.lr,
             max_iter=self.max_iter,
-            val_fn=val_fn,
+            val=self._val,
             stopping=self._stopping,
         )
-        self.temperature = float((F.softplus(raw_t) + _T_EPS).detach().cpu().item())
 
     def _map_logits(self, canonical: torch.Tensor) -> torch.Tensor:
         temperature = max(self.temperature, _T_EPS)
         return canonical / temperature
 
     def _constructor_config(self) -> dict[str, Any]:
-        return {
-            "init_temperature": self.init_temperature,
-            "optimizer": self.optimizer,
-            "lr": self.lr,
-            "max_iter": self.max_iter,
-        }
+        return {"init_temperature": self.init_temperature, **self._optimizer_config()}
 
     def _get_state(self) -> dict[str, Any]:
         return {"temperature": torch.tensor(float(self.temperature))}

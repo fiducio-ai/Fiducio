@@ -78,7 +78,7 @@ loaded only when you ask for them:
 |-------|----------|-----|
 | `fiducio[plots]` | `matplotlib` | reliability-diagram plots |
 | `fiducio[docs]` | MkDocs Material + mkdocstrings | building the docs |
-| `fiducio[dev]` | pytest, ruff, mypy, build, matplotlib | development |
+| `fiducio[dev]` | pytest, pytest-cov, ruff, mypy, build, matplotlib | development |
 | `fiducio[all]` | all of the above | everything |
 
 ```bash

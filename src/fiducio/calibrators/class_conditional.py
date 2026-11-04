@@ -73,13 +73,7 @@ class _ClassConditionalBase(Calibrator):
     ) -> None:
         super().__init__(input_type=input_type, ignore_index=ignore_index, device=device)
         self.optimizer, self.lr, self.max_iter = resolve_optimizer(
-            optimizer,
-            lr,
-            max_iter,
-            adam_lr=1e-2,
-            lbfgs_lr=1.0,
-            adam_max_iter=200,
-            lbfgs_max_iter=100,
+            optimizer, lr, max_iter, adam_lr=1e-2
         )
         self._init_stopping(self.optimizer, patience, min_delta, lr_patience, lr_factor)
         self.lambda_reg = positive_finite(lambda_reg, "lambda_reg", allow_zero=True)
@@ -193,9 +187,8 @@ class _ClassConditionalBase(Calibrator):
             val_fn=val_fn,
             stopping=self._stopping,
         )
-        with torch.no_grad():
-            self._raw_b = raw_b.detach()
-            self._raw_mu = raw_mu.detach()
+        self._raw_b = raw_b.detach()
+        self._raw_mu = raw_mu.detach()
 
     def _fit_independent(
         self, z_flat: torch.Tensor, y_flat: torch.Tensor, num_classes: int
@@ -255,9 +248,8 @@ class _ClassConditionalBase(Calibrator):
                 val_fn=val_fn,
                 stopping=self._stopping,
             )
-            with torch.no_grad():
-                self._raw_b[c] = b_c.detach()
-                self._raw_mu[c] = mu_c.detach()
+            self._raw_b[c] = b_c.detach()
+            self._raw_mu[c] = mu_c.detach()
 
     def _route(
         self,
@@ -292,9 +284,7 @@ class _ClassConditionalBase(Calibrator):
 
     def _constructor_config(self) -> dict[str, Any]:
         return {
-            "optimizer": self.optimizer,
-            "lr": self.lr,
-            "max_iter": self.max_iter,
+            **self._optimizer_config(),
             "lambda_reg": self.lambda_reg,
             "mu_reg": self.mu_reg,
             "independent_experts": self.independent_experts,

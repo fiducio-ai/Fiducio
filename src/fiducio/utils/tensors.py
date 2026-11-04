@@ -61,10 +61,8 @@ def to_tensor(
         raise TypeError(f"Expected a torch.Tensor or numpy.ndarray, got {type(x)!r}")
     if tensor.is_complex():
         raise TypeError(f"complex tensors are not supported; got dtype {tensor.dtype}")
-    if dtype is not None:
-        tensor = tensor.to(dtype=dtype)
-    if device is not None:
-        tensor = tensor.to(device=device)
+    if dtype is not None or device is not None:
+        tensor = tensor.to(dtype=dtype, device=device)
     return tensor
 
 
@@ -106,7 +104,7 @@ def inverse_softplus(value: float, device: torch.device) -> torch.Tensor:
 def integer_targets(targets: ArrayLike, *, device: torch.device) -> torch.Tensor:
     """Reject fractional/non-finite labels before converting to int64."""
     y = to_tensor(targets, device=device)
-    if y.is_complex() or not torch.isfinite(y).all():
+    if not torch.isfinite(y).all():
         raise ValueError("targets must contain finite integer labels")
     if y.is_floating_point() and (
         not torch.equal(y, y.trunc()) or (y >= 2**63).any() or (y < -(2**63)).any()
@@ -161,6 +159,16 @@ def mean_human_response(
     return proportions, counts > 0
 
 
+def _valid_label_positions(
+    targets: torch.Tensor, mask: torch.Tensor | None, ignore_index: int
+) -> torch.Tensor:
+    """Positions with a real label and, when given, a ``True`` mask value."""
+    valid = targets != ignore_index
+    if mask is not None:
+        valid = valid & mask.to(torch.bool)
+    return valid
+
+
 def validation_positions(
     predictions: torch.Tensor,
     targets: torch.Tensor,
@@ -181,10 +189,7 @@ def validation_positions(
         return mask
     if mask is not None and tuple(mask.shape) != expected:
         return mask
-    positions = targets != ignore_index
-    if mask is not None:
-        positions = positions & mask.to(torch.bool)
-    return positions
+    return _valid_label_positions(targets, mask, ignore_index)
 
 
 def validate_mask(predictions: torch.Tensor, mask: torch.Tensor | None) -> None:
@@ -318,9 +323,7 @@ def validate_targets(
     # converted here so direct callers cannot smuggle fractional or wrapped labels.
     if targets.dtype != torch.int64:
         targets = integer_targets(targets, device=targets.device)
-    valid = targets != ignore_index
-    if mask is not None:
-        valid = valid & mask.to(torch.bool)
+    valid = _valid_label_positions(targets, mask, ignore_index)
     if valid.any():
         valid_labels = targets if valid.all() else targets[valid]
         lo, hi = (int(v) for v in torch.aminmax(valid_labels))
@@ -372,9 +375,9 @@ def flatten_valid(
             return flat, soft.argmax(1)
         return flat, soft.to(dtype=z.dtype)
     targets_flat = targets.reshape(-1)
-    valid = targets_flat != ignore_index
-    if mask is not None:
-        valid = valid & mask.reshape(-1).to(torch.bool)
+    valid = _valid_label_positions(
+        targets_flat, None if mask is None else mask.reshape(-1), ignore_index
+    )
     return flat[valid], targets_flat[valid].long()
 
 

@@ -2,8 +2,8 @@
 
 The metrics take probabilities of shape `(B, C, *spatial)` and integer labels of
 shape `(B, *spatial)`, or floating class distributions with the same shape as
-the probabilities. Use `mask` to exclude soft targets; `ignore_index` applies
-to hard labels. See [multi-rater calibration](../multi_rater.md).
+the probabilities. `mask` selects valid voxels for either target kind;
+`ignore_index` applies to hard labels. See [multi-rater calibration](../multi_rater.md).
 
 ::: fiducio.negative_log_likelihood
 

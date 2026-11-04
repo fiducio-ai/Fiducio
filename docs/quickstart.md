@@ -3,10 +3,11 @@
 ## 1. Get model outputs and labels
 
 You need two things from a **held-out, labelled calibration set** (see
-[Concepts](concepts.md) for why it must be held out):
+[Concepts](concepts.md#you-need-a-separate-labelled-calibration-set) for why it
+must be held out):
 
 - `predictions`: the model output, shape `(B, C, *spatial)` with the class axis
-  at dimension 1 (e.g. `(B, C, H, W)` in 2D, `(B, C, D, H, W)` in 3D);
+  at dimension 1 (e.g. `(B, C, H, W)` in 2D);
 - `targets`: integer labels, shape `(B, *spatial)`.
 
 ```python
@@ -38,7 +39,8 @@ calibrated = calibrator.transform(new_logits)  # calibrated probabilities (B, C,
 `predict_proba` is an alias, and `fit_transform(logits, labels)` does both steps.
 Evaluate on separate data rather than the output of `fit_transform`.
 If you need calibrated **logits** instead, use `decision_function(new_logits)`
-(`softmax` of its output equals `transform`).
+(`softmax` of its output equals `transform`); see
+[Concepts](concepts.md#calibrated-probabilities-vs-logits).
 
 ## 4. Measure the effect
 
@@ -104,15 +106,13 @@ TemperatureScaling(input_type="logits")  # raw scores (default)
 TemperatureScaling(input_type="probs")  # probabilities that sum to 1
 ```
 
+Keep logits when available: converting to probabilities can round small values
+to zero. Use the same `input_type` for fitting and inference. See
+[Concepts](concepts.md#logits-versus-probabilities).
+
 ## Accepted tensor shapes
 
-| Use case | `predictions` | `targets` |
-|----------|---------------|-----------|
-| 2D segmentation | `(B, C, H, W)` | `(B, H, W)` |
-| 3D segmentation | `(B, C, D, H, W)` | `(B, D, H, W)` |
-| general n-D | `(B, C, *spatial)` | `(B, *spatial)` |
-| per-pixel table | `(N, C)` | `(N,)` |
-
-The class axis is **always** dimension 1. Binary segmentation is provided as two
-channels (`C = 2`); see [the single-channel conversion](concepts.md#binary-versus-multiclass).
-Floating class-distribution targets, including MHR, have the same shape as predictions.
+The class axis is **always** dimension 1, and the same code handles 2D, 3D and
+per-pixel inputs. Binary segmentation is provided as two channels (`C = 2`). See
+[Concepts](concepts.md#tensor-convention) for the full convention and
+[the single-channel conversion](concepts.md#binary-versus-multiclass).

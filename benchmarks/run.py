@@ -43,9 +43,8 @@ ROBUST_CASES = ("saturated", "tiny", "class_absent", "float32", "float64")
 def hardware():
     cpu = platform.processor() or platform.machine()
     try:
-        cpu = next(
-            ln.split(":")[1].strip() for ln in open("/proc/cpuinfo") if ln.startswith("model name")
-        )
+        with open("/proc/cpuinfo") as handle:
+            cpu = next(ln.split(":")[1].strip() for ln in handle if ln.startswith("model name"))
     except (OSError, StopIteration):
         pass
     return dict(
@@ -94,6 +93,14 @@ def write(path, rows):
         w.writerows(rows)
 
 
+def fit_timed(cls, C, zc, yc):
+    """Construct and fit an adapter, returning it with the fit duration in seconds."""
+    m = cls(C)
+    t = time.perf_counter()
+    m.fit(zc, yc)
+    return m, time.perf_counter() - t
+
+
 def calibration(a):
     hw, rows = hardware(), []
     for scenario in data.SCENARIOS:
@@ -121,10 +128,7 @@ def calibration(a):
                         lib_version=adapters.version(cls.lib),
                     )
                     try:
-                        m = cls(C)
-                        t = time.perf_counter()
-                        m.fit(zc, yc)
-                        row["fit_s"] = time.perf_counter() - t
+                        m, row["fit_s"] = fit_timed(cls, C, zc, yc)
                         p = m.predict(zt)
                         row.update(scores(p, yt, C), **independent_scores(p, yt))
                         row["argmax_kept"] = (p.argmax(1) == zt.argmax(1)).float().mean().item()
@@ -192,10 +196,7 @@ def downstream(a):
                     lib_version=adapters.version(cls.lib),
                 )
                 try:
-                    m = cls(C)
-                    t = time.perf_counter()
-                    m.fit(zc, yc)
-                    row["fit_s"] = time.perf_counter() - t
+                    m, row["fit_s"] = fit_timed(cls, C, zc, yc)
                     p = m.predict(zt)
                     row.update(downstream_scores(p, yt, C, reference))
                 except Exception:  # noqa: BLE001
@@ -268,10 +269,7 @@ def robustness(a):
                 )
                 try:
                     with deadline(a.timeout):
-                        m = cls(C)
-                        t = time.perf_counter()
-                        m.fit(zc, yc)
-                        row["fit_s"] = time.perf_counter() - t
+                        m, row["fit_s"] = fit_timed(cls, C, zc, yc)
                         p = m.predict(zt)
                         row["nll"] = negative_log_likelihood(p, yt)
                         row["ece"] = expected_calibration_error(p, yt, n_bins=15)
@@ -297,10 +295,8 @@ def child(a):
     cls(4).fit(zc[:2000], yc[:2000])  # warm-up
     fit, pred = [], []
     for _ in range(a.reps):
-        m = cls(4)
-        t = time.perf_counter()
-        m.fit(zc, yc)
-        fit.append(time.perf_counter() - t)
+        m, dt = fit_timed(cls, 4, zc, yc)
+        fit.append(dt)
         t = time.perf_counter()
         m.predict(zt)
         pred.append(time.perf_counter() - t)
@@ -385,24 +381,10 @@ NOTES = """## Reading these results
   redraws all cases, so it covers case-to-case variance.
 * **Input contract.** Fiducio and torch-uncertainty receive logits; netcal and dirichletcal receive
   `softmax(z)` in float64. dirichletcal runs on JAX, which computes in float32 unless x64 is
-  enabled (probabilities differ by a few 1e-6 between the two modes, 3.16e-6 measured).
+  enabled (probabilities differ by a few 1e-6 between the two modes).
 * **netcal pitfall.** With float32 probabilities `TemperatureScaling.fit` leaves T = 1 without a
   warning; the adapter casts to float64. Its `T` multiplies the logits, Fiducio's divides them.
 * **Defaults.** Each library runs with its default optimiser budget; no per-library tuning.
-* **Downstream (axis 4) is Fiducio only.** The class-conditional calibrators (CMSap, CMSop) and
-  the scalar/matrix ones have no counterpart among the competitors. TS, CMSap and CMSop preserve
-  the argmax in exact arithmetic (CMSop the full class order), so their Dice and argmax change are
-  zero by construction; VS, MS and DC may change both, and Dice is informative for them. An ECE
-  gain does not prove a downstream gain: the preserving methods cut ECE here but keep identity's
-  volume bias.
-* **Robustness (axis 5) records status, not ranking.** Every (case, method, seed) is a row in the
-  CSV, with `ok`, `timeout`, `oom` or `error`; no row is dropped. Saturated cases scale the logits
-  so that `softmax` underflows to exact 0/1 before netcal and dirichletcal see probabilities.
-  Fiducio's probability path is exercised by the `(probs)` variants; the `raw dtype` netcal variant
-  skips the adapter's float64 cast, so the float32 pitfall shows up. Each fit and transform is
-  bounded by an in-process SIGALRM deadline, not a fresh process as in the scaling axis.
-* **Timings** are medians of fit and transform measured separately, each (method, N) in a fresh
-  process with a timeout. `timeout`, `oom` and `error` are results, not omissions.
 """
 
 
@@ -506,8 +488,8 @@ def report(a):
         "## Downstream (Fiducio only)",
         "",
         "Same paired seeds as the calibration axis, 4 classes, scenarios with a per-class bias "
-        "(`bias`) and a rare class (`rare`), and identity as the reference decision. No competitor "
-        "provides a class-conditional calibrator, so this axis is Fiducio only.",
+        "(`bias`) and a rare class (`rare`), and identity as the reference decision. None of the "
+        "competitors' tested methods is class-conditional, so this axis is Fiducio only.",
         "",
         "Per-class ECE uses the class-specific metric (`class_index`), and the **volume bias** of a "
         "class is its predicted voxel share minus its label share (signed: negative means "
@@ -574,10 +556,11 @@ def report(a):
         "",
         "Every (case, method, seed) is a row in `results/robustness.csv` and appears below; "
         "`timeout`, `oom` and `error` are results, not omissions. Status is counted over seeds; "
-        "NLL and ECE are medians over the successful seeds. Each fit and transform has an in-process "
-        "SIGALRM deadline, so a timeout is recorded per row. An `error` is the adapter/library "
-        "combination, not necessarily a library defect: torch-uncertainty's matrix scaler does not "
-        "accept float64 through this adapter, and dirichletcal rejects a missing class.",
+        "NLL and ECE are medians over the successful seeds. Each fit-and-transform is bounded by "
+        "an in-process SIGALRM deadline (not a fresh process, unlike the scaling axis), so a "
+        "timeout is recorded per row. An `error` is the adapter/library combination, not "
+        "necessarily a library defect: torch-uncertainty's matrix scaler does not accept float64 "
+        "through this adapter, and dirichletcal rejects a missing class.",
         "",
     ]
     for case in ROBUST_CASES:
@@ -628,9 +611,8 @@ def report(a):
         "Scenario `over`, 4 classes, one process per row.",
         "",
         "Fit times reflect each library's default optimiser budget: Fiducio's temperature scaling "
-        "uses Adam with `max_iter=200`, which dominates its fit time at 1M voxels, while "
-        '`optimizer="lbfgs"` reaches the same optimum in 0.41 s at that size (T 2.498649 vs '
-        "2.498665) in our measurement; netcal's default is much cheaper.",
+        "uses Adam with `max_iter=200`, which dominates its fit time at 1M voxels, while netcal's "
+        "default is much cheaper.",
         "",
         "| N | method | status | fit (s) | transform (s) | peak RSS (MB) |",
         "|--:|---|---|--:|--:|--:|",

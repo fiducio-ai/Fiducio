@@ -118,24 +118,19 @@ def _validate_state(
             raise ValueError("invalid saved isotonic coordinates or monotonicity")
 
 
-def _major(version_str: str | None) -> int | None:
-    if not version_str:
-        return None
+def _major(version_str: str) -> int | None:
     try:
-        return int(str(version_str).split(".")[0])
+        return int(version_str.split(".")[0])
     except ValueError:
         return None
 
 
 def _fiducio_version() -> str:
-    try:
-        from importlib.metadata import PackageNotFoundError, version
+    from importlib.metadata import version
 
-        try:
-            return version("fiducio")
-        except PackageNotFoundError:
-            return "0.0.0+unknown"
-    except Exception:  # pragma: no cover - importlib always present on 3.10+
+    try:
+        return version("fiducio")
+    except Exception:  # pragma: no cover - source checkout or unreadable metadata
         return "0.0.0+unknown"
 
 
@@ -163,9 +158,10 @@ def save_calibrator(calibrator: Calibrator, path: PathLike) -> None:
         raise ValueError(
             f"{type(calibrator).__name__} has no registered calibrator_id and cannot be saved"
         )
+    path = os.fspath(path)
     if os.path.isdir(path):
         raise ValueError(f"calibrator path is a directory: {path}")
-    directory = os.path.dirname(os.fspath(path))
+    directory = os.path.dirname(path)
     if directory:
         os.makedirs(directory, exist_ok=True)
 
@@ -180,13 +176,13 @@ def save_calibrator(calibrator: Calibrator, path: PathLike) -> None:
         "state": _to_cpu(calibrator._get_state()),
     }
     # A unique, exclusively created name keeps concurrent saves from colliding.
-    tmp_path = f"{os.fspath(path)}.{os.getpid()}.{uuid.uuid4().hex}.tmp"
+    tmp_path = f"{path}.{os.getpid()}.{uuid.uuid4().hex}.tmp"
     try:
         with open(tmp_path, "xb") as handle:
             torch.save(payload, handle)
             handle.flush()
             os.fsync(handle.fileno())
-        os.replace(tmp_path, os.fspath(path))
+        os.replace(tmp_path, path)
     finally:
         if os.path.exists(tmp_path):
             os.remove(tmp_path)
@@ -261,14 +257,15 @@ def load_calibrator(
     if not fitted and classes is not None:
         raise ValueError("an unfitted calibrator must have num_classes=None")
 
-    saved_version = payload.get("fiducio_version")
-    saved_major, current_major = _major(saved_version), _major(_fiducio_version())
+    saved_version = payload["fiducio_version"]
+    current_version = _fiducio_version()
+    saved_major, current_major = _major(saved_version), _major(current_version)
     if saved_major is not None and current_major is not None and saved_major != current_major:
         _logger.warning(
             "calibrator was saved with fiducio %s but the installed version is %s; "
             "loading may not be fully compatible",
             saved_version,
-            _fiducio_version(),
+            current_version,
         )
 
     calibrator_id = payload["calibrator_id"]
@@ -277,7 +274,7 @@ def load_calibrator(
     except KeyError as exc:
         raise ValueError(f"unsupported calibrator id {calibrator_id!r}") from exc
 
-    config = dict(payload["config"])
+    config = payload["config"]
     if "device" in config:
         raise ValueError("saved config must not override map_location")
     try:

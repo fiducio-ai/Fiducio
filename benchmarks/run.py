@@ -160,9 +160,9 @@ def downstream_scores(p, y, C, reference_argmax):
     )
     for c in range(C):
         out[f"ece_c{c}"] = expected_calibration_error(p, y, n_bins=15, class_index=c)
-        out[f"volume_bias_c{c}"] = (
-            (pred == c).float().mean().item() - (y == c).float().mean().item()
-        )
+        out[f"volume_bias_c{c}"] = (pred == c).float().mean().item() - (
+            y == c
+        ).float().mean().item()
     return out
 
 
@@ -539,8 +539,7 @@ def report(a):
                 fmt(g.argmax_changed.mean(), ci(g.argmax_changed), 4),
             ]
             cells += [
-                fmt(g[f"volume_bias_c{c}"].mean(), ci(g[f"volume_bias_c{c}"]), 4)
-                for c in range(4)
+                fmt(g[f"volume_bias_c{c}"].mean(), ci(g[f"volume_bias_c{c}"]), 4) for c in range(4)
             ]
             out.append("| " + " | ".join([name, *cells]) + " |")
         out.append("")
@@ -556,7 +555,10 @@ def report(a):
     ]
     dsbad = ds[ds["error"].notna()] if "error" in ds else ds.iloc[:0]
     if len(dsbad):
-        out += ["Failures: " + ", ".join(sorted(set(dsbad.method))) + " (tracebacks in the CSV).", ""]
+        out += [
+            "Failures: " + ", ".join(sorted(set(dsbad.method))) + " (tracebacks in the CSV).",
+            "",
+        ]
 
     robust_notes = {
         "saturated": "logits scaled by 10⁴ so that `softmax` underflows to exact 0/1; netcal and "
@@ -688,8 +690,14 @@ def main():
     r = sub.add_parser("report")
     r.add_argument("--out", default=HERE.parent / "docs/benchmark.md")
     a = p.parse_args()
-    {"calibration": calibration, "scaling": scaling, "child": child, "report": report,
-     "downstream": downstream, "robustness": robustness}[a.cmd](a)
+    {
+        "calibration": calibration,
+        "scaling": scaling,
+        "child": child,
+        "report": report,
+        "downstream": downstream,
+        "robustness": robustness,
+    }[a.cmd](a)
 
 
 if __name__ == "__main__":

@@ -457,10 +457,7 @@ def test_soft_targets_match_the_global_metrics_and_leave_dice_undefined():
     assert math.isnan(report.failures.ece_without_failed)
     assert any("soft targets" in w for w in report.warnings)
     # ignore_index selects hard labels only: it changes nothing for a soft target.
-    assert (
-        diagnose(logits, soft, mask=mask, ignore_index=7, n_boot=0).to_dict()
-        == report.to_dict()
-    )
+    assert diagnose(logits, soft, mask=mask, ignore_index=7, n_boot=0).to_dict() == report.to_dict()
     json.loads(json.dumps(report.to_dict(), allow_nan=False))
 
 
@@ -495,9 +492,7 @@ def test_loader_mask_is_used_and_probs_input_matches():
     mask = torch.ones(8, 16, 16, dtype=torch.bool)
     mask[1, :3] = False
     mask[2, 0, 0] = False
-    loader = DataLoader(
-        [(logits[i], labels[i], mask[i]) for i in range(len(logits))], batch_size=3
-    )
+    loader = DataLoader([(logits[i], labels[i], mask[i]) for i in range(len(logits))], batch_size=3)
     streamed = diagnose(IdentityModel(), loader, n_boot=0)
     assert streamed.to_dict() == diagnose(logits, labels, mask=mask, n_boot=0).to_dict()
 

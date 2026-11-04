@@ -419,9 +419,7 @@ class _Accumulator:
             torch.stack(
                 [
                     _bin_stats(
-                        reliability_curve(
-                            p, yi, mi, self.ignore_index, self.n_bins, class_index=c
-                        )
+                        reliability_curve(p, yi, mi, self.ignore_index, self.n_bins, class_index=c)
                     )
                     for c in range(self.num_classes)
                 ]
@@ -850,9 +848,7 @@ def diagnose(
             threshold=dice_failure_threshold,
             n_failed=int(failed_img.sum()),
             ece_all=point["ece"],
-            ece_without_failed=float(_ece(top_s[rest].sum(0)))
-            if rest.any()
-            else float("nan"),
+            ece_without_failed=float(_ece(top_s[rest].sum(0))) if rest.any() else float("nan"),
             confidence_failed=mean_conf(failed_img) if failed_img.any() else float("nan"),
             confidence_rest=mean_conf(rest) if rest.any() else float("nan"),
             worst=worst,

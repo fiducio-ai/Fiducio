@@ -63,6 +63,42 @@ matplotlib figure (reliability diagram, confidence histogram, per-class ECE and
 per-image Dice; needs `fiducio[plots]`), and `report.to_dict()` returns a
 JSON-serializable dictionary.
 
+### Streaming over a model and DataLoader
+
+Pass a model and a DataLoader instead of materialised logits and labels:
+
+```python
+from torch.utils.data import DataLoader
+
+loader = DataLoader(calibration_dataset, batch_size=8)
+report = fiducio.diagnose(model, loader, device="cuda", class_names=["background", "pet"])
+```
+
+Each batch is `(inputs, labels)` or `(inputs, labels, mask)`. `inputs` are whatever
+the model accepts (tensors, or lists/tuples/dicts of tensors; all moved to `device`);
+the model output is `(B, C, *spatial)` logits (or probabilities with
+`input_type="probs"`). The model runs under `torch.no_grad()`; its `training` flag
+is left untouched, so call `model.eval()` yourself if you want inference-mode
+dropout/batchnorm. `device` defaults to the device of the model's first parameter.
+Only per-image sufficient statistics are accumulated — the images are never
+materialised together — so the report streams over a dataset that does not fit in
+memory. Masks come from the batch; the `mask` argument is for the tensor input.
+
+### Soft targets (MHR)
+
+`labels` may be floating class distributions `(B, C, *spatial)`, as produced by
+`mean_human_response`. The metric conventions match the rest of Fiducio:
+
+- top-1 and routed ECE compare the top-1 confidence with `q[argmax(p)]`;
+- per-class ECE compares `p_c` with `q_c`;
+- NLL and Brier use the existing soft-target definitions;
+- `ignore_index` selects hard labels only; a soft target is restricted by `mask`.
+
+Hard-label Dice is undefined for class distributions, so `image_dice`, every Dice
+field and the failure statistics are NaN (counts are 0) and the report warns.
+Class balance still reports the expected label mass `sum(q_c)`, which may be
+fractional. No soft Dice substitute is invented.
+
 ## Reading the report
 
 - **Intervals** are 95% bootstrap intervals over **images**, not voxels. Voxels of
@@ -82,6 +118,15 @@ JSON-serializable dictionary.
   p10 / min* columns of the failure table are per image, over the images where the
   class is present, so the two differ. **Saturated** voxels have a confidence above
   0.999. The ECE uses `n_bins` (15) equal-width bins on the top-1 confidence.
+- **First/last bin** describes the `[0, 1/n_bins]` and `[(n_bins-1)/n_bins, 1]`
+  confidence bins explicitly: the share of voxels in each, their mean confidence
+  minus accuracy (positive means over-confident), and their exact contribution to
+  the reported `ece`. The `ece` definition itself is unchanged.
+- **Per-class intervals** (`class_ece_ci`, `routed_ece_ci`, `dice_ci` in
+  `to_dict()`, and the second table in the summary) are 95% bootstrap intervals
+  over images, using the same resampling as the global intervals. A class routed on
+  fewer than two images, or present in fewer than two labels, gets NaN intervals.
+
 - **label % / pred %** show class balance. **class ECE** compares the probability
   of the class with its observed frequency. **routed** columns restrict to the voxels
   whose argmax is the class: this is the split that class-conditional calibrators
@@ -112,5 +157,8 @@ JSON-serializable dictionary.
 `diagnose` works per image.
 
 Cost is `2C + 1` reliability curves per image (global, per-class and routed), plus a
-few passes for NLL, Brier and the confusion matrix, so it grows with the number of classes and the volume size. Soft targets (multi-rater
-class distributions) are not supported.
+few passes for NLL, Brier and the confusion matrix, so it grows with the number of
+classes and the volume size. With a model and DataLoader the forward pass dominates.
+The accumulator keeps `O(n_images)` summaries (`O(n_images * C * n_bins)` for the
+calibration statistics and `O(n_images * C^2)` for the confusion matrices), and the
+bootstrap resamples those summaries rather than the voxels.

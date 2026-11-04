@@ -7,6 +7,7 @@ import math
 
 import pytest
 import torch
+from torch.utils.data import DataLoader, TensorDataset
 
 from conftest import synthetic_logits, to_probs
 from fiducio import (
@@ -17,6 +18,24 @@ from fiducio import (
     negative_log_likelihood,
     reliability_curve,
 )
+
+
+class IdentityModel(torch.nn.Module):
+    """Return its input unchanged, with one parameter to check no-grad inference."""
+
+    def __init__(self):
+        super().__init__()
+        self.scale = torch.nn.Parameter(torch.tensor(1.0))
+
+    def forward(self, x):
+        return x * self.scale
+
+
+class UnwrapModel(torch.nn.Module):
+    """Accept a dict or a sequence of inputs and return the predictions inside."""
+
+    def forward(self, x):
+        return x["logits"] if isinstance(x, dict) else x[0]
 
 
 def noisy_logits(n_images=24, num_classes=3, size=16, *, scale, seed=0):
@@ -176,9 +195,20 @@ def test_to_dict_is_strict_json_and_text_names_the_classes():
     data = json.loads(json.dumps(report.to_dict(), allow_nan=False))
     assert data["classes"][2]["dice"] is None
     assert data["bias"] == report.bias
+    assert data["soft_targets"] is False
+    assert set(data["boundary"]) == {
+        "low_bin_mass",
+        "low_bin_gap",
+        "high_bin_mass",
+        "high_bin_gap",
+        "ece_contribution",
+    }
+    # Per-class intervals serialise as [low, high] lists, None when undefined.
+    assert data["classes"][0]["class_ece_ci"] == [None, None]
     text = str(report)
     assert text == repr(report) == report.summary()
     assert "pet" in text and "edge" in text and "Lowest-Dice images" in text
+    assert "Per-class 95% intervals" in text
 
 
 def test_summary_without_failures_or_warnings():
@@ -252,10 +282,10 @@ def test_background_class_excluding_every_present_class_warns():
     json.loads(json.dumps(report.to_dict(), allow_nan=False))
 
 
-def test_soft_targets_and_empty_inputs_are_rejected():
+def test_invalid_soft_targets_and_empty_inputs_are_rejected():
     logits, labels = noisy_logits(n_images=2, scale=1.0)
-    with pytest.raises(ValueError, match="hard integer labels"):
-        diagnose(logits, to_probs(logits))
+    with pytest.raises(ValueError, match="sum to 1"):
+        diagnose(logits, to_probs(logits) / 2)
     with pytest.raises(ValueError, match="at least one image"):
         diagnose(logits[:0], labels[:0])
     with pytest.raises(ValueError, match="no valid voxels"):
@@ -390,3 +420,230 @@ def test_small_but_frequent_class_is_not_called_rare():
 def test_flat_input_is_rejected():
     with pytest.raises(ValueError, match="spatial"):
         diagnose(torch.randn(100, 3), torch.randint(0, 3, (100,)))
+
+
+# --- soft / MHR targets ---------------------------------------------------------------
+
+
+def test_soft_targets_match_the_global_metrics_and_leave_dice_undefined():
+    logits, _ = synthetic_logits((6, 4, 12, 12), seed=11)
+    soft = to_probs(logits)
+    mask = torch.ones(6, 12, 12, dtype=torch.bool)
+    mask[1, 3:5] = False
+    report = diagnose(logits, soft, mask=mask, n_boot=0)
+
+    assert report.soft_targets is True
+    assert report.metrics["ece"][0] == pytest.approx(
+        expected_calibration_error(soft, soft, mask), abs=1e-6
+    )
+    assert report.metrics["nll"][0] == pytest.approx(
+        negative_log_likelihood(soft, soft, mask), abs=1e-6
+    )
+    assert report.metrics["brier"][0] == pytest.approx(brier_score(soft, soft, mask), abs=1e-6)
+    valid = mask
+    pred = soft.argmax(1)
+    for c, stats in enumerate(report.classes):
+        assert stats.class_ece == pytest.approx(
+            reliability_curve(soft, soft, mask, class_index=c).ece, abs=1e-6
+        )
+        assert stats.routed_ece == pytest.approx(
+            expected_calibration_error(soft, soft, valid & (pred == c)), abs=1e-6
+        )
+        assert stats.label_voxels == pytest.approx(float(soft[:, c][valid].sum()), rel=1e-6)
+        assert stats.n_present == stats.n_failed == stats.n_spurious == 0
+        assert math.isnan(stats.dice) and math.isnan(stats.dice_ci[0])
+    assert bool(report.image_dice.isnan().all())
+    assert report.failures.n_failed == 0 and report.failures.worst == []
+    assert math.isnan(report.failures.ece_without_failed)
+    assert any("soft targets" in w for w in report.warnings)
+    # ignore_index selects hard labels only: it changes nothing for a soft target.
+    assert diagnose(logits, soft, mask=mask, ignore_index=7, n_boot=0).to_dict() == report.to_dict()
+    json.loads(json.dumps(report.to_dict(), allow_nan=False))
+
+
+def test_soft_targets_and_bootstrap_give_per_class_intervals():
+    logits, _ = synthetic_logits((6, 4, 8, 8), seed=12)
+    soft = to_probs(logits)
+    a = diagnose(logits, soft, n_boot=20, seed=5)
+    b = diagnose(logits, soft, n_boot=20, seed=5)
+    for ca, cb in zip(a.classes, b.classes, strict=True):
+        assert ca.class_ece_ci == cb.class_ece_ci
+        assert ca.routed_ece_ci == cb.routed_ece_ci
+        assert ca.dice_ci == cb.dice_ci
+    assert all(math.isnan(c.dice_ci[0]) for c in a.classes)
+
+
+# --- model + DataLoader ---------------------------------------------------------------
+
+
+def test_loader_path_matches_the_tensor_path_and_preserves_model_state():
+    logits, labels = noisy_logits(n_images=11, scale=2.0)
+    model = IdentityModel()
+    loader = DataLoader(TensorDataset(logits, labels), batch_size=4)
+    streamed = diagnose(model, loader, device="cpu", n_boot=12, seed=3)
+    direct = diagnose(logits, labels, n_boot=12, seed=3)
+    assert streamed.to_dict() == direct.to_dict()
+    assert model.training is True
+    assert model.scale.grad is None
+
+
+def test_loader_mask_is_used_and_probs_input_matches():
+    logits, labels = noisy_logits(n_images=8, scale=2.0)
+    mask = torch.ones(8, 16, 16, dtype=torch.bool)
+    mask[1, :3] = False
+    mask[2, 0, 0] = False
+    loader = DataLoader([(logits[i], labels[i], mask[i]) for i in range(len(logits))], batch_size=3)
+    streamed = diagnose(IdentityModel(), loader, n_boot=0)
+    assert streamed.to_dict() == diagnose(logits, labels, mask=mask, n_boot=0).to_dict()
+
+    probs = to_probs(logits)
+    loader = DataLoader(TensorDataset(probs, labels), batch_size=5)
+    report = diagnose(IdentityModel(), loader, input_type="probs", n_boot=0)
+    assert report.to_dict() == diagnose(probs, labels, input_type="probs", n_boot=0).to_dict()
+
+
+def test_loader_soft_targets_match_the_tensor_path():
+    logits, _ = synthetic_logits((5, 3, 8, 8), seed=13)
+    soft = to_probs(logits)
+    loader = DataLoader(TensorDataset(logits, soft), batch_size=2)
+    streamed = diagnose(IdentityModel(), loader, n_boot=0)
+    direct = diagnose(logits, soft, n_boot=0)
+    assert streamed.to_dict() == direct.to_dict()
+    assert streamed.soft_targets is True
+
+
+def test_loader_accepts_dict_and_sequence_inputs():
+    logits, labels = noisy_logits(n_images=4, scale=2.0)
+    expected = diagnose(logits, labels, n_boot=0)
+    dict_batches = [({"logits": logits[i : i + 2]}, labels[i : i + 2]) for i in (0, 2)]
+    tuple_batches = [((logits[i : i + 2], "unused"), labels[i : i + 2]) for i in (0, 2)]
+    assert diagnose(UnwrapModel(), dict_batches, n_boot=0).to_dict() == expected.to_dict()
+    assert diagnose(UnwrapModel(), tuple_batches, n_boot=0).to_dict() == expected.to_dict()
+
+
+def test_loader_errors():
+    logits, labels = noisy_logits(n_images=3, scale=1.0)
+    model = IdentityModel()
+    with pytest.raises(ValueError, match="at least one image"):
+        diagnose(model, [])
+    with pytest.raises(ValueError, match="labels must be a DataLoader"):
+        diagnose(model, None)
+    with pytest.raises(ValueError, match="labels must be a DataLoader"):
+        diagnose(model, labels)
+    with pytest.raises(ValueError, match="pass each mask in the batch"):
+        diagnose(model, [(logits[0], labels[0])], mask=torch.ones(16, 16, dtype=torch.bool))
+    with pytest.raises(ValueError, match="loader batch"):
+        diagnose(model, [(logits[0],)])
+    with pytest.raises(ValueError, match="loader batch"):
+        diagnose(model, [torch.tensor(1)])
+    with pytest.raises(ValueError, match="image_ids"):
+        diagnose(model, [(logits[:1], labels[:1])], image_ids=["a", "b"])
+    with pytest.raises(ValueError, match="class_names"):
+        diagnose(model, [(logits[:1], labels[:1])], class_names=5)
+
+
+def test_loader_rejects_bad_model_output_and_mixed_batches():
+    logits, labels = noisy_logits(n_images=3, scale=1.0)
+
+    class NotATensor(torch.nn.Module):
+        def forward(self, x):
+            return [x]
+
+    class Flat(torch.nn.Module):
+        def forward(self, x):
+            return x[:, :, 0, 0]
+
+    class Wider(torch.nn.Module):
+        """Return three classes on the first call and four on the second."""
+
+        def __init__(self):
+            super().__init__()
+            self.calls = 0
+
+        def forward(self, x):
+            self.calls += 1
+            return x if self.calls == 1 else torch.cat([x, x[:, :1]], dim=1)
+
+    class IntegerLogits(torch.nn.Module):
+        def forward(self, x):
+            return (x * 10).round().long()
+
+    # Integer model outputs are converted to float, as for tensor inputs.
+    report = diagnose(IntegerLogits(), [(logits[:1], labels[:1])], n_boot=0)
+    assert report.n_images == 1 and report.n_valid > 0
+
+    with pytest.raises(TypeError, match="must return a tensor"):
+        diagnose(NotATensor(), [(logits[:1], labels[:1])])
+    with pytest.raises(ValueError, match="model output must have shape"):
+        diagnose(Flat(), [(logits[:1], labels[:1])])
+    with pytest.raises(ValueError, match="fitted for C=3"):
+        diagnose(Wider(), [(logits[:1], labels[:1]), (logits[1:2], labels[1:2])])
+    # A hard batch followed by a soft batch.
+    with pytest.raises(ValueError, match="must not be mixed"):
+        diagnose(
+            IdentityModel(),
+            [(logits[:1], labels[:1]), (logits[1:2], to_probs(logits[1:2]))],
+        )
+
+
+# --- boundary bins --------------------------------------------------------------------
+
+
+def test_boundary_bins_at_the_probability_edges():
+    probs = torch.full((1, 20, 3), 1 / 20)
+    probs[0, 0, 0] = 1.0
+    probs[0, 1:, 0] = 0.0
+    labels = torch.tensor([[0, 1, 1]])  # two wrong, minimum-confidence voxels
+    report = diagnose(probs, labels, input_type="probs", n_bins=10, n_boot=0)
+    boundary = report.boundary
+    assert boundary.low_bin_mass == pytest.approx(2 / 3)
+    assert boundary.high_bin_mass == pytest.approx(1 / 3)
+    assert boundary.low_bin_gap == pytest.approx(0.05)
+    assert boundary.high_bin_gap == pytest.approx(0.0)
+    # Only the first bin is miscalibrated, so it contributes the whole ECE.
+    assert boundary.ece_contribution == pytest.approx(0.1 / 3)
+    assert boundary.ece_contribution == pytest.approx(report.metrics["ece"][0])
+    # A single bin counts once, not twice.
+    one_bin = diagnose(probs, labels, input_type="probs", n_bins=1, n_boot=0)
+    assert one_bin.boundary.ece_contribution == pytest.approx(one_bin.metrics["ece"][0])
+
+
+def test_empty_edge_bins_have_undefined_gaps():
+    probs = torch.full((2, 2, 4, 4), 0.5)
+    labels = torch.zeros(2, 4, 4, dtype=torch.long)
+    report = diagnose(probs, labels, input_type="probs", n_bins=15, n_boot=0)
+    assert report.boundary.low_bin_mass == 0.0
+    assert report.boundary.high_bin_mass == 0.0
+    assert math.isnan(report.boundary.low_bin_gap)
+    assert math.isnan(report.boundary.high_bin_gap)
+
+
+# --- per-class intervals --------------------------------------------------------------
+
+
+def test_per_class_intervals_are_deterministic_and_guarded():
+    logits, labels = noisy_logits(n_images=6, scale=2.0)
+    logits[:, 2] = -50.0
+    logits[0, 2, 0, :4] = 50.0  # class 2 routed on one image only
+    a = diagnose(logits, labels, n_boot=40, seed=7)
+    b = diagnose(logits, labels, n_boot=40, seed=7)
+    assert a.to_dict()["classes"] == b.to_dict()["classes"]
+    for c in a.classes:
+        for lo, hi in (c.class_ece_ci, c.routed_ece_ci, c.dice_ci):
+            if not math.isnan(lo):
+                assert lo <= hi
+    assert math.isfinite(a.classes[0].class_ece_ci[0])
+    assert math.isnan(a.classes[2].routed_ece_ci[0])
+    assert all(
+        math.isnan(c.class_ece_ci[0])
+        for c in diagnose(*noisy_logits(1, scale=1.0), n_boot=20).classes
+    )
+
+
+def test_class_present_in_one_image_has_no_dice_interval():
+    logits, labels = noisy_logits(n_images=5, scale=1.0)
+    labels[labels == 2] = 0
+    labels[0, 0, 0] = 2
+    c = diagnose(logits, labels, n_boot=20).classes[2]
+    assert c.n_present == 1
+    assert math.isnan(c.dice_ci[0])

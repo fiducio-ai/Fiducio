@@ -4,8 +4,8 @@ Releases are manual and gated. No workflow uploads to PyPI on its own.
 
 ## What the workflows enforce
 
-- `validate.yml` (reusable) builds **one** wheel/sdist pair and runs every check
-  against exactly those archives:
+- `validate.yml` (reusable) builds **one** wheel/sdist pair and runs the checks,
+  using those archives wherever a package is installed:
     - Twine and a content check (`scripts/check_distribution.py`): license,
       `py.typed`, identical sources in the wheel and sdist, the project page shipped
       in the sdist and absent from the wheel;
@@ -16,7 +16,8 @@ Releases are manual and gated. No workflow uploads to PyPI on its own.
       supported PyTorch 2.10;
     - `mkdocs build --strict` from the checkout and from the unpacked sdist,
       the project-page check (`scripts/check_site.py`), and a wheel rebuilt from
-      the sdist that must match the tested wheel.
+      the sdist that must match the tested wheel;
+    - the benchmark harness tests on Python 3.12 with every competitor installed.
 - `tests.yml` runs it on pull requests and on `main`; `package.yml` reruns it manually.
 - `publish-pypi.yml` (manual, with `confirm: publish`) first runs
   `scripts/check_release.py`. It fails unless the run was started from a

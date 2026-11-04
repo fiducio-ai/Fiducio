@@ -6,7 +6,7 @@ Install the optional plotting dependency:
 pip install "fiducio[plots]"
 ```
 
-`import fiducio` does not load matplotlib. The plotting helper imports it only
+`import fiducio` does not load matplotlib; the plotting helper imports it only
 when called.
 
 ## Read a diagram
@@ -33,9 +33,9 @@ example, not a result from the paper. Run
 from the repository to reproduce it as `outputs/reliability.png`.
 
 The figures on this page are light-background PNGs. A dark-mode variant is not
-shipped because `reliability_diagram` currently uses fixed light-theme colors
-(black markers and bar edges, a white annotation box); a readable dark figure
-needs a plotting-theme option, not only a different background.
+shipped because `reliability_diagram` uses fixed light-theme colors (black
+markers and bar edges, a white annotation box); a readable dark figure needs a
+plotting-theme option, not only a different background.
 
 The same workflow in a standalone snippet:
 
@@ -70,10 +70,10 @@ like the metrics.
 ![Class-1 reliability against mean human responses on held-out synthetic cases, before and after isotonic calibration](assets/reliability_mhr.png)
 
 With `class_index=1`, the horizontal axis is the probability of class 1 and the
-vertical axis is its observed frequency or mean annotator proportion. The
-figure uses 50 evaluation bins and compares uncalibrated probabilities with a
-binary isotonic map fitted to MHR on separate cases. Isotonic calibration may
-change the segmentation at threshold 0.5.
+vertical axis is its observed frequency or mean annotator proportion. The figure
+uses 50 evaluation bins and compares uncalibrated probabilities with a binary
+isotonic map fitted to MHR on separate cases. Isotonic calibration may change the
+segmentation at threshold 0.5.
 
 Given separate calibration and test arrays (`p_fit`, `votes_fit`, `p_test`,
 `votes_test`), plot the test cases as follows. Probabilities have shape
@@ -109,20 +109,20 @@ plt.close(fig)
 
 Missing votes use `-100`; the helper excludes them from each voxel's denominator.
 Always pass its mask when evaluating MHR, since voxels with no votes have zero
-target mass. The annotation is **ECE against MHR**, not mean per-rater ECE.
-See the [multi-rater guide](multi_rater.md#metrics-two-different-eces) for the
+target mass. The annotation is **ECE against MHR**, not mean per-rater ECE; see
+the [multi-rater guide](multi_rater.md#metrics-two-different-eces) for the
 distinction and
 [`examples/multi_rater_calibration.py`](https://github.com/fiducio-ai/Fiducio/blob/main/examples/multi_rater_calibration.py)
-for a complete runnable example. That script reproduces the figure as
+for a complete runnable example that writes
 `outputs/multi_rater_reliability.png`.
 
 ## Change the summary or build a custom plot
 
-Both figures annotate ECE: each bin's gap is weighted by its voxel count.
-Use `metric="ace"` for the unweighted mean over nonempty bins, or `metric=None`
-to hide the annotation. This ACE is not adaptive/equal-mass binning.
-`n_bins` controls uniform evaluation bins, separately from the isotonic
-calibrator's approximately equal-mass fitting bins.
+Both figures annotate ECE, weighting each bin's gap by its voxel count. Use
+`metric="ace"` for the unweighted mean over nonempty bins, or `metric=None` to
+hide the annotation. This ACE is not adaptive/equal-mass binning. `n_bins`
+controls uniform evaluation bins, separately from the isotonic calibrator's
+approximately equal-mass fitting bins.
 
 For custom plots, [`reliability_curve`](api/metrics.md) returns `bin_edges`,
 `bin_confidence`, `bin_accuracy`, `bin_counts`, `ece` and `ace`. Inspect

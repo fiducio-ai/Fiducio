@@ -6,19 +6,17 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-green)](https://github.com/fiducio-ai/Fiducio/blob/main/LICENSE)
 
 **Fiducio** is a model-agnostic Python library of **post-hoc calibrators for 2D
-and 3D semantic segmentation**. Give it the logits or probabilities of any
-segmentation model and a labelled calibration set to fit a probability
-transform without retraining the segmentation model.
-It implements temperature, vector, matrix and Dirichlet scaling, the
-translation-invariant matrix-scaling variant (MSc), and the class-conditional
-(CDC, CMSap, CMSop) calibrators introduced in our paper
-[*Rethinking Post-Hoc Calibration in Semantic Segmentation*](https://arxiv.org/abs/2607.01902),
-accepted at TMLR. Whether the segmentation is preserved depends on the
-calibrator; see the guarantees below.
+and 3D semantic segmentation**. It fits a probability transform on the logits or
+probabilities of any segmentation model, using a held-out labelled calibration
+set, without retraining the model. It implements temperature, vector, matrix and
+Dirichlet scaling, the translation-invariant matrix-scaling variant (MSc), and
+the class-conditional calibrators (CDC, CMSap, CMSop) introduced in the paper
+[*Rethinking Post-Hoc Calibration in Semantic Segmentation*](https://arxiv.org/abs/2607.01902)
+(TMLR 2026).
 
-It works with PyTorch U-Net, nnU-Net, SegFormer or any model that produces
-logits: Fiducio only ever sees `(B, C, *spatial)` tensors and never needs to know
-the architecture.
+Fiducio only sees `(B, C, *spatial)` tensors, so it works with a PyTorch U-Net,
+nnU-Net, SegFormer or any model that produces logits. Whether the segmentation
+is preserved depends on the calibrator; see the guarantees below.
 
 ![Reliability diagrams of an over-confident model before and after calibration with TemperatureScaling and CMSop](https://raw.githubusercontent.com/fiducio-ai/Fiducio/main/docs/assets/reliability_before_after.png)
 
@@ -39,7 +37,9 @@ or, in a uv application:
 uv add fiducio
 ```
 
-Requires Python ≥ 3.10 and PyTorch ≥ 2.10 (a security floor, see [installation](https://github.com/fiducio-ai/Fiducio/blob/main/docs/installation.md#why-pytorch-210)). The core install depends only on `numpy` and `torch`. Optional extras:
+Requires Python ≥ 3.10 and PyTorch ≥ 2.10 (a security floor, see
+[installation](https://github.com/fiducio-ai/Fiducio/blob/main/docs/installation.md#why-pytorch-210)).
+The core install depends only on `numpy` and `torch`. Optional extras:
 `fiducio[plots]` (matplotlib reliability diagrams), `fiducio[docs]`,
 `fiducio[dev]`, `fiducio[all]`.
 
@@ -56,7 +56,8 @@ uv sync --locked
 uv run --no-sync pytest
 ```
 
-This uses CPU PyTorch for development. See [CONTRIBUTING.md](https://github.com/fiducio-ai/Fiducio/blob/main/CONTRIBUTING.md)
+This uses CPU PyTorch for development. See
+[CONTRIBUTING.md](https://github.com/fiducio-ai/Fiducio/blob/main/CONTRIBUTING.md)
 for the pinned uv version, documentation and build commands.
 
 ## Quick start
@@ -85,7 +86,9 @@ cases; see the [Quickstart](https://fiducio-ai.github.io/Fiducio/quickstart/).
 
 Every calibrator exposes the same API:
 `fit(predictions, targets, mask=None)`, `transform`, `predict_proba`,
-`fit_transform`, `save`, and the top-level `load_calibrator`.
+`fit_transform`, `save`, and the top-level `load_calibrator`. `transform`
+returns probabilities; `decision_function` returns calibrated logits.
+See [Concepts](https://fiducio-ai.github.io/Fiducio/concepts/).
 
 ## Accepted tensor shapes
 
@@ -125,17 +128,16 @@ This is a summary; the canonical table, with parameters and API links, is in
 once it collapses towards the uniform component.
 
 Translation-invariant means the output is unchanged when the same constant is
-added to every input logit of a voxel.
-
-Every calibrator exposes `decision_function` (calibrated logits, or
-log-probabilities for isotonic calibration). The nine parametric methods have
-a configurable `optimizer` (`"adam"` default, or `"lbfgs"`); isotonic fitting
-uses weighted PAVA instead.
+added to every input logit of a voxel. Every calibrator exposes
+`decision_function` (calibrated logits, or log-probabilities for isotonic
+calibration). The nine parametric methods have a configurable `optimizer`
+(`"adam"` default, or `"lbfgs"`); isotonic fitting uses weighted PAVA instead.
+The paper method mapping is in [Calibrators](https://fiducio-ai.github.io/Fiducio/calibrators/#paper-method-mapping).
 
 ### Early stopping
 
-Adam-fitted calibrators support the paper's recipe of early stopping on a
-validation set (with an optional learning-rate decay on plateaus):
+Adam-fitted calibrators support early stopping on a validation set, with an
+optional learning-rate decay on plateaus:
 
 ```python
 from fiducio import OrderPreservingMatrixScaling
@@ -149,57 +151,39 @@ calibrator.fit(
 )
 ```
 
-The iterate with the best validation NLL is kept. The default fixed budget
-(`max_iter`) is short, so it can underfit expressive calibrators; prefer a larger
-`max_iter` together with `patience` for CDC, CMSap and CMSop. This reproduces
-only the Adam + validation-NLL early-stopping recipe; the paper's case batching,
-class weighting, schedules, clipping and hyperparameter search are not part of the
-library (see the [implementation guide](https://github.com/fiducio-ai/Fiducio/blob/main/reproducibility/README.md)).
+The iterate with the best validation NLL is kept. The default `max_iter` is
+short, so it can underfit expressive calibrators; prefer a larger `max_iter`
+together with `patience` for CDC, CMSap and CMSop. This reproduces only the
+Adam + validation-NLL recipe; the paper's case batching, class weighting,
+schedules, clipping and hyperparameter search are not part of the library (see
+the [implementation guide](https://github.com/fiducio-ai/Fiducio/blob/main/reproducibility/README.md)).
+Details are in [Concepts](https://fiducio-ai.github.io/Fiducio/concepts/#early-stopping).
 
-### Paper method mapping
-
-| Paper method | Class |
-|--------------|-------|
-| TS | `TemperatureScaling` |
-| MS | `MatrixScaling` |
-| MSc | `TranslationInvariantMatrixScaling` |
-| CDC | `ClassConditionalMatrixScaling` |
-| CMSap | `ArgmaxPreservingMatrixScaling` |
-| CMSop | `OrderPreservingMatrixScaling` |
-
-LTS is not included in this release; this table is not the complete
-experimental method inventory.
-
-CDC, CMSap and CMSop are class-conditional: they fit one affine map per
-uncalibrated top class, optimized **jointly** in one cross-entropy loss.
-Regularization applies to each expert's induced affine map in the common
-logit space. Set `independent_experts=True` to fit each expert separately.
-See [Calibrators](https://fiducio-ai.github.io/Fiducio/calibrators/) for the
-regularization formula and method-specific limits.
+## Metrics and diagnostics
 
 Calibration metrics are included: `negative_log_likelihood`,
-`expected_calibration_error` (ECE, population-weighted), `unweighted_calibration_error`
-(ACE, unweighted over the same bins — doesn't let a sparsely populated bin get
-drowned out by a large one), `brier_score`, `reliability_curve`, plus an
-optional reliability-diagram plot (`fiducio.plots.reliability_diagram`, needs
-`fiducio[plots]`).
+`expected_calibration_error` (ECE, population-weighted),
+`unweighted_calibration_error` (ACE, unweighted over the same bins),
+`brier_score`, `reliability_curve`, plus an optional reliability-diagram plot
+(`fiducio.plots.reliability_diagram`, needs `fiducio[plots]`).
 
 Before calibrating, `fiducio.diagnose(logits, labels)` returns a
 `ReliabilityReport` describing the model on the calibration set: class balance,
 global calibration with bootstrap intervals over images, per-class calibration,
 and images or classes where the Dice is close to zero. It does not print by
 itself; call `print(fiducio.diagnose(...))` to read it
-([guide](https://github.com/fiducio-ai/Fiducio/blob/main/docs/diagnostics.md)). Its intervals are not the paper's hierarchical-bootstrap tests.
+([guide](https://github.com/fiducio-ai/Fiducio/blob/main/docs/diagnostics.md)).
+Its intervals are not the paper's hierarchical-bootstrap tests.
 
 BA-ECE (boundary-aware ECE), per-case metric aggregation, the DSC/flip-rate
 audit and the paper's paired hierarchical-bootstrap tests are not included; the
-shipped metrics are top-1 pooled point estimates. `unweighted_calibration_error` is the
-unweighted mean over non-empty uniform bins (not the adaptive ACE of other work)
-and is also available under the backwards-compatible alias `average_calibration_error`.
-
-Decision and ordering guarantees hold in exact arithmetic and are subject to
-floating-point ties and rounding. They do not cover thresholded or post-processed
-segmentations.
+shipped metrics are top-1 pooled point estimates.
+`unweighted_calibration_error` is the unweighted mean over non-empty uniform
+bins, so each non-empty bin weighs the same (not the adaptive ACE of other work);
+it is also available under the backwards-compatible alias
+`average_calibration_error`. Decision and ordering guarantees hold in exact
+arithmetic and are subject to floating-point ties and rounding; they do not cover
+thresholded or post-processed segmentations.
 
 ## Multi-rater calibration
 
@@ -219,31 +203,10 @@ calibrated = cal.transform(test_probabilities)
 The isotonic map is binary, with at most 250 bins and weighted PAVA. It may
 change a segmentation at threshold 0.5. Its tie handling and interpolation are
 Fiducio conventions; exact TwinTrack reproduction is not claimed. All fits
-remain in memory. See the [multi-rater guide](https://fiducio-ai.github.io/Fiducio/multi_rater/)
-and `examples/multi_rater_calibration.py` for validation and the distinction
-between ECE against MHR and mean ECE against individual raters.
+remain in memory. See the
+[multi-rater guide](https://fiducio-ai.github.io/Fiducio/multi_rater/).
 
 ## Documentation
-
-The [paper project page](https://fiducio-ai.github.io/Fiducio/paper/) presents the
-methods, interactive illustrations and published results.
-
-The [paper implementation guide](https://github.com/fiducio-ai/Fiducio/blob/main/reproducibility/README.md) records method
-mapping, numerical-reference coverage, fitting limits and the remaining steps
-needed to reproduce the paper's experiments. For ensemble inputs, see
-[`examples/ensemble_pooling.py`](https://github.com/fiducio-ai/Fiducio/blob/main/examples/ensemble_pooling.py).
-
-### Results in the paper
-
-The paper compares these calibrators on real segmentation benchmarks. The
-reliability diagrams below (paper appendix) show the uncalibrated ensemble
-pooling (`p0`, `p̄`) against the best calibrator per dataset; the exact
-protocol, datasets and metrics are in the paper. This repository ships the
-calibrators, not the fitted models or benchmark pipelines, so it does not
-regenerate these figures (see the
-[implementation guide](https://github.com/fiducio-ai/Fiducio/blob/main/reproducibility/README.md)).
-
-![Reliability diagrams from the paper on three datasets](https://raw.githubusercontent.com/fiducio-ai/Fiducio/main/docs/assets/paper_reliability.png)
 
 Full guide and API reference: **https://fiducio-ai.github.io/Fiducio/**
 
@@ -257,6 +220,22 @@ Full guide and API reference: **https://fiducio-ai.github.io/Fiducio/**
 - [Examples](https://fiducio-ai.github.io/Fiducio/examples/)
 - [Tutorial (Oxford Pets)](https://fiducio-ai.github.io/Fiducio/tutorial/)
 - [Plotting](https://fiducio-ai.github.io/Fiducio/plots/)
+
+The [paper project page](https://fiducio-ai.github.io/Fiducio/paper/) presents
+the methods, interactive illustrations and published results. The
+[implementation guide](https://github.com/fiducio-ai/Fiducio/blob/main/reproducibility/README.md)
+records method mapping, numerical-reference coverage, fitting limits and the
+remaining steps needed to reproduce the paper's experiments.
+
+### Results in the paper
+
+The paper compares these calibrators on real segmentation benchmarks. The
+reliability diagrams below show uncalibrated ensemble pooling against the best
+calibrator per dataset; the protocol, datasets and metrics are in the paper.
+This repository ships the calibrators, not the fitted models or benchmark
+pipelines, so it does not regenerate these figures.
+
+![Reliability diagrams from the paper on three datasets](https://raw.githubusercontent.com/fiducio-ai/Fiducio/main/docs/assets/paper_reliability.png)
 
 ## Citation
 

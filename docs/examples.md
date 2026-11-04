@@ -4,8 +4,9 @@ Runnable, CPU-only examples ship in the
 [`examples/`](https://github.com/fiducio-ai/Fiducio/tree/main/examples) directory
 **of the source repository** — they are not part of the installed wheel, so clone
 the repository (or download a single script) before running the commands below.
-The examples below do not download any model or dataset; the
-[Oxford Pets tutorial](tutorial.md) downloads a public dataset (or runs offline with `--smoke`).
+These examples download no model or dataset; the
+[Oxford Pets tutorial](tutorial.md) downloads a public dataset (or runs offline
+with `--smoke`).
 
 Install `fiducio[plots]` for the plotting and multi-rater examples. From a
 development checkout, `uv sync --locked` includes matplotlib; prefix the commands
@@ -27,9 +28,9 @@ python examples/basic_segmentation_calibration.py
 
 [`examples/pytorch_model_calibration.py`](https://github.com/fiducio-ai/Fiducio/blob/main/examples/pytorch_model_calibration.py)
 
-Uses a tiny `nn.Module` segmenter to show the real-world workflow: run the model
-over a `DataLoader`, stack the logits and labels, fit a calibrator and apply it
-at inference time.
+Uses a tiny `nn.Module` segmenter to show the real workflow: run the model over
+a `DataLoader`, stack the logits and labels, fit a calibrator and apply it at
+inference time.
 
 ```bash
 python examples/pytorch_model_calibration.py
@@ -48,8 +49,8 @@ def collect_logits(model, loader):
     return torch.cat(logits), torch.cat(labels)
 ```
 
-The exact same procedure applies to a **U-Net**, **nnU-Net** or **SegFormer** —
-only the model and the source of `images`/`targets` change. See
+The same procedure applies to a **U-Net**, **nnU-Net** or **SegFormer** — only
+the model and the source of `images`/`targets` change. See
 [Concepts](concepts.md#integrating-with-u-net-nnu-net-and-segformer).
 
 ## 3. Reliability diagram
@@ -66,20 +67,25 @@ python examples/reliability_diagram.py
 
 ## 4. Ensemble pooling
 
-`python examples/ensemble_pooling.py` demonstrates two separate CMSap fits:
-one on the mean probabilities (`input_type="probs"`) and one on the mean logits
-(`input_type="logits"`). Members are pooled before fitting. Calibration and test
-cases are disjoint. These are synthetic examples, not paper benchmark results.
+[`examples/ensemble_pooling.py`](https://github.com/fiducio-ai/Fiducio/blob/main/examples/ensemble_pooling.py)
+demonstrates two separate CMSap fits: one on the mean probabilities
+(`input_type="probs"`) and one on the mean logits (`input_type="logits"`).
+Members are pooled before fitting, and calibration and test cases are disjoint.
+These are synthetic examples, not paper benchmark results.
+
+```bash
+python examples/ensemble_pooling.py
+```
 
 ## 5. Multi-rater calibration
 
-Compare single-rater and MHR targets for temperature scaling and binary isotonic
-calibration, using separate calibration, validation and test cases:
+[`examples/multi_rater_calibration.py`](https://github.com/fiducio-ai/Fiducio/blob/main/examples/multi_rater_calibration.py)
+compares single-rater and MHR targets for temperature scaling and binary isotonic
+calibration, using separate calibration, validation and test cases. It reports
+both MHR-ECE and mean-rater-ECE, and saves the positive-class diagram to
+`outputs/multi_rater_reliability.png`. See the
+[multi-rater guide](multi_rater.md) for the metric definitions and a figure.
 
 ```bash
 python examples/multi_rater_calibration.py
 ```
-
-The script reports both MHR-ECE and mean-rater-ECE, and saves the positive-class
-diagram to `outputs/multi_rater_reliability.png`. See the
-[multi-rater guide](multi_rater.md) for the metric definitions and a figure.

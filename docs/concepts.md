@@ -45,19 +45,20 @@ same `input_type` for fitting and inference.
 short paper) calibrates probabilities towards the mean human response: the
 proportion of annotators assigning each class to a voxel. Fiducio accepts these
 floating distributions on all nine parametric methods and provides binary
-isotonic regression inspired by TwinTrack. See the [multi-rater guide](multi_rater.md)
-for missing votes, weighting, validation and metric conventions.
+isotonic regression inspired by TwinTrack. See the
+[multi-rater guide](multi_rater.md) for missing votes, weighting, validation and
+metric conventions.
 
 ## Tensor convention
 
 Fiducio is channel-first with the **class axis fixed at dimension 1**:
 
-- `predictions`: `(B, C, *spatial)`
-- `targets`: `(B, *spatial)`, integer class indices, or `(B, C, *spatial)` floating distributions
+- `predictions`: `(B, C, *spatial)`, or the voxel table `(N, C)`
+- `targets`: `(B, *spatial)` integer class indices, or `(B, C, *spatial)` floating distributions
 - `mask` (optional): `(B, *spatial)`, `True` = valid
 
-The class axis is never guessed from the shape. 2D, 3D and general n-D inputs are
-all handled by the same code, which flattens every spatial position into a
+The class axis is never guessed from the shape. 2D, 3D and general n-D inputs
+are handled by the same code, which flattens every spatial position into an
 `(N, C)` table internally.
 
 ## Binary versus multiclass
@@ -112,10 +113,10 @@ calibrators keep `lr=0.01` for Adam), and can be overridden explicitly.
 
 ## Early stopping
 
-With `optimizer="adam"` (the default), every parametric calibrator can stop on a held-out
-validation set instead of running a fixed number of iterations, which is the
-recipe used in the paper (Adam, early stopping on the validation NLL, learning
-rate decayed on plateaus):
+With `optimizer="adam"` (the default), every parametric calibrator can stop on a
+held-out validation set instead of running a fixed number of iterations. This is
+the recipe used in the paper (Adam, early stopping on the validation NLL,
+learning rate decayed on plateaus):
 
 ```python
 from fiducio import ClassConditionalMatrixScaling
@@ -136,9 +137,9 @@ calibrator.fit(
 )
 ```
 
-This reproduces only the Adam + validation-NLL early-stopping recipe; the
-paper's case batching, class weighting, schedules, clipping and hyperparameter
-search are not part of the library (see the
+This reproduces only the Adam + validation-NLL early-stopping recipe; the paper's
+case batching, class weighting, schedules, clipping and hyperparameter search are
+not part of the library (see the
 [implementation guide](https://github.com/fiducio-ai/Fiducio/blob/main/reproducibility/README.md)).
 
 - The monitored quantity is the plain cross-entropy (NLL) on the validation set,
@@ -198,8 +199,7 @@ Fiducio is deliberately model-agnostic. The integration is always the same:
 For **U-Net** the logits are the network output before softmax. For **nnU-Net**
 they are the per-voxel class scores (you can calibrate before the usual argmax).
 For **SegFormer** they are the segmentation head logits, upsampled to the label
-resolution. In every case Fiducio only sees `(B, C, *spatial)` tensors and never
-needs to know the architecture.
+resolution. In every case Fiducio only sees `(B, C, *spatial)` tensors.
 
 ## Validation and numerical behavior
 
@@ -208,9 +208,9 @@ and tensor layouts raise errors; integral floating labels remain accepted.
 With a `mask`, values are only checked at valid positions, so masked-out padding
 may hold anything (including NaN) and comes out of `transform` as 0. The
 sum-to-1 tolerance for probabilities is `1e-3`, widened to twice the machine
-epsilon for float16/bfloat16 inputs.
-A failed refit preserves the complete previous fitted state. Non-finite losses
-or learned parameters raise an error rather than producing a fitted object.
+epsilon for float16/bfloat16 inputs. A failed refit preserves the complete
+previous fitted state. Non-finite losses or learned parameters raise an error
+rather than producing a fitted object.
 
 Adam considers the initial state and every updated state. It restores the true
 minimum training/validation loss; `min_delta` controls patience, not which

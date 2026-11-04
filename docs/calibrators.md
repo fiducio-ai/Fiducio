@@ -36,14 +36,14 @@ order-preserving up to floating-point rounding.
 
 [`BinaryIsotonicCalibration`](api/calibrators.md#fiducio.BinaryIsotonicCalibration)
 fits a nondecreasing positive-class map with weighted PAVA on at most `n_bins`
-bins (default 250).
-It accepts two-channel probabilities or logits and hard or MHR targets. This
-approach is inspired by [TwinTrack](https://arxiv.org/abs/2604.15950v2)
-(Kirscher et al., MIDL 2026, short paper). Tie handling and interpolation are
-explicit Fiducio conventions; exact reproduction has not been verified.
-It can change a segmentation at threshold 0.5, and has no optimizer or early
-stopping. The nine parametric calibrators also accept MHR distributions.
-See [multi-rater calibration](multi_rater.md) for details and metric conventions.
+bins (default 250). It accepts two-channel probabilities or logits and hard or
+MHR targets. This approach is inspired by
+[TwinTrack](https://arxiv.org/abs/2604.15950v2) (Kirscher et al., MIDL 2026,
+short paper). Tie handling and interpolation are explicit Fiducio conventions;
+exact reproduction has not been verified. It can change a segmentation at
+threshold 0.5, and has no optimizer or early stopping. The nine parametric
+calibrators also accept MHR distributions. See
+[multi-rater calibration](multi_rater.md) for details and metric conventions.
 
 Choose fitting `n_bins` on validation cases held out from the fit. The fitting
 bins and the evaluation bins are separate settings:
@@ -72,13 +72,17 @@ Evaluate the selected calibrator once on separate test cases. Ties can reduce
 the actual number of fitting bins. A small high-confidence tail may be merged
 into the final bin, so extreme scores can be pulled towards that bin's mean.
 
-Decision and ordering guarantees in the table hold in exact arithmetic and
-are subject to floating-point ties and rounding.
+Decision and ordering guarantees in the table hold in exact arithmetic and are
+subject to floating-point ties and rounding.
 
 ## Paper method mapping
 
-The following methods of [*Rethinking Post-Hoc Calibration in Semantic Segmentation*](https://openreview.net/forum?id=xwNoSNxgxV) (Kirscher et al., Transactions on Machine Learning Research, 2026; preprint [arXiv:2607.01902](https://arxiv.org/abs/2607.01902)) are implemented here. LTS is not included in this
-release; this table is not the complete experimental method inventory.
+The following methods of
+[*Rethinking Post-Hoc Calibration in Semantic Segmentation*](https://openreview.net/forum?id=xwNoSNxgxV)
+(Kirscher et al., Transactions on Machine Learning Research, 2026; preprint
+[arXiv:2607.01902](https://arxiv.org/abs/2607.01902)) are implemented here.
+LTS is not included in this release; this table is not the complete
+experimental method inventory.
 
 | Paper method | Class | Alias |
 |--------------|-------|-------|
@@ -89,34 +93,36 @@ release; this table is not the complete experimental method inventory.
 | CMSap | [`ArgmaxPreservingMatrixScaling`](api/calibrators.md#fiducio.ArgmaxPreservingMatrixScaling) | `CMSap` |
 | CMSop | [`OrderPreservingMatrixScaling`](api/calibrators.md#fiducio.OrderPreservingMatrixScaling) | `CMSop` |
 
-CDC, CMSap and CMSop are class-conditional calibrators: each fits one affine
-map per uncalibrated top class. By default (`independent_experts=False`,
-matching the paper) all experts are optimized **jointly** — a single optimizer
-minimizes one cross-entropy loss over every voxel at once (each voxel passing
-through its own expert's map) — with `lambda_reg` / `mu_reg` regularizing the
-affine map induced in the common *logit* space (not the raw per-expert
-parameters), averaged across experts. This logit-space regularization is what
-makes the penalty meaningful for CMSap/CMSop, whose raw parameters are
-non-negative margins/gaps rather than matrix entries — a naive penalty on the
-raw parameters would not correspond to "close to the identity" in the space
-the map actually operates in.
+## Class-conditional calibrators
 
-Set `independent_experts=True` to instead fit each expert in its own
-optimization loop, using only the voxels routed to it. This avoids an expert
-with few routed voxels being drowned out by the joint loss, at the cost of
-`C` times the optimizer work (one full `max_iter`-step fit per class instead
-of one shared fit across all classes).
+CDC, CMSap and CMSop route each voxel to an expert affine map selected by the
+uncalibrated top class. By default (`independent_experts=False`, matching the
+paper) all experts are optimized **jointly** — a single optimizer minimizes one
+cross-entropy loss over every voxel at once, with each voxel passing through
+its own expert's map. `lambda_reg` and `mu_reg` regularize the affine map
+induced in the common *logit* space (not the raw per-expert parameters),
+averaged across experts. This logit-space regularization makes the penalty
+meaningful for CMSap/CMSop, whose raw parameters are non-negative margins/gaps
+rather than matrix entries; a penalty on the raw parameters would not correspond
+to "close to the identity" in the space the map operates in.
+
+Set `independent_experts=True` to fit each expert in its own optimization loop,
+using only the voxels routed to it. This avoids an expert with few routed voxels
+being drowned out by the joint loss, at the cost of `C` times the optimizer work
+(one full `max_iter`-step fit per class instead of one shared fit).
 
 The preserving variants (`ArgmaxPreservingMatrixScaling`,
 `OrderPreservingMatrixScaling`) also accept `init_alpha` (default `1.0`) and
 `init_floor` (default `1e-6`): their positive margin/gap parameters start at
 `init_floor`, except the diagonal entries, which start at `init_alpha`. These
 are constructor-only starting values, not learned parameters; the unconstrained
-`ClassConditionalMatrixScaling` does not use them.
+`ClassConditionalMatrixScaling` accepts them but does not use them.
+
+Their parameters grow as `O(C^3)`, so they suit low-to-moderate class counts,
+and are the most expressive option: they benefit most from a reasonably sized
+calibration set.
 
 ## Choosing a calibrator
-
-A practical decision guide:
 
 - **Start with `TemperatureScaling`.** It has a single parameter, is very hard to
   overfit, preserves the argmax up to floating-point ties and rounding, and is a
@@ -125,10 +131,9 @@ A practical decision guide:
   the off-diagonal/bias regularisation (`lambda_reg`, `mu_reg`) when the number
   of classes is large relative to the calibration set, to avoid overfitting.
 - **Want matrix scaling invariant to logit shifts?** Use
-  `TranslationInvariantMatrixScaling`, which is invariant to adding a constant to
-  all input logits.
+  `TranslationInvariantMatrixScaling`.
 - **Probability-space transform?** `DirichletCalibration` applies an affine map
-  to log-probabilities (log-linear in probability space).
+  to log-probabilities.
 - **Calibration must not change the predicted labels?** Use
   `ArgmaxPreservingMatrixScaling`: the calibrated argmax equals the uncalibrated
   one at every valid voxel up to floating-point ties, so an argmax segmentation,
@@ -141,17 +146,9 @@ A practical decision guide:
 - **Only two classes?** `MSc` is very restrictive for `C = 2`; the paper finds
   it significantly worse on BA-ECE. Prefer a less constrained calibrator.
 - **Binary problem with a flexible monotone map?** `BinaryIsotonicCalibration`
-  fits a nondecreasing, piecewise-linear map on equal-mass bins (see *Binary isotonic
-  calibration and MHR* above). Unlike the parametric maps it can pull extreme
-  scores toward the last bin mean when the top-confidence voxels weigh less
-  than one bin; tune `n_bins` for your data.
-
-The class-conditional calibrators (`CDC`/`CMS`, `CMSap`/`CMSAP`, `CMSop`/`CMSOP`)
-jointly optimise all experts in a single loss and regularise the affine map
-induced in the common logit space. They are the most expressive option and
-benefit most from a reasonably sized calibration set. Their parameters grow as
-`O(C^3)`, so they suit low-to-moderate class counts, and
-`independent_experts=True` costs one full optimization per class.
+  fits a nondecreasing, piecewise-linear map on equal-mass bins. Unlike the
+  parametric maps it can pull extreme scores toward the last bin mean when the
+  top-confidence voxels weigh less than one bin; tune `n_bins` for your data.
 
 ## Regularisation
 
@@ -168,8 +165,8 @@ means, matching Kull et al.'s (2019) normalized ODIR (their code with
 `reg_norm=True`); values from un-normalized settings are not transferable.
 
 `VectorScaling`'s `lambda_reg` pulls the scale vector towards 1 and its
-`mu_reg` penalizes the bias. Start at `0` and
-increase if the calibrator overfits a small calibration set.
+`mu_reg` penalizes the bias. Start at `0` and increase if the calibrator
+overfits a small calibration set.
 
 MSc optimizes `C-1` free columns and a learned common row sum; the final column
 is reconstructed before applying the off-diagonal penalty. Initialization is

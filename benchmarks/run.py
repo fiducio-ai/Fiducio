@@ -43,9 +43,8 @@ ROBUST_CASES = ("saturated", "tiny", "class_absent", "float32", "float64")
 def hardware():
     cpu = platform.processor() or platform.machine()
     try:
-        cpu = next(
-            ln.split(":")[1].strip() for ln in open("/proc/cpuinfo") if ln.startswith("model name")
-        )
+        with open("/proc/cpuinfo") as handle:
+            cpu = next(ln.split(":")[1].strip() for ln in handle if ln.startswith("model name"))
     except (OSError, StopIteration):
         pass
     return dict(
@@ -94,6 +93,14 @@ def write(path, rows):
         w.writerows(rows)
 
 
+def fit_timed(cls, C, zc, yc):
+    """Construct and fit an adapter, returning it with the fit duration in seconds."""
+    m = cls(C)
+    t = time.perf_counter()
+    m.fit(zc, yc)
+    return m, time.perf_counter() - t
+
+
 def calibration(a):
     hw, rows = hardware(), []
     for scenario in data.SCENARIOS:
@@ -121,10 +128,7 @@ def calibration(a):
                         lib_version=adapters.version(cls.lib),
                     )
                     try:
-                        m = cls(C)
-                        t = time.perf_counter()
-                        m.fit(zc, yc)
-                        row["fit_s"] = time.perf_counter() - t
+                        m, row["fit_s"] = fit_timed(cls, C, zc, yc)
                         p = m.predict(zt)
                         row.update(scores(p, yt, C), **independent_scores(p, yt))
                         row["argmax_kept"] = (p.argmax(1) == zt.argmax(1)).float().mean().item()
@@ -192,10 +196,7 @@ def downstream(a):
                     lib_version=adapters.version(cls.lib),
                 )
                 try:
-                    m = cls(C)
-                    t = time.perf_counter()
-                    m.fit(zc, yc)
-                    row["fit_s"] = time.perf_counter() - t
+                    m, row["fit_s"] = fit_timed(cls, C, zc, yc)
                     p = m.predict(zt)
                     row.update(downstream_scores(p, yt, C, reference))
                 except Exception:  # noqa: BLE001
@@ -268,10 +269,7 @@ def robustness(a):
                 )
                 try:
                     with deadline(a.timeout):
-                        m = cls(C)
-                        t = time.perf_counter()
-                        m.fit(zc, yc)
-                        row["fit_s"] = time.perf_counter() - t
+                        m, row["fit_s"] = fit_timed(cls, C, zc, yc)
                         p = m.predict(zt)
                         row["nll"] = negative_log_likelihood(p, yt)
                         row["ece"] = expected_calibration_error(p, yt, n_bins=15)
@@ -297,10 +295,8 @@ def child(a):
     cls(4).fit(zc[:2000], yc[:2000])  # warm-up
     fit, pred = [], []
     for _ in range(a.reps):
-        m = cls(4)
-        t = time.perf_counter()
-        m.fit(zc, yc)
-        fit.append(time.perf_counter() - t)
+        m, dt = fit_timed(cls, 4, zc, yc)
+        fit.append(dt)
         t = time.perf_counter()
         m.predict(zt)
         pred.append(time.perf_counter() - t)

@@ -102,8 +102,8 @@ installed. CI runs the suite with every competitor installed on Python 3.12.
   only, with identity as the reference decision. TS, CMSap and CMSop preserve the
   argmax (CMSop the full order) in exact arithmetic, so their Dice and argmax change
   are zero by construction; VS, MS and DC may change both. ECE gains need not
-  translate into volume or MAE gains: on SCaLE, ECE halved while volumetric MAE
-  degraded.
+  translate into volume gains: in these runs CMSap and CMSop cut ECE while keeping
+  identity's volume bias.
 - Robustness cases are small and in-process. A SIGALRM deadline marks a slow fit as
   `timeout`; `oom` is caught from `MemoryError` / `torch.OutOfMemoryError`. The
   saturated case scales the logits so `softmax` underflows to exact 0/1; it does not

@@ -27,7 +27,8 @@ Versions: dirichletcal 0.5.3, fiducio 0.4.0, netcal 1.4.0, torch-uncertainty 0.1
   the scalar/matrix ones have no counterpart among the competitors. TS, CMSap and CMSop preserve
   the argmax in exact arithmetic (CMSop the full class order), so their Dice and argmax change are
   zero by construction; VS, MS and DC may change both, and Dice is informative for them. An ECE
-  gain does not prove a downstream gain: on SCaLE, ECE halved while volumetric MAE degraded.
+  gain does not prove a downstream gain: the preserving methods cut ECE here but keep identity's
+  volume bias.
 * **Robustness (axis 5) records status, not ranking.** Every (case, method, seed) is a row in the
   CSV, with `ok`, `timeout`, `oom` or `error`; no row is dropped. Saturated cases scale the logits
   so that `softmax` underflows to exact 0/1 before netcal and dirichletcal see probabilities.
@@ -184,7 +185,7 @@ Per-class ECE uses the class-specific metric (`class_index`), and the **volume b
 | fiducio CMSap | 0.7742 ± 0.0025 | 0.0165 ± 0.0036 | 0.0114 ± 0.0025 | 0.0114 ± 0.0024 | 0.0112 ± 0.0022 | 0.0015 ± 0.0003 | 0.5394 ± 0.0016 | 0.0000 ± 0.0000 | 0.0000 ± 0.0000 | 0.0047 ± 0.0008 | 0.0035 ± 0.0011 | 0.0039 ± 0.0009 | -0.0122 ± 0.0003 |
 | fiducio CMSop | 0.7742 ± 0.0025 | 0.0168 ± 0.0036 | 0.0114 ± 0.0026 | 0.0115 ± 0.0024 | 0.0113 ± 0.0022 | 0.0016 ± 0.0003 | 0.5394 ± 0.0016 | 0.0000 ± 0.0000 | 0.0000 ± 0.0000 | 0.0047 ± 0.0008 | 0.0035 ± 0.0011 | 0.0039 ± 0.0009 | -0.0122 ± 0.0003 |
 
-TS, CMSap and CMSop preserve the argmax in exact arithmetic (CMSop the full class order), so their Dice and argmax change are zero by construction, up to floating-point ties; VS, MS and DC can change the decision, so Dice is informative for them. In these runs the preserving methods improve ECE but keep identity's volume bias, while VS, MS and DC change the decision and reduce it; in `rare`, the decision-changing methods also lower Dice slightly. An ECE gain does not prove a downstream gain: on SCaLE, the class-conditional calibrators halved ECE while volumetric MAE degraded.
+TS, CMSap and CMSop preserve the argmax in exact arithmetic (CMSop the full class order), so their Dice and argmax change are zero by construction, up to floating-point ties; VS, MS and DC can change the decision, so Dice is informative for them. In these runs the preserving methods improve ECE but keep identity's volume bias, while VS, MS and DC change the decision and reduce it; in `rare`, the decision-changing methods also lower Dice slightly.
 
 ## Robustness
 

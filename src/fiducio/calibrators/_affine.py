@@ -57,15 +57,7 @@ class _AffineCalibrator(Calibrator):
         device: DeviceLike | None = None,
     ) -> None:
         super().__init__(input_type=input_type, ignore_index=ignore_index, device=device)
-        self.optimizer, self.lr, self.max_iter = resolve_optimizer(
-            optimizer,
-            lr,
-            max_iter,
-            adam_lr=0.1,
-            lbfgs_lr=1.0,
-            adam_max_iter=200,
-            lbfgs_max_iter=100,
-        )
+        self.optimizer, self.lr, self.max_iter = resolve_optimizer(optimizer, lr, max_iter)
         self._init_stopping(self.optimizer, patience, min_delta, lr_patience, lr_factor)
         self.lambda_reg = positive_finite(lambda_reg, "lambda_reg", allow_zero=True)
         self.mu_reg = positive_finite(mu_reg, "mu_reg", allow_zero=True)
@@ -81,7 +73,7 @@ class _AffineCalibrator(Calibrator):
         if self._mode == "diagonal":
             self._weight = torch.ones(c, device=self.device)
         elif self._mode == "matrix_ti":
-            self._weight = torch.eye(c, device=self.device)[:, :-1].clone()
+            self._weight = torch.eye(c, device=self.device)[:, :-1]
             self._row_sum = torch.tensor(1.0, device=self.device)
         else:
             self._weight = torch.eye(c, device=self.device)
@@ -162,9 +154,7 @@ class _AffineCalibrator(Calibrator):
 
     def _constructor_config(self) -> dict[str, Any]:
         return {
-            "optimizer": self.optimizer,
-            "lr": self.lr,
-            "max_iter": self.max_iter,
+            **self._optimizer_config(),
             "lambda_reg": self.lambda_reg,
             "mu_reg": self.mu_reg,
         }

@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   exact ECE contribution of the first and last uniform confidence bins.
 - Per-class 95% bootstrap intervals over images: `ClassStats.class_ece_ci`,
   `routed_ece_ci`, `dice_ci`, shown in `summary()` and `to_dict()`.
+- Benchmark axes for downstream segmentation metrics (Fiducio only: per-class ECE,
+  class volume bias, Dice and argmax change) and for robustness (saturated
+  probabilities, tiny N, a class absent from calibration, float32 vs float64).
+  The committed benchmark results are regenerated on Fiducio 0.4.0.
 
 ## [0.4.0] - 2026-11-03
 

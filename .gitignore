@@ -26,6 +26,7 @@ site/
 .venv/
 venv/
 env/
+benchmarks/.venv-bench/
 
 # Editor / OS
 .vscode/

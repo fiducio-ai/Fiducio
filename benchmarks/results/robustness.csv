@@ -1,0 +1,1403 @@
+case,seed,C,n_cal,n_test,dtype,cpu,cores,threads,torch,method,lib,lib_version,fit_s,nll,ece,status,error
+saturated,0,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,7.809139788150787e-07,10.51360353461081,0.38049999999999995,ok,
+saturated,0,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.9778264969354495,10.480688672766703,0.38049961173534386,ok,
+saturated,0,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.112503781914711,1.8490025510874946,0.14137910598516465,ok,
+saturated,0,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.11428309499751776,1.6642355132407385,0.19809157809615138,ok,
+saturated,0,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.11562697403132915,18.073944626634127,0.6600315436124802,ok,
+saturated,0,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.012575155938975513,1.0823305357859607,0.0002991147041321307,ok,
+saturated,0,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.05416749801952392,10.51360353461081,0.38049999999999995,ok,
+saturated,0,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.2541293400572613,19.92196622458448,0.721,ok,
+saturated,0,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.19505385402590036,0.9564810442961418,0.06669291010499004,ok,
+saturated,0,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,7.421534308930859,9.66066620431609,0.34367279967665676,ok,
+saturated,0,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.12237200199160725,1.0882370414725688,0.01350874316692348,ok,
+saturated,0,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.11828581197187304,1.0886652389449927,0.013564717888832045,ok,
+saturated,0,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.0016714149387553334,6.066077726861735,0.3804996423721313,ok,
+saturated,1,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,8.080387488007545e-07,10.410755231527226,0.3769999998807907,ok,
+saturated,1,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.09097546699922532,10.378036895745648,0.37694666960835466,ok,
+saturated,1,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.11446140299085528,1.7984394938123696,0.06015724794566633,ok,
+saturated,1,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.11831714294385165,1.6271705203393934,0.2095544359833002,ok,
+saturated,1,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.11792492098174989,1.9666077578680181,0.35664184695482254,ok,
+saturated,1,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.004885027999989688,1.0774283084615395,0.022641897052526443,ok,
+saturated,1,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.058538345037959516,26.53959578184937,0.9605,ok,
+saturated,1,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.14669206703547388,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 276, in robustness
+    row[""nll""] = negative_log_likelihood(p, yt)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/src/fiducio/metrics/calibration.py"", line 78, in negative_log_likelihood
+    p, y, valid = _voxels(probs, targets, mask, ignore_index)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/src/fiducio/metrics/calibration.py"", line 48, in _voxels
+    c = validate_predictions(p, input_type=""probs"", mask=valid, context=""metrics"")
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/src/fiducio/utils/tensors.py"", line 258, in validate_predictions
+    raise ValueError(""predictions contain non-finite values (nan/inf)"")
+ValueError: predictions contain non-finite values (nan/inf)
+"
+saturated,1,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.12464050203561783,0.9007904814110086,0.014706653594970682,ok,
+saturated,1,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,0.020801378064788878,10.410755231527226,0.3769999998807907,ok,
+saturated,1,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.11506097891833633,1.0793874193060797,0.02957055231928829,ok,
+saturated,1,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.11791859695222229,1.0795832573134279,0.029530988007783948,ok,
+saturated,1,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.001458267099224031,6.009983969457921,0.3769996423125267,ok,
+saturated,2,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,6.810296326875687e-07,11.004576457982486,0.398499999821186,ok,
+saturated,2,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.09192757506389171,10.995794801005271,0.3984007350504398,ok,
+saturated,2,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.1144024949753657,1.8459587270590896,0.462013939678669,ok,
+saturated,2,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.11771043494809419,1.4953153561729675,0.22630272276699542,ok,
+saturated,2,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.11882364889606833,1.494332390536494,0.22597724498808386,ok,
+saturated,2,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.006301676039583981,1.110285214384181,0.013404624074697504,ok,
+saturated,2,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.056084656971506774,11.010961914697527,0.39849999999999997,ok,
+saturated,2,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.1452316789655015,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 276, in robustness
+    row[""nll""] = negative_log_likelihood(p, yt)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/src/fiducio/metrics/calibration.py"", line 78, in negative_log_likelihood
+    p, y, valid = _voxels(probs, targets, mask, ignore_index)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/src/fiducio/metrics/calibration.py"", line 48, in _voxels
+    c = validate_predictions(p, input_type=""probs"", mask=valid, context=""metrics"")
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/src/fiducio/utils/tensors.py"", line 258, in validate_predictions
+    raise ValueError(""predictions contain non-finite values (nan/inf)"")
+ValueError: predictions contain non-finite values (nan/inf)
+"
+saturated,2,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.058568096021190286,0.9544160601650937,0.0240523902773857,ok,
+saturated,2,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,0.022119496949017048,11.004576457982486,0.398499999821186,ok,
+saturated,2,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.11709346994757652,1.1105868700202537,0.01320595699548718,ok,
+saturated,2,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.11734809400513768,1.1104006685700654,0.013194249570369637,ok,
+saturated,2,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.001467198017053306,6.352499512477744,0.398499642252922,ok,
+saturated,3,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,7.029157131910324e-07,10.585623587391769,0.3834986030459403,ok,
+saturated,3,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.09112306998576969,10.550696829507343,0.38349630323052414,ok,
+saturated,3,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.11245261994190514,1.808847750197317,0.34346742992103096,ok,
+saturated,3,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.11631907697301358,1.50248479246229,0.2467140544205904,ok,
+saturated,3,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.11650164995808154,1.5013557419372114,0.13671994724869727,ok,
+saturated,3,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.006442993995733559,1.0868057368215518,0.005293868020176891,ok,
+saturated,3,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.05577592400368303,10.596496597958598,0.38349999999999995,ok,
+saturated,3,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.1613772390410304,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 276, in robustness
+    row[""nll""] = negative_log_likelihood(p, yt)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/src/fiducio/metrics/calibration.py"", line 78, in negative_log_likelihood
+    p, y, valid = _voxels(probs, targets, mask, ignore_index)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/src/fiducio/metrics/calibration.py"", line 48, in _voxels
+    c = validate_predictions(p, input_type=""probs"", mask=valid, context=""metrics"")
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/src/fiducio/utils/tensors.py"", line 258, in validate_predictions
+    raise ValueError(""predictions contain non-finite values (nan/inf)"")
+ValueError: predictions contain non-finite values (nan/inf)
+"
+saturated,3,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.19490696501452476,0.9319351637268409,0.027048363804817212,ok,
+saturated,3,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,0.020573194953612983,10.585623587332163,0.38349860313534734,ok,
+saturated,3,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.11188371607568115,1.0880238659585697,0.004308229491114676,ok,
+saturated,3,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.11885557707864791,1.0918643165897723,0.004910821408033371,ok,
+saturated,3,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.001444278983399272,6.108876188370541,0.3834982455968856,ok,
+saturated,4,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,9.400537237524986e-07,10.73465170353824,0.38849999999999996,ok,
+saturated,4,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.09088096697814763,10.705489624598883,0.38847690340876573,ok,
+saturated,4,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.11952432699035853,1.878275409555489,0.3451094691157341,ok,
+saturated,4,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.12342757103033364,1.8217763188405096,0.275599417746067,ok,
+saturated,4,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.13077758706640452,1.5198469345611845,0.11329667814075946,ok,
+saturated,4,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.006164735998027027,1.0949469423209648,0.0019349559247493918,ok,
+saturated,4,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.05674064205959439,10.73465170353824,0.38849999999999996,ok,
+saturated,4,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.14675985393114388,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 276, in robustness
+    row[""nll""] = negative_log_likelihood(p, yt)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/src/fiducio/metrics/calibration.py"", line 78, in negative_log_likelihood
+    p, y, valid = _voxels(probs, targets, mask, ignore_index)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/src/fiducio/metrics/calibration.py"", line 48, in _voxels
+    c = validate_predictions(p, input_type=""probs"", mask=valid, context=""metrics"")
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/src/fiducio/utils/tensors.py"", line 258, in validate_predictions
+    raise ValueError(""predictions contain non-finite values (nan/inf)"")
+ValueError: predictions contain non-finite values (nan/inf)
+"
+saturated,4,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.07692743802908808,0.9368312965756238,0.02962978915870188,ok,
+saturated,4,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,0.020819460973143578,10.73465170353824,0.38849999999999996,ok,
+saturated,4,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.11617634608410299,1.0954807043260335,0.002490508109331099,ok,
+saturated,4,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.12152865098323673,1.096786413682031,0.0023842339813708755,ok,
+saturated,4,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.0014557410031557083,6.193616804270067,0.3884996423721313,ok,
+saturated,5,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,6.710179150104523e-07,10.914256763543342,0.394996588587761,ok,
+saturated,5,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.09121145703829825,10.897489761109588,0.3952762400507926,ok,
+saturated,5,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.1132722330512479,1.825101918342152,0.10847341167926787,ok,
+saturated,5,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.11741149006411433,1.5273654863657111,0.06806542389094833,ok,
+saturated,5,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.11979877506382763,12.314337894783199,0.4493702723681927,ok,
+saturated,5,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.006902192020788789,1.1051716428387512,0.0031590728312730493,ok,
+saturated,5,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.052154175005853176,10.914253340791776,0.395,ok,
+saturated,5,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.16431357502005994,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 276, in robustness
+    row[""nll""] = negative_log_likelihood(p, yt)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/src/fiducio/metrics/calibration.py"", line 78, in negative_log_likelihood
+    p, y, valid = _voxels(probs, targets, mask, ignore_index)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/src/fiducio/metrics/calibration.py"", line 48, in _voxels
+    c = validate_predictions(p, input_type=""probs"", mask=valid, context=""metrics"")
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/src/fiducio/utils/tensors.py"", line 258, in validate_predictions
+    raise ValueError(""predictions contain non-finite values (nan/inf)"")
+ValueError: predictions contain non-finite values (nan/inf)
+"
+saturated,5,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.17277234105858952,0.9592186367579852,0.060738886952400185,ok,
+saturated,5,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,0.5856073040049523,9.976716264913334,0.3625322962403298,ok,
+saturated,5,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.11915412009693682,1.1086488708685198,0.029969611659646064,ok,
+saturated,5,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.11837123706936836,1.1091792951357378,0.02993376538157459,ok,
+saturated,5,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.0014714539283886552,6.297245727267509,0.3949962311089039,ok,
+saturated,6,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,9.180512279272079e-07,10.355584986129827,0.3749999998807907,ok,
+saturated,6,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.0917475790483877,10.32215451629066,0.37491501718759535,ok,
+saturated,6,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.11283260898198932,1.8908365595441807,0.27123283356428146,ok,
+saturated,6,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.11746699095238,1.646207515412567,0.16985184982419016,ok,
+saturated,6,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.11842158797662705,13.202370301990607,0.4808175737261773,ok,
+saturated,6,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.006094187963753939,1.0733362114387632,0.006726181805133781,ok,
+saturated,6,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.05578812200110406,10.361632918473205,0.375,ok,
+saturated,6,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.17496283492073417,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 276, in robustness
+    row[""nll""] = negative_log_likelihood(p, yt)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/src/fiducio/metrics/calibration.py"", line 78, in negative_log_likelihood
+    p, y, valid = _voxels(probs, targets, mask, ignore_index)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/src/fiducio/metrics/calibration.py"", line 48, in _voxels
+    c = validate_predictions(p, input_type=""probs"", mask=valid, context=""metrics"")
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/src/fiducio/utils/tensors.py"", line 258, in validate_predictions
+    raise ValueError(""predictions contain non-finite values (nan/inf)"")
+ValueError: predictions contain non-finite values (nan/inf)
+"
+saturated,6,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.08024096000008285,0.9128612054496642,0.05289738434553147,ok,
+saturated,6,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,1.7062610640423372,8.829714776127508,0.3012530371248722,ok,
+saturated,6,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.12687869498040527,1.0783567761701218,0.007139454990625299,ok,
+saturated,6,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.11955172603484243,1.0800566181221747,0.0071650213599205,ok,
+saturated,6,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.0014632149832323194,5.9781909969602545,0.3749996423125267,ok,
+saturated,7,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,8.159549906849861e-07,10.8263943762506,0.392,ok,
+saturated,7,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.09064505493734032,10.792976357163532,0.3919263660311699,ok,
+saturated,7,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.11265447502955794,2.4349670333151217,0.53898172467947,ok,
+saturated,7,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.11844673100858927,2.1445183104425993,0.3762041376233102,ok,
+saturated,7,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.12056803493760526,1.882777204244779,0.20946432876586912,ok,
+saturated,7,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.006018123007379472,1.100160342643888,0.008265968799591076,ok,
+saturated,7,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.053506152937188745,10.831360277443991,0.392,ok,
+saturated,7,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.15856832906138152,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 276, in robustness
+    row[""nll""] = negative_log_likelihood(p, yt)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/src/fiducio/metrics/calibration.py"", line 78, in negative_log_likelihood
+    p, y, valid = _voxels(probs, targets, mask, ignore_index)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/src/fiducio/metrics/calibration.py"", line 48, in _voxels
+    c = validate_predictions(p, input_type=""probs"", mask=valid, context=""metrics"")
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/src/fiducio/utils/tensors.py"", line 258, in validate_predictions
+    raise ValueError(""predictions contain non-finite values (nan/inf)"")
+ValueError: predictions contain non-finite values (nan/inf)
+"
+saturated,7,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.0674997529713437,0.9400425205580138,0.019127445787191378,ok,
+saturated,7,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,0.5658844310091808,10.82387127649629,0.39199999827146537,ok,
+saturated,7,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.12260306510142982,1.1008544142366858,0.007343230962753338,ok,
+saturated,7,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.11821621598210186,1.1033466060550792,0.00727932399511339,ok,
+saturated,7,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.001547671970911324,6.249415150636212,0.39199964237213136,ok,
+saturated,8,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,1.0640360414981842e-06,11.092928139372491,0.40149999999999997,ok,
+saturated,8,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.09493594605010003,11.07670305817802,0.4014824319779873,ok,
+saturated,8,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.11352968495339155,1.9107309430668415,0.4346507861763239,ok,
+saturated,8,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.12019029993098229,2.2941922609144387,0.41016948601603515,ok,
+saturated,8,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.11852457700297236,2.8871853337681057,0.3071471355855465,ok,
+saturated,8,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.00607670599129051,1.1146782455812878,0.008562404245138128,ok,
+saturated,8,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.0527416099794209,11.093854978045313,0.40149999999999997,ok,
+saturated,8,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.1450402729678899,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 276, in robustness
+    row[""nll""] = negative_log_likelihood(p, yt)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/src/fiducio/metrics/calibration.py"", line 78, in negative_log_likelihood
+    p, y, valid = _voxels(probs, targets, mask, ignore_index)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/src/fiducio/metrics/calibration.py"", line 48, in _voxels
+    c = validate_predictions(p, input_type=""probs"", mask=valid, context=""metrics"")
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/src/fiducio/utils/tensors.py"", line 258, in validate_predictions
+    raise ValueError(""predictions contain non-finite values (nan/inf)"")
+ValueError: predictions contain non-finite values (nan/inf)
+"
+saturated,8,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.08152385998982936,0.9630100609204894,0.04929088208079341,ok,
+saturated,8,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,0.4527093570213765,11.097258775261212,0.4019994473159313,ok,
+saturated,8,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.12404606794007123,1.1156993080080186,0.008404011875390985,ok,
+saturated,8,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.1161578930914402,1.1162462657267511,0.008395578116178493,ok,
+saturated,8,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.0014758410397917032,6.400867805058608,0.4014996423721313,ok,
+saturated,9,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,1.0869698598980904e-06,10.661685398003954,0.38599944582581525,ok,
+saturated,9,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.0905086660059169,10.637969739916361,0.38576743882894515,ok,
+saturated,9,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.11282171006314456,1.6614697036668018,0.043735295027494396,ok,
+saturated,9,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.12443178799003363,1.4646243695711756,0.026771165251731885,ok,
+saturated,9,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.12184810196049511,11.466378190311337,0.41825032028555875,ok,
+saturated,9,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.0062880279729142785,1.0910094275645208,0.006777593508362718,ok,
+saturated,9,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.05585586105007678,10.66557415074842,0.386,ok,
+saturated,9,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.17307069804519415,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 276, in robustness
+    row[""nll""] = negative_log_likelihood(p, yt)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/src/fiducio/metrics/calibration.py"", line 78, in negative_log_likelihood
+    p, y, valid = _voxels(probs, targets, mask, ignore_index)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/src/fiducio/metrics/calibration.py"", line 48, in _voxels
+    c = validate_predictions(p, input_type=""probs"", mask=valid, context=""metrics"")
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/src/fiducio/utils/tensors.py"", line 258, in validate_predictions
+    raise ValueError(""predictions contain non-finite values (nan/inf)"")
+ValueError: predictions contain non-finite values (nan/inf)
+"
+saturated,9,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.07608792604878545,0.9308894318272802,0.05308714234828947,ok,
+saturated,9,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,0.8225020669633523,10.64786988744599,0.38549999999999995,ok,
+saturated,9,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.11669892200734466,1.092318962027887,0.005396826446056386,ok,
+saturated,9,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.11338039499241859,1.0957808723004203,0.005443330600857748,ok,
+saturated,9,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.001752729993313551,6.153760842460755,0.38599908825755125,ok,
+tiny,0,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,1.0390067473053932e-06,0.6600378242834058,0.2745705246925354,ok,
+tiny,0,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.0637930459342897,0.9635530807430253,0.18722298741340637,ok,
+tiny,0,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.08229537901934236,3.4441157385711296,0.42294688522815704,ok,
+tiny,0,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.08914677798748016,3.0705273027526268,0.5351208224892616,ok,
+tiny,0,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.08717775298282504,5.366859776848823,0.6209434643387794,ok,
+tiny,0,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.011026274063624442,0.9767069777676036,0.27539362758398056,ok,
+tiny,0,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.04450023698154837,0.9762219778748424,0.2752327285706997,ok,
+tiny,0,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.05106535495724529,0.9936966718531667,0.3031357489526272,ok,
+tiny,0,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.19404544797725976,11.791157974339637,0.6213985979557037,ok,
+tiny,0,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,3.8306020320160314,14.738800646984158,0.6241044923663139,ok,
+tiny,0,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.1050789930159226,4.365423197522374,0.278392530977726,ok,
+tiny,0,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.08943030308000743,5.366859137658465,0.6209434494376183,ok,
+tiny,0,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.0012212060391902924,0.6600378242834058,0.2745705246925354,ok,
+tiny,1,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,8.449424058198929e-07,1.1589432107437818,0.40150757133960724,ok,
+tiny,1,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.06397054600529373,0.9568421860916713,0.29380811005830765,ok,
+tiny,1,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.079463777015917,4.337817950622236,0.47575255483388906,ok,
+tiny,1,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.09300029301084578,4.953003565494626,0.6148246973752975,ok,
+tiny,1,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.09440017805900425,7.557658169414846,0.367273174226284,ok,
+tiny,1,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.0040702089900150895,0.9568476599821665,0.29380758851766586,ok,
+tiny,1,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.049921588972210884,0.9568041943031969,0.2938118577003479,ok,
+tiny,1,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.052990486030466855,1.2283458476514224,0.2270323522388935,ok,
+tiny,1,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.16823825205210596,13.00940909434026,0.6127981245517731,ok,
+tiny,1,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 273, in robustness
+    m.fit(zc, yc)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/adapters.py"", line 95, in fit
+    self.m.fit(z.softmax(1).double().numpy(), y.numpy())
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/fulldirichlet.py"", line 52, in fit
+    self.calibrator_.fit(_X, y, *args, **kwargs)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 103, in fit
+    weights = _newton_update(self.weights_0_, X_, XXT, target, k,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 252, in _newton_update
+    L_list = [float(_objective(weights_0, X, XX_T, target, k, method_,
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 164, in _objective
+    outputs = clip_jax(_calculate_outputs(weights, X))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 237, in _calculate_outputs
+    mul = np.dot(X, weights.transpose())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/jax/_src/numpy/tensor_contractions.py"", line 124, in dot
+    result = lax.dot_general(a, b, dimension_numbers=(contract_dims, batch_dims),
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: dot_general requires contracting dimensions to have the same shape, got (5,) and (4,).
+--------------------
+For simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.
+"
+tiny,1,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.08654336002655327,5.185358688794444,0.41976188123226166,ok,
+tiny,1,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.08901002607308328,7.557657188485341,0.36727307736873627,ok,
+tiny,1,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.0017336200689896941,1.1589432107437818,0.40150757133960724,ok,
+tiny,2,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,1.059030182659626e-06,1.265896841957473,0.305242657661438,ok,
+tiny,2,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.07320977607741952,0.8675368422883776,0.2757894955575466,ok,
+tiny,2,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.08310318202711642,4.58921871906396,0.34103260189294815,ok,
+tiny,2,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.09069681295659393,6.392417953324502,0.4159146696329117,ok,
+tiny,2,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.08988940389826894,10.12666482758189,0.5068960934877396,ok,
+tiny,2,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.004004238056950271,0.8675359945913675,0.2757900469005108,ok,
+tiny,2,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.04571512690745294,0.8675626811089279,0.2757740058004856,ok,
+tiny,2,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.19641411898192018,11.046936992509425,0.6415769383311272,ok,
+tiny,2,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.1708988930331543,6.226013500404617,0.6057066842913628,ok,
+tiny,2,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 273, in robustness
+    m.fit(zc, yc)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/adapters.py"", line 95, in fit
+    self.m.fit(z.softmax(1).double().numpy(), y.numpy())
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/fulldirichlet.py"", line 52, in fit
+    self.calibrator_.fit(_X, y, *args, **kwargs)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 103, in fit
+    weights = _newton_update(self.weights_0_, X_, XXT, target, k,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 252, in _newton_update
+    L_list = [float(_objective(weights_0, X, XX_T, target, k, method_,
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 164, in _objective
+    outputs = clip_jax(_calculate_outputs(weights, X))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 237, in _calculate_outputs
+    mul = np.dot(X, weights.transpose())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/jax/_src/numpy/tensor_contractions.py"", line 124, in dot
+    result = lax.dot_general(a, b, dimension_numbers=(contract_dims, batch_dims),
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: dot_general requires contracting dimensions to have the same shape, got (5,) and (4,).
+--------------------
+For simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.
+"
+tiny,2,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.0878081729169935,1.4620670655014254,0.47396875917911535,ok,
+tiny,2,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.09287187596783042,10.126665113875788,0.5068960785865785,ok,
+tiny,2,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.001429378055036068,1.265896841957473,0.305242657661438,ok,
+tiny,3,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,6.849877536296844e-07,0.44222106620447577,0.28917285427451134,ok,
+tiny,3,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.06801600602921098,0.5907051660914494,0.2578875757753849,ok,
+tiny,3,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.09122279193252325,1.8368093072150495,0.41614118218421936,ok,
+tiny,3,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.09631796297617257,3.793434920371579,0.5713985487818718,ok,
+tiny,3,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.09265767398755997,6.224741039649934,0.5386074483394623,ok,
+tiny,3,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.0038906100671738386,0.5906684898304382,0.2578745074570179,ok,
+tiny,3,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.03520783700514585,0.5902359816964009,0.25772035121917725,ok,
+tiny,3,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.052090132026933134,0.57957453563803,0.24087249860167503,ok,
+tiny,3,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.17735080502461642,5.164078271667501,0.5357489809393883,ok,
+tiny,3,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 273, in robustness
+    m.fit(zc, yc)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/adapters.py"", line 95, in fit
+    self.m.fit(z.softmax(1).double().numpy(), y.numpy())
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/fulldirichlet.py"", line 52, in fit
+    self.calibrator_.fit(_X, y, *args, **kwargs)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 103, in fit
+    weights = _newton_update(self.weights_0_, X_, XXT, target, k,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 252, in _newton_update
+    L_list = [float(_objective(weights_0, X, XX_T, target, k, method_,
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 164, in _objective
+    outputs = clip_jax(_calculate_outputs(weights, X))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 237, in _calculate_outputs
+    mul = np.dot(X, weights.transpose())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/jax/_src/numpy/tensor_contractions.py"", line 124, in dot
+    result = lax.dot_general(a, b, dimension_numbers=(contract_dims, batch_dims),
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: dot_general requires contracting dimensions to have the same shape, got (5,) and (4,).
+--------------------
+For simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.
+"
+tiny,3,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.08976031292695552,1.941015003933738,0.3561158776283264,ok,
+tiny,3,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.09207494102884084,6.224742000022769,0.5386074483394623,ok,
+tiny,3,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.0012008199701085687,0.44222105602082085,0.28917284682393074,ok,
+tiny,4,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,1.100008375942707e-06,2.780761644374259,0.45216188579797745,ok,
+tiny,4,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.06670556496828794,1.562516014233479,0.3996183015406132,ok,
+tiny,4,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.08450482098851353,7.697596165425798,0.44880775362253195,ok,
+tiny,4,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.10123627004213631,6.822189450535715,0.3871097266674042,ok,
+tiny,4,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.09057166601996869,6.530632113629008,0.3731086105108261,ok,
+tiny,4,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.004685078980401158,1.5624849185703267,0.3996143378317356,ok,
+tiny,4,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.05036454799119383,1.5632963710207781,0.39971789345145226,ok,
+tiny,4,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.16683618095703423,11.212116811993436,0.49986132234334946,ok,
+tiny,4,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.1710465430514887,10.364005997346037,0.3725675269961357,ok,
+tiny,4,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,0.9409145569661632,15.776223868091964,0.8365590125322342,ok,
+tiny,4,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.10396879899781197,5.795492718376722,0.5009383857250214,ok,
+tiny,4,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.09063910890836269,6.530631524754277,0.3731086105108261,ok,
+tiny,4,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.0012170550180599093,2.780761644374259,0.45216188579797745,ok,
+tiny,5,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,1.2569362297654152e-06,0.6850938277173455,0.2764409929513931,ok,
+tiny,5,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.06791873404290527,0.7059905617790047,0.21304763108491898,ok,
+tiny,5,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.07828179001808167,7.943533867891441,0.5738429427146912,ok,
+tiny,5,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.09121528000105172,3.577930306160983,0.3815781846642494,ok,
+tiny,5,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.08796027197968215,15.320001132234882,0.6645258963108063,ok,
+tiny,5,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.006134202005341649,0.7064127907438374,0.21335722133517265,ok,
+tiny,5,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.04096056392882019,0.70563450765577,0.212786253541708,ok,
+tiny,5,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.0757251069881022,2.5107359660644266,0.5571402423083782,ok,
+tiny,5,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.19496499805245548,12.278181580601647,0.795086182653904,ok,
+tiny,5,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 273, in robustness
+    m.fit(zc, yc)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/adapters.py"", line 95, in fit
+    self.m.fit(z.softmax(1).double().numpy(), y.numpy())
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/fulldirichlet.py"", line 52, in fit
+    self.calibrator_.fit(_X, y, *args, **kwargs)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 103, in fit
+    weights = _newton_update(self.weights_0_, X_, XXT, target, k,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 252, in _newton_update
+    L_list = [float(_objective(weights_0, X, XX_T, target, k, method_,
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 164, in _objective
+    outputs = clip_jax(_calculate_outputs(weights, X))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 237, in _calculate_outputs
+    mul = np.dot(X, weights.transpose())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/jax/_src/numpy/tensor_contractions.py"", line 124, in dot
+    result = lax.dot_general(a, b, dimension_numbers=(contract_dims, batch_dims),
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: dot_general requires contracting dimensions to have the same shape, got (5,) and (4,).
+--------------------
+For simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.
+"
+tiny,5,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.08480568195227534,3.4811675588651347,0.5394575893878937,ok,
+tiny,5,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.09304776589851826,15.32000083922855,0.6645256131887436,ok,
+tiny,5,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.0012213119771331549,0.6850938277173455,0.2764409929513931,ok,
+tiny,6,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,1.1379597708582878e-06,0.9701790169501561,0.2802992612123489,ok,
+tiny,6,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.06277175201103091,0.7829681755438639,0.21012676507234573,ok,
+tiny,6,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.08046520303469151,12.873690621293669,0.8584660589694977,ok,
+tiny,6,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.08773508190643042,5.929282970318691,0.6029067859053612,ok,
+tiny,6,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.08842962293419987,5.51534756637124,0.33705806732177734,ok,
+tiny,6,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.0036547660129144788,0.7829655866911017,0.21012546122074127,ok,
+tiny,6,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.044870308018289506,0.782978567363515,0.2101319581270218,ok,
+tiny,6,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.04134241701103747,0.7232194202228895,0.30382871627807617,ok,
+tiny,6,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.1662144580623135,13.906618650723159,0.624989315867424,ok,
+tiny,6,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,1.026987722958438,6.907778198553104,0.24997708201408386,ok,
+tiny,6,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.08335605601314455,7.497858988207031,0.4282623454928398,ok,
+tiny,6,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.08729760895948857,5.5153475203327105,0.33705806732177734,ok,
+tiny,6,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.0011960770934820175,0.9701790169501561,0.2802992612123489,ok,
+tiny,7,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,7.170019671320915e-07,2.07437998873463,0.4940262734889984,ok,
+tiny,7,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.06334263598546386,1.1876638155668016,0.17954925447702408,ok,
+tiny,7,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.08918168605305254,5.854999300212869,0.4336954429745674,ok,
+tiny,7,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.09688998304773122,6.59710659233677,0.4986101761460304,ok,
+tiny,7,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.08743353199679404,8.874018956581699,0.6966790705919266,ok,
+tiny,7,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.019526346935890615,1.190949087587556,0.08530551195144653,ok,
+tiny,7,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.06374926504213363,1.1908862635245479,0.0851859748363495,ok,
+tiny,7,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.06439452606718987,2.250621130828844,0.4120524525642395,ok,
+tiny,7,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.1819789910223335,9.720750062314442,0.39552433043718344,ok,
+tiny,7,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 273, in robustness
+    m.fit(zc, yc)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/adapters.py"", line 95, in fit
+    self.m.fit(z.softmax(1).double().numpy(), y.numpy())
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/fulldirichlet.py"", line 52, in fit
+    self.calibrator_.fit(_X, y, *args, **kwargs)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 103, in fit
+    weights = _newton_update(self.weights_0_, X_, XXT, target, k,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 252, in _newton_update
+    L_list = [float(_objective(weights_0, X, XX_T, target, k, method_,
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 164, in _objective
+    outputs = clip_jax(_calculate_outputs(weights, X))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 237, in _calculate_outputs
+    mul = np.dot(X, weights.transpose())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/jax/_src/numpy/tensor_contractions.py"", line 124, in dot
+    result = lax.dot_general(a, b, dimension_numbers=(contract_dims, batch_dims),
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: dot_general requires contracting dimensions to have the same shape, got (5,) and (4,).
+--------------------
+For simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.
+"
+tiny,7,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.07926594698801637,4.594188731619958,0.7199144586920738,ok,
+tiny,7,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.09327151300385594,8.874016814632268,0.6966790482401848,ok,
+tiny,7,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.0013562580570578575,2.0743800010294753,0.4940262660384178,ok,
+tiny,8,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,8.010538294911385e-07,1.3474048339757299,0.3447529897093773,ok,
+tiny,8,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.06724308396223933,1.1314057127981212,0.2516075186431408,ok,
+tiny,8,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.07903923001140356,3.172702532097059,0.36080358549952507,ok,
+tiny,8,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.08728338195942342,5.696662699500281,0.5596374794840813,ok,
+tiny,8,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.08799290691968054,2.901620612597762,0.47454849630594254,ok,
+tiny,8,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.0036703699734061956,1.131409212934002,0.2516031302511692,ok,
+tiny,8,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.053180504008196294,1.1313923835047268,0.2516242675483227,ok,
+tiny,8,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.054715981939807534,1.2380731729151462,0.3186750113964081,ok,
+tiny,8,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.21347299800254405,14.576999178094791,0.6246541291475296,ok,
+tiny,8,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,1.0545358579838648,19.971310746945512,0.7499999925494194,ok,
+tiny,8,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.07931695401202887,2.54039974207308,0.5104943290352821,ok,
+tiny,8,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.08737518894486129,2.9016208957795304,0.47454843670129776,ok,
+tiny,8,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.0011878639925271273,1.3474048548099677,0.3447529897093773,ok,
+tiny,9,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,7.950002327561378e-07,2.7423597948354983,0.5017600022256374,ok,
+tiny,9,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.0684485730016604,1.3491484839627934,0.39780233055353165,ok,
+tiny,9,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.08045032992959023,4.0111421605679345,0.3566592447459698,ok,
+tiny,9,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.08952762093394995,9.095550871463246,0.679881751537323,ok,
+tiny,9,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.08815053990110755,8.45803304137105,0.7021190263330936,ok,
+tiny,9,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.0055578770115971565,1.3323070243116817,0.3958824388682842,ok,
+tiny,9,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.04183956095948815,1.332397893400546,0.39589857310056686,ok,
+tiny,9,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.045032714959234,1.3499578043543077,0.3007456474006176,ok,
+tiny,9,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.20467460807412863,16.234363339489917,0.6862326264381409,ok,
+tiny,9,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,1.2721687400480732,17.335966226411745,0.6766168102622032,ok,
+tiny,9,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.08089327800553292,4.897119384334025,0.21764982491731644,ok,
+tiny,9,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.10376026504673064,8.458033219301944,0.7021191269159317,ok,
+tiny,9,4,8,8,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.0012434559175744653,2.7423598795384745,0.5017599873244762,ok,
+class_absent,0,4,1498,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,7.690396159887314e-07,1.363497466075667,0.2180709437578917,ok,
+class_absent,0,4,1498,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.09208857803605497,0.9491039496299228,0.0588327270448208,ok,
+class_absent,0,4,1498,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.1227634729584679,2.2497350459374874,0.22594928263127806,ok,
+class_absent,0,4,1498,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.14116603590082377,2.356319899256996,0.2299674994051456,ok,
+class_absent,0,4,1498,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.13648171490058303,5.41677509877364,0.2272191435098648,ok,
+class_absent,0,4,1498,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.00892235804349184,0.9490851090495628,0.05880803935229778,ok,
+class_absent,0,4,1498,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.08184452797286212,0.9492576663893125,0.05896805502474309,ok,
+class_absent,0,4,1498,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.059821436065249145,1.0353320769455008,0.10549036127328876,ok,
+class_absent,0,4,1498,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.1857539580669254,4.142348516807751,0.23016199776530266,ok,
+class_absent,0,4,1498,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 273, in robustness
+    m.fit(zc, yc)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/adapters.py"", line 95, in fit
+    self.m.fit(z.softmax(1).double().numpy(), y.numpy())
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/fulldirichlet.py"", line 52, in fit
+    self.calibrator_.fit(_X, y, *args, **kwargs)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 103, in fit
+    weights = _newton_update(self.weights_0_, X_, XXT, target, k,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 252, in _newton_update
+    L_list = [float(_objective(weights_0, X, XX_T, target, k, method_,
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 164, in _objective
+    outputs = clip_jax(_calculate_outputs(weights, X))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 237, in _calculate_outputs
+    mul = np.dot(X, weights.transpose())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/jax/_src/numpy/tensor_contractions.py"", line 124, in dot
+    result = lax.dot_general(a, b, dimension_numbers=(contract_dims, batch_dims),
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: dot_general requires contracting dimensions to have the same shape, got (5,) and (4,).
+--------------------
+For simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.
+"
+class_absent,0,4,1498,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.1792225670069456,2.6465927452085345,0.22272829850018028,ok,
+class_absent,0,4,1498,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.17906939110253006,5.416325382294061,0.2277421005219221,ok,
+class_absent,0,4,1498,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.0014970159390941262,1.3634974756278122,0.21807093970477587,ok,
+class_absent,1,4,1530,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,7.910421118140221e-07,1.138221696952466,0.18171764270961283,ok,
+class_absent,1,4,1530,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.12200532096903771,0.8970962159291687,0.014118387579917888,ok,
+class_absent,1,4,1530,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.13342532597016543,2.3018798809406227,0.16766717763245104,ok,
+class_absent,1,4,1530,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.13859957095701247,2.368882667156918,0.17400751574337484,ok,
+class_absent,1,4,1530,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.20362833293620497,5.093299670771167,0.17363808158040045,ok,
+class_absent,1,4,1530,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.03583877393975854,0.8970952134458381,0.013951621383428587,ok,
+class_absent,1,4,1530,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.09849609597586095,0.8970928288409141,0.013641736119985585,ok,
+class_absent,1,4,1530,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.11502279399428517,0.9633359971586871,0.04776306699216365,ok,
+class_absent,1,4,1530,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.33612488210201263,4.248615586876107,0.17425530356168747,ok,
+class_absent,1,4,1530,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 273, in robustness
+    m.fit(zc, yc)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/adapters.py"", line 95, in fit
+    self.m.fit(z.softmax(1).double().numpy(), y.numpy())
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/fulldirichlet.py"", line 52, in fit
+    self.calibrator_.fit(_X, y, *args, **kwargs)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 103, in fit
+    weights = _newton_update(self.weights_0_, X_, XXT, target, k,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 252, in _newton_update
+    L_list = [float(_objective(weights_0, X, XX_T, target, k, method_,
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 164, in _objective
+    outputs = clip_jax(_calculate_outputs(weights, X))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 237, in _calculate_outputs
+    mul = np.dot(X, weights.transpose())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/jax/_src/numpy/tensor_contractions.py"", line 124, in dot
+    result = lax.dot_general(a, b, dimension_numbers=(contract_dims, batch_dims),
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: dot_general requires contracting dimensions to have the same shape, got (5,) and (4,).
+--------------------
+For simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.
+"
+class_absent,1,4,1530,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.16438560490496457,2.653982231196145,0.16718848171830175,ok,
+class_absent,1,4,1530,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.16637100803200155,5.092398513529852,0.17364378386735915,ok,
+class_absent,1,4,1530,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.0020273519912734628,1.138221699259762,0.18171764178574085,ok,
+class_absent,2,4,1513,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,1.0390067473053932e-06,1.2089483472985363,0.1907701691240072,ok,
+class_absent,2,4,1513,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.11159126495476812,0.95109314768067,0.0202241314202547,ok,
+class_absent,2,4,1513,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.11494858399964869,2.2341377911183318,0.15172347699105737,ok,
+class_absent,2,4,1513,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.12965273100417107,2.271903484383056,0.15037861444056033,ok,
+class_absent,2,4,1513,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.17753203003667295,4.4798698625313085,0.15058281904459,ok,
+class_absent,2,4,1513,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.042195182060822845,0.9510899452147422,0.02020891223847865,ok,
+class_absent,2,4,1513,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.1524163760477677,0.9510703618836486,0.01984859718382358,ok,
+class_absent,2,4,1513,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.07372421096079051,0.9933289558935284,0.02804366622865202,ok,
+class_absent,2,4,1513,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.1793394540436566,4.047625436058578,0.15059994062781334,ok,
+class_absent,2,4,1513,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 273, in robustness
+    m.fit(zc, yc)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/adapters.py"", line 95, in fit
+    self.m.fit(z.softmax(1).double().numpy(), y.numpy())
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/fulldirichlet.py"", line 52, in fit
+    self.calibrator_.fit(_X, y, *args, **kwargs)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 103, in fit
+    weights = _newton_update(self.weights_0_, X_, XXT, target, k,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 252, in _newton_update
+    L_list = [float(_objective(weights_0, X, XX_T, target, k, method_,
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 164, in _objective
+    outputs = clip_jax(_calculate_outputs(weights, X))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 237, in _calculate_outputs
+    mul = np.dot(X, weights.transpose())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/jax/_src/numpy/tensor_contractions.py"", line 124, in dot
+    result = lax.dot_general(a, b, dimension_numbers=(contract_dims, batch_dims),
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: dot_general requires contracting dimensions to have the same shape, got (5,) and (4,).
+--------------------
+For simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.
+"
+class_absent,2,4,1513,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.14576080802362412,2.76570057502169,0.14525825104117396,ok,
+class_absent,2,4,1513,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.13246760796755552,4.479869550069252,0.1505827619433403,ok,
+class_absent,2,4,1513,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.001623076037503779,1.2089483471166609,0.19077016882598397,ok,
+class_absent,3,4,1473,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,5.83939254283905e-07,1.164281630967642,0.18134428672492506,ok,
+class_absent,3,4,1473,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.10026671399828047,0.9302732265337723,0.027484875231981273,ok,
+class_absent,3,4,1473,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.13406136794947088,2.2345142795026214,0.17291700361669063,ok,
+class_absent,3,4,1473,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.13209679001010954,2.2972547562781394,0.17446693047881126,ok,
+class_absent,3,4,1473,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.1411474880296737,4.634323071701322,0.1749164174199104,ok,
+class_absent,3,4,1473,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.00629796099383384,0.9302729568963539,0.027470112755894657,ok,
+class_absent,3,4,1473,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.1044692270224914,0.9302704100027475,0.02745014639198779,ok,
+class_absent,3,4,1473,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.07125760708004236,0.9926590573940992,0.04051853518188,ok,
+class_absent,3,4,1473,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.21313750999979675,3.977074144818606,0.1746779714375734,ok,
+class_absent,3,4,1473,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 273, in robustness
+    m.fit(zc, yc)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/adapters.py"", line 95, in fit
+    self.m.fit(z.softmax(1).double().numpy(), y.numpy())
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/fulldirichlet.py"", line 52, in fit
+    self.calibrator_.fit(_X, y, *args, **kwargs)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 103, in fit
+    weights = _newton_update(self.weights_0_, X_, XXT, target, k,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 252, in _newton_update
+    L_list = [float(_objective(weights_0, X, XX_T, target, k, method_,
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 164, in _objective
+    outputs = clip_jax(_calculate_outputs(weights, X))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 237, in _calculate_outputs
+    mul = np.dot(X, weights.transpose())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/jax/_src/numpy/tensor_contractions.py"", line 124, in dot
+    result = lax.dot_general(a, b, dimension_numbers=(contract_dims, batch_dims),
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: dot_general requires contracting dimensions to have the same shape, got (5,) and (4,).
+--------------------
+For simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.
+"
+class_absent,3,4,1473,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.16839147603604943,2.5544668703942053,0.17169125366210938,ok,
+class_absent,3,4,1473,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.16645357699599117,4.634322441594877,0.17491639545559884,ok,
+class_absent,3,4,1473,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.0019632549956440926,1.1642816325460839,0.1813442869335413,ok,
+class_absent,4,4,1536,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,7.239868864417076e-07,1.2729489292917717,0.20682728862762453,ok,
+class_absent,4,4,1536,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.12995628104545176,0.9360445613508619,0.03167771619558334,ok,
+class_absent,4,4,1536,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.1547956250142306,2.177289867574177,0.12398251089453699,ok,
+class_absent,4,4,1536,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.1637333440594375,2.214263470158093,0.12240389195084571,ok,
+class_absent,4,4,1536,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.15959899697918445,4.6882629520090155,0.12108696910738947,ok,
+class_absent,4,4,1536,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.02424564294051379,0.936050064573278,0.031696088477969175,ok,
+class_absent,4,4,1536,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.08951040194369853,0.9359704091062331,0.03158131420612337,ok,
+class_absent,4,4,1536,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.05327732197474688,0.9742339568719272,0.02670684294402602,ok,
+class_absent,4,4,1536,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.17707093292847276,4.0383580824100145,0.12262593278288841,ok,
+class_absent,4,4,1536,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 273, in robustness
+    m.fit(zc, yc)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/adapters.py"", line 95, in fit
+    self.m.fit(z.softmax(1).double().numpy(), y.numpy())
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/fulldirichlet.py"", line 52, in fit
+    self.calibrator_.fit(_X, y, *args, **kwargs)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 103, in fit
+    weights = _newton_update(self.weights_0_, X_, XXT, target, k,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 252, in _newton_update
+    L_list = [float(_objective(weights_0, X, XX_T, target, k, method_,
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 164, in _objective
+    outputs = clip_jax(_calculate_outputs(weights, X))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 237, in _calculate_outputs
+    mul = np.dot(X, weights.transpose())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/jax/_src/numpy/tensor_contractions.py"", line 124, in dot
+    result = lax.dot_general(a, b, dimension_numbers=(contract_dims, batch_dims),
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: dot_general requires contracting dimensions to have the same shape, got (5,) and (4,).
+--------------------
+For simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.
+"
+class_absent,4,4,1536,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.12356864695902914,2.6484691253414536,0.12097222292423249,ok,
+class_absent,4,4,1536,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.11658763501327485,4.687960264732533,0.12092799931764601,ok,
+class_absent,4,4,1536,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.001601479947566986,1.2729489330612884,0.20682728707790377,ok,
+class_absent,5,4,1501,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,6.260816007852554e-07,1.3900004756628481,0.23542220330238345,ok,
+class_absent,5,4,1501,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.0864255940541625,0.9586958161392746,0.06537996625900269,ok,
+class_absent,5,4,1501,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.11343514593318105,2.311508228638908,0.22029724735021594,ok,
+class_absent,5,4,1501,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.11726333398837596,2.3886085840389453,0.22436241509020327,ok,
+class_absent,5,4,1501,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.11652059690095484,5.558672169851738,0.22681495817005637,ok,
+class_absent,5,4,1501,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.007536198943853378,0.9586865091548903,0.06536755979061128,ok,
+class_absent,5,4,1501,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.08070558495819569,0.9588266610668338,0.06662082415819169,ok,
+class_absent,5,4,1501,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.05496638501062989,1.0506083392763497,0.09488132517039777,ok,
+class_absent,5,4,1501,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.19746208610013127,4.261813045927794,0.22453394097089766,ok,
+class_absent,5,4,1501,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 273, in robustness
+    m.fit(zc, yc)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/adapters.py"", line 95, in fit
+    self.m.fit(z.softmax(1).double().numpy(), y.numpy())
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/fulldirichlet.py"", line 52, in fit
+    self.calibrator_.fit(_X, y, *args, **kwargs)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 103, in fit
+    weights = _newton_update(self.weights_0_, X_, XXT, target, k,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 252, in _newton_update
+    L_list = [float(_objective(weights_0, X, XX_T, target, k, method_,
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 164, in _objective
+    outputs = clip_jax(_calculate_outputs(weights, X))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 237, in _calculate_outputs
+    mul = np.dot(X, weights.transpose())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/jax/_src/numpy/tensor_contractions.py"", line 124, in dot
+    result = lax.dot_general(a, b, dimension_numbers=(contract_dims, batch_dims),
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: dot_general requires contracting dimensions to have the same shape, got (5,) and (4,).
+--------------------
+For simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.
+"
+class_absent,5,4,1501,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.11426166305318475,2.7951105938408767,0.22040589582920073,ok,
+class_absent,5,4,1501,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.11884093598928303,5.555026470630401,0.22679528883099556,ok,
+class_absent,5,4,1501,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.001894828979857266,1.3900004807989335,0.2354222003519535,ok,
+class_absent,6,4,1493,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,9.159557521343231e-07,1.1872511037594515,0.19841767002642158,ok,
+class_absent,6,4,1493,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.11130441003479064,0.905637013987872,0.05448188765347004,ok,
+class_absent,6,4,1493,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.11497455602511764,2.1470234418184497,0.18645087027549745,ok,
+class_absent,6,4,1493,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.16617482097353786,2.232399944040487,0.18959945821762084,ok,
+class_absent,6,4,1493,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.11081498698331416,5.0630373676788505,0.18948523814976215,ok,
+class_absent,6,4,1493,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.00727461208589375,0.9056012310790946,0.054401780948042856,ok,
+class_absent,6,4,1493,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.08297280606348068,0.9056919093011883,0.05460446816682815,ok,
+class_absent,6,4,1493,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.061858940054662526,0.9733342986478769,0.0773508251160383,ok,
+class_absent,6,4,1493,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.1467933829408139,3.8205752833821305,0.189794972255826,ok,
+class_absent,6,4,1493,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 273, in robustness
+    m.fit(zc, yc)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/adapters.py"", line 95, in fit
+    self.m.fit(z.softmax(1).double().numpy(), y.numpy())
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/fulldirichlet.py"", line 52, in fit
+    self.calibrator_.fit(_X, y, *args, **kwargs)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 103, in fit
+    weights = _newton_update(self.weights_0_, X_, XXT, target, k,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 252, in _newton_update
+    L_list = [float(_objective(weights_0, X, XX_T, target, k, method_,
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 164, in _objective
+    outputs = clip_jax(_calculate_outputs(weights, X))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 237, in _calculate_outputs
+    mul = np.dot(X, weights.transpose())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/jax/_src/numpy/tensor_contractions.py"", line 124, in dot
+    result = lax.dot_general(a, b, dimension_numbers=(contract_dims, batch_dims),
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: dot_general requires contracting dimensions to have the same shape, got (5,) and (4,).
+--------------------
+For simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.
+"
+class_absent,6,4,1493,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.1069024889729917,2.465720009784296,0.1828780696839094,ok,
+class_absent,6,4,1493,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.10500345297623426,5.063040677181296,0.18948491889238359,ok,
+class_absent,6,4,1493,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.001377259031869471,1.1872511084576731,0.19841766911745068,ok,
+class_absent,7,4,1471,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,1.0300427675247192e-06,1.2041281998040212,0.19462421675026417,ok,
+class_absent,7,4,1471,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.09080017392989248,0.9382176473190275,0.028560986161231983,ok,
+class_absent,7,4,1471,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.1028275799471885,2.2035906356225192,0.133373129144311,ok,
+class_absent,7,4,1471,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.1069319189991802,2.23616732424075,0.132900542229414,ok,
+class_absent,7,4,1471,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.10460917605087161,4.619836297725654,0.1274246208369732,ok,
+class_absent,7,4,1471,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.004878519917838275,0.9382059014948463,0.02773483242094518,ok,
+class_absent,7,4,1471,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.05421919096261263,0.9381548342513513,0.02668713966012002,ok,
+class_absent,7,4,1471,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.0510865569813177,0.9786891744777585,0.02794814702868463,ok,
+class_absent,7,4,1471,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.15819773799739778,3.9761402079321826,0.13312618288397787,ok,
+class_absent,7,4,1471,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 273, in robustness
+    m.fit(zc, yc)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/adapters.py"", line 95, in fit
+    self.m.fit(z.softmax(1).double().numpy(), y.numpy())
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/fulldirichlet.py"", line 52, in fit
+    self.calibrator_.fit(_X, y, *args, **kwargs)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 103, in fit
+    weights = _newton_update(self.weights_0_, X_, XXT, target, k,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 252, in _newton_update
+    L_list = [float(_objective(weights_0, X, XX_T, target, k, method_,
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 164, in _objective
+    outputs = clip_jax(_calculate_outputs(weights, X))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 237, in _calculate_outputs
+    mul = np.dot(X, weights.transpose())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/jax/_src/numpy/tensor_contractions.py"", line 124, in dot
+    result = lax.dot_general(a, b, dimension_numbers=(contract_dims, batch_dims),
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: dot_general requires contracting dimensions to have the same shape, got (5,) and (4,).
+--------------------
+For simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.
+"
+class_absent,7,4,1471,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.10723005991894752,2.751717536810072,0.12831858122348785,ok,
+class_absent,7,4,1471,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.10700529802124947,4.619655862316047,0.1274099030941725,ok,
+class_absent,7,4,1471,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.0013745160540565848,1.204128202309409,0.1946242166161537,ok,
+class_absent,8,4,1543,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,1.018051989376545e-06,1.360940628794289,0.22966263219714161,ok,
+class_absent,8,4,1543,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.08054620691109449,0.9592790025697662,0.049658069208264356,ok,
+class_absent,8,4,1543,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.10528887994587421,2.2415750607940725,0.2012340775281191,ok,
+class_absent,8,4,1543,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.11533237807452679,2.322919538089407,0.20390233324468138,ok,
+class_absent,8,4,1543,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.10682274505961686,5.2603111029488065,0.2034100458920002,ok,
+class_absent,8,4,1543,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.004299041000194848,0.9592777223582348,0.04965503992140294,ok,
+class_absent,8,4,1543,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.057350037968717515,0.9593518694721938,0.04983008001744747,ok,
+class_absent,8,4,1543,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.28059889504220337,1.0199531106756368,0.07494141483306885,ok,
+class_absent,8,4,1543,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.156451852992177,4.187140617099462,0.2041146104633808,ok,
+class_absent,8,4,1543,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 273, in robustness
+    m.fit(zc, yc)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/adapters.py"", line 95, in fit
+    self.m.fit(z.softmax(1).double().numpy(), y.numpy())
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/fulldirichlet.py"", line 52, in fit
+    self.calibrator_.fit(_X, y, *args, **kwargs)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 103, in fit
+    weights = _newton_update(self.weights_0_, X_, XXT, target, k,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 252, in _newton_update
+    L_list = [float(_objective(weights_0, X, XX_T, target, k, method_,
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 164, in _objective
+    outputs = clip_jax(_calculate_outputs(weights, X))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 237, in _calculate_outputs
+    mul = np.dot(X, weights.transpose())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/jax/_src/numpy/tensor_contractions.py"", line 124, in dot
+    result = lax.dot_general(a, b, dimension_numbers=(contract_dims, batch_dims),
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: dot_general requires contracting dimensions to have the same shape, got (5,) and (4,).
+--------------------
+For simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.
+"
+class_absent,8,4,1543,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.10808775096666068,2.7118867216233222,0.1981754855811596,ok,
+class_absent,8,4,1543,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.10658961406443268,5.2603120429496375,0.2034101183414459,ok,
+class_absent,8,4,1543,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.0014198269927874207,1.3609406314184744,0.22966263043880458,ok,
+class_absent,9,4,1510,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,9.92906279861927e-07,1.3345774600746072,0.22770552203059197,ok,
+class_absent,9,4,1510,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.08093480102252215,0.9304751676986347,0.06004422342777252,ok,
+class_absent,9,4,1510,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.12167331296950579,2.178536410671224,0.20454381948709488,ok,
+class_absent,9,4,1510,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.10757844801992178,2.265008608994846,0.20790681053698062,ok,
+class_absent,9,4,1510,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.11555781005881727,5.3557992771021325,0.20632418793439863,ok,
+class_absent,9,4,1510,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.004500196082517505,0.9305030494391499,0.060087854310870166,ok,
+class_absent,9,4,1510,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.06145226303488016,0.9305810203606947,0.060742863759398455,ok,
+class_absent,9,4,1510,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.04531941004097462,1.0088958730558175,0.09543110872805118,ok,
+class_absent,9,4,1510,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.1510824019787833,3.947481643905271,0.20809648056328298,ok,
+class_absent,9,4,1510,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 273, in robustness
+    m.fit(zc, yc)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/adapters.py"", line 95, in fit
+    self.m.fit(z.softmax(1).double().numpy(), y.numpy())
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/fulldirichlet.py"", line 52, in fit
+    self.calibrator_.fit(_X, y, *args, **kwargs)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 103, in fit
+    weights = _newton_update(self.weights_0_, X_, XXT, target, k,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 252, in _newton_update
+    L_list = [float(_objective(weights_0, X, XX_T, target, k, method_,
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 164, in _objective
+    outputs = clip_jax(_calculate_outputs(weights, X))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/dirichletcal/calib/multinomial.py"", line 237, in _calculate_outputs
+    mul = np.dot(X, weights.transpose())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/jax/_src/numpy/tensor_contractions.py"", line 124, in dot
+    result = lax.dot_general(a, b, dimension_numbers=(contract_dims, batch_dims),
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: dot_general requires contracting dimensions to have the same shape, got (5,) and (4,).
+--------------------
+For simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.
+"
+class_absent,9,4,1510,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.11132203799206764,2.661562930855504,0.19920422039926053,ok,
+class_absent,9,4,1510,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.10667000594548881,5.355881842561234,0.2063403213471174,ok,
+class_absent,9,4,1510,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.001376730971969664,1.3345774657355367,0.2277055174559355,ok,
+float32,0,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,1.0139774531126022e-06,1.363497466075667,0.2180709437578917,ok,
+float32,0,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.08739858400076628,0.9498906295239796,0.05988490763306614,ok,
+float32,0,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.10815204493701458,0.9567565059730897,0.06844582875072956,ok,
+float32,0,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.11376845103222877,0.9589185529111797,0.07034458057582377,ok,
+float32,0,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.11307137494441122,0.9571190060215097,0.06837732414901257,ok,
+float32,0,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.004527054028585553,0.9498421649923883,0.05981527478992939,ok,
+float32,0,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.05254562001209706,0.9500383592338347,0.060096604257822046,ok,
+float32,0,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.05022605799604207,0.9526646663669609,0.06668674080073834,ok,
+float32,0,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.05220284196548164,0.959021706070059,0.07008149914443493,ok,
+float32,0,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,0.330547969089821,0.9571442329457227,0.0677431703656912,ok,
+float32,0,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.11409388389438391,0.9543920243502496,0.06743998120725156,ok,
+float32,0,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.11478563002310693,0.9571432482981188,0.0677428617924452,ok,
+float32,0,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.0014413640601560473,1.3634974756278122,0.21807093970477587,ok,
+float32,1,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,1.1969823390245438e-06,1.138221696952466,0.18171764270961283,ok,
+float32,1,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.08995672804303467,0.8974563022675673,0.01575789432227609,ok,
+float32,1,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.11113058088812977,0.9025748531152848,0.01888369849324227,ok,
+float32,1,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.12325130891986191,0.9043513814894464,0.016874502792954455,ok,
+float32,1,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.1161967400694266,0.9025609611833336,0.013748896762728693,ok,
+float32,1,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.004772259038873017,0.8974589446302124,0.015234799161553384,ok,
+float32,1,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.06829800200648606,0.8974430846664139,0.01653808005154132,ok,
+float32,1,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.04922393895685673,0.8974848335426507,0.017533739447593684,ok,
+float32,1,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.04803570103831589,0.9042478166494334,0.01530366082489491,ok,
+float32,1,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,0.29550161899533123,0.9025651356981272,0.014140435710549345,ok,
+float32,1,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.11599337100051343,0.9013914686666927,0.01864383865892887,ok,
+float32,1,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.11987198598217219,0.9025609709216487,0.013748892337083811,ok,
+float32,1,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.0014696470461785793,1.138221699259762,0.18171764178574085,ok,
+float32,2,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,1.1880183592438698e-06,1.2089483472985363,0.1907701691240072,ok,
+float32,2,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.08579627005383372,0.9525228947032721,0.024232411012053496,ok,
+float32,2,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.10734387394040823,0.9520843273997912,0.025994252383708956,ok,
+float32,2,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.1130939219146967,0.9546195759977224,0.02449314914643766,ok,
+float32,2,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.12211386300623417,0.954091663485807,0.02864515572786331,ok,
+float32,2,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.004870717064477503,0.9525086130089676,0.02415649501979352,ok,
+float32,2,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.07135629595723003,0.9524761564262343,0.023983097553253174,ok,
+float32,2,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.04948622896336019,0.9522877559435144,0.026345563203096393,ok,
+float32,2,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.04892493295483291,0.9545555198312403,0.024324473947286616,ok,
+float32,2,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,0.3484203680418432,0.9541006144536266,0.028802612110972403,ok,
+float32,2,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.11474611703306437,0.9519546018247574,0.02591562256217001,ok,
+float32,2,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.1143843560712412,0.9541007866452392,0.028809928566217422,ok,
+float32,2,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.0014476969372481108,1.2089483471166609,0.19077016882598397,ok,
+float32,3,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,9.699724614620209e-07,1.164281630967642,0.18134428672492506,ok,
+float32,3,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.0882650149287656,0.9302718610211372,0.02714090476930143,ok,
+float32,3,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.11663421301636845,0.9305224709993845,0.022747092172503477,ok,
+float32,3,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.12586478097364306,0.9323649609112047,0.02457283850014211,ok,
+float32,3,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.11307527800090611,0.9353304763890655,0.0269022645652294,ok,
+float32,3,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.0048943860456347466,0.9302719951038477,0.027148629352450396,ok,
+float32,3,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.06510213494766504,0.9302693808478957,0.026911741480231274,ok,
+float32,3,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.046242467942647636,0.9297929971970031,0.02868907900154591,ok,
+float32,3,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.05384299997240305,0.9323507334668326,0.024185408368706703,ok,
+float32,3,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,0.2960986379766837,0.9353379987545383,0.026996667623519877,ok,
+float32,3,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.11545275489334017,0.930987988868658,0.022718485876917834,ok,
+float32,3,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.11560872395057231,0.935330502446057,0.026902304798364626,ok,
+float32,3,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.0014640659792348742,1.1642816325460839,0.1813442869335413,ok,
+float32,4,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,1.1939555406570435e-06,1.2729489292917717,0.20682728862762453,ok,
+float32,4,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.08593704807572067,0.9356880243464528,0.031412002637982356,ok,
+float32,4,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.11004240997135639,0.936293812028051,0.030354215949773777,ok,
+float32,4,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.11492848303169012,0.9370974431410953,0.03863927522301674,ok,
+float32,4,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.11369308992289007,0.9359289095029201,0.0323497999757528,ok,
+float32,4,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.006442732992582023,0.9356937125682746,0.03142473766207694,ok,
+float32,4,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.062497589038684964,0.9356189604451104,0.03138955888152123,ok,
+float32,4,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.049248586990870535,0.9359366833698638,0.03317992077767849,ok,
+float32,4,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.05357623798772693,0.9370685742462135,0.038354016318917265,ok,
+float32,4,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,0.3440028380136937,0.9359389755705936,0.032987776204943656,ok,
+float32,4,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.11677439603954554,0.9353962298058828,0.03062201024591924,ok,
+float32,4,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.11850562901236117,0.9359440051689322,0.0330074745416641,ok,
+float32,4,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.0015902299201115966,1.2729489330612884,0.20682728707790377,ok,
+float32,5,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,9.479699656367302e-07,1.3900004756628481,0.23542220330238345,ok,
+float32,5,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.08985468500759453,0.9537109287220201,0.057579860433936106,ok,
+float32,5,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.11726633692160249,0.9571289683922506,0.06179861287772655,ok,
+float32,5,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.11973140900954604,0.9603059924967856,0.06153312787413598,ok,
+float32,5,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.11479536397382617,0.9606131794983297,0.0581602168381214,ok,
+float32,5,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.004916840000078082,0.953692395671181,0.057550204798579224,ok,
+float32,5,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.06760298600420356,0.9538002360554091,0.05825585123896601,ok,
+float32,5,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.052933371043764055,0.9567605883331615,0.061152546286582926,ok,
+float32,5,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.050202050944790244,0.9604104443812648,0.062281130164861684,ok,
+float32,5,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,0.36230796796735376,0.9606252744139879,0.05818708938360214,ok,
+float32,5,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.1272554669994861,0.9584795626816972,0.054371302872896175,ok,
+float32,5,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.11807869502808899,0.9606398955265344,0.05818933355808258,ok,
+float32,5,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.0014838449424132705,1.3900004807989335,0.2354222003519535,ok,
+float32,6,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,1.5299301594495773e-06,1.1872511037594515,0.19841767002642158,ok,
+float32,6,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.08928883692715317,0.9051236776513287,0.052982738047838214,ok,
+float32,6,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.11282406200189143,0.9094328770227614,0.04983994995057584,ok,
+float32,6,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.11548283195588738,0.9130252779996068,0.05262706173956393,ok,
+float32,6,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.11544553306885064,0.9139518565350939,0.0525414368957281,ok,
+float32,6,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.004262228962033987,0.9051029474059192,0.05293490971624852,ok,
+float32,6,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.04810401506256312,0.9052381035912036,0.05357905206084253,ok,
+float32,6,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.05324276594910771,0.9083169545728705,0.049208271011710165,ok,
+float32,6,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.0589716830290854,0.9131091607654848,0.05284107959270477,ok,
+float32,6,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,0.3001278400188312,0.9139410552985664,0.05252753001451492,ok,
+float32,6,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.11833001405466348,0.909293066525693,0.046617848515510575,ok,
+float32,6,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.12288750591687858,0.9139472904123196,0.052563077136874185,ok,
+float32,6,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.0014604800380766392,1.1872511084576731,0.19841766911745068,ok,
+float32,7,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,1.1820811778306961e-06,1.2041281998040212,0.19462421675026417,ok,
+float32,7,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.09384322306141257,0.9369683554544578,0.019194994032382964,ok,
+float32,7,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.10873087297659367,0.9371165156641508,0.020226670771837263,ok,
+float32,7,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.11378948693163693,0.9402370098708485,0.018335648775100688,ok,
+float32,7,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.11279946297872812,0.9400333843528306,0.03044052778184415,ok,
+float32,7,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.004980954923667014,0.9369567165162828,0.01929967156052588,ok,
+float32,7,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.06635672599077225,0.9369265785394434,0.019157822847366324,ok,
+float32,7,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.05020452104508877,0.9373018307586722,0.0220839463621378,ok,
+float32,7,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.05231429007835686,0.9401963930437538,0.018190495431423176,ok,
+float32,7,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,0.29518451704643667,0.9400226843082321,0.03081676015257838,ok,
+float32,7,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.11536352301482111,0.9385025254201923,0.02590582062304019,ok,
+float32,7,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.11528991803061217,0.940019274808332,0.032009239047765745,ok,
+float32,7,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.0014376080362126231,1.204128202309409,0.1946242166161537,ok,
+float32,8,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,1.119915395975113e-06,1.360940628794289,0.22966263219714161,ok,
+float32,8,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.09301526402123272,0.9584882623371873,0.047581461429595955,ok,
+float32,8,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.11582074291072786,0.9589423587367114,0.04483314333856107,ok,
+float32,8,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.12243313097860664,0.962747532217401,0.05011276978254318,ok,
+float32,8,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.12094692105893046,0.9621116004872633,0.043466586232185356,ok,
+float32,8,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.004825004958547652,0.9585062132931282,0.047626319363713254,ok,
+float32,8,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.06901490909513086,0.9585853796672886,0.0478234873712063,ok,
+float32,8,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.05009326199069619,0.9586678342335958,0.04705669938027861,ok,
+float32,8,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.05237318598665297,0.9628067871503444,0.05025129579007624,ok,
+float32,8,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,0.2915219160495326,0.9621054055669526,0.043461340621113766,ok,
+float32,8,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.11467432708013803,0.9589908461897569,0.04954994428157807,ok,
+float32,8,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.115443215938285,0.9621116159938253,0.04346659238636493,ok,
+float32,8,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.0014621770242229104,1.3609406314184744,0.22966263043880458,ok,
+float32,9,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,1.0860385373234749e-06,1.3345774600746072,0.22770552203059197,ok,
+float32,9,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.08920453500468284,0.9274897606367632,0.05335835385322571,ok,
+float32,9,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.11260629596654326,0.9280055997960349,0.05202672764658928,ok,
+float32,9,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.11363170307595283,0.9316637493448565,0.0545049000531435,ok,
+float32,9,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.11405558604747057,0.9320660392505278,0.05698727674782278,ok,
+float32,9,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.004903088905848563,0.9274921037294764,0.05336357869207859,ok,
+float32,9,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.06490349094383419,0.9276093263654516,0.053624110758304595,ok,
+float32,9,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.04857167403679341,0.9274906914896717,0.053432693839073175,ok,
+float32,9,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,0.052993689896538854,0.931701350361656,0.05462851566076278,ok,
+float32,9,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,0.34388056898023933,0.9320660242038526,0.05698723623156547,ok,
+float32,9,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.12800744001287967,0.9272152123401427,0.05555235624313354,ok,
+float32,9,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.117317127995193,0.9320590521245113,0.05697320844233036,ok,
+float32,9,4,2000,2000,float32,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.0015606930246576667,1.3345774657355367,0.2277055174559355,ok,
+float64,0,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,1.1159572750329971e-06,1.363497469162832,0.21807094419854164,ok,
+float64,0,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.08767429098952562,0.9498906295239796,0.05988490763306614,ok,
+float64,0,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.11161742091644555,0.9567565059730897,0.06844582875072956,ok,
+float64,0,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.11807782005053014,0.9589185529111797,0.07034458057582377,ok,
+float64,0,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.11332681297790259,0.9571190060215097,0.06837732414901257,ok,
+float64,0,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.0100308459950611,0.9498421725891167,0.05981528209149837,ok,
+float64,0,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.0923307950142771,0.949861432359092,0.059842968008913255,ok,
+float64,0,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.08491220499854535,0.9525311179369714,0.06650517207048731,ok,
+float64,0,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 273, in robustness
+    m.fit(zc, yc)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/adapters.py"", line 79, in fit
+    self.m.fit(DataLoader(TensorDataset(z, y), batch_size=65536), progress=False)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch_uncertainty/post_processing/calibration/scaler.py"", line 99, in fit
+    optimizer.step(calib_eval)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/optim/optimizer.py"", line 567, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/utils/_contextlib.py"", line 158, in no_grad
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/optim/lbfgs.py"", line 342, in step
+    orig_loss = closure()
+                ^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/utils/_contextlib.py"", line 158, in enable_grad
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch_uncertainty/post_processing/calibration/scaler.py"", line 94, in calib_eval
+    loss = self.criterion(self._scale(all_logits), all_labels)
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch_uncertainty/post_processing/calibration/matrix_scaler.py"", line 87, in _scale
+    return linear(logits, self.inv_temperature_weight, self.inv_temperature_bias)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: mat1 and mat2 must have the same dtype, but got Double and Float
+"
+float64,0,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,0.34767481905873865,0.9571442346687882,0.06774317012727263,ok,
+float64,0,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.12697036599274725,0.9544423090691346,0.06750379008054734,ok,
+float64,0,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.13443366601131856,0.9570825942124266,0.06835487119853498,ok,
+float64,0,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.004869641037657857,0.9498421725891167,0.05981528209149837,ok,
+float64,1,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,1.4249235391616821e-06,1.1382216964154217,0.18171764309564248,ok,
+float64,1,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.09958917100448161,0.8974563022675673,0.01575789432227609,ok,
+float64,1,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.11545120109803975,0.9025748531152848,0.01888369849324227,ok,
+float64,1,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.12087107298430055,0.9043513814894464,0.016874502792954455,ok,
+float64,1,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.1156691579381004,0.9025609611833336,0.013748896762728693,ok,
+float64,1,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.004794431966729462,0.8974589447890621,0.0152348009198904,ok,
+float64,1,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.09283891099039465,0.8974565432412153,0.015758836579114047,ok,
+float64,1,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.0769035330740735,0.8975035638968653,0.01715563132695766,ok,
+float64,1,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 273, in robustness
+    m.fit(zc, yc)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/adapters.py"", line 79, in fit
+    self.m.fit(DataLoader(TensorDataset(z, y), batch_size=65536), progress=False)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch_uncertainty/post_processing/calibration/scaler.py"", line 99, in fit
+    optimizer.step(calib_eval)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/optim/optimizer.py"", line 567, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/utils/_contextlib.py"", line 158, in no_grad
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/optim/lbfgs.py"", line 342, in step
+    orig_loss = closure()
+                ^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/utils/_contextlib.py"", line 158, in enable_grad
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch_uncertainty/post_processing/calibration/scaler.py"", line 94, in calib_eval
+    loss = self.criterion(self._scale(all_logits), all_labels)
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch_uncertainty/post_processing/calibration/matrix_scaler.py"", line 87, in _scale
+    return linear(logits, self.inv_temperature_weight, self.inv_temperature_bias)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: mat1 and mat2 must have the same dtype, but got Double and Float
+"
+float64,1,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,0.29526462394278497,0.9025651348160857,0.014140435174107556,ok,
+float64,1,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.11673204496037215,0.9013926902214673,0.018640722408890722,ok,
+float64,1,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.11919737700372934,0.9025609722513657,0.01374889789521694,ok,
+float64,1,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.0054641939932480454,0.8974589447890621,0.0152348009198904,ok,
+float64,2,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,1.2880191206932068e-06,1.2089483482239545,0.1907701685736227,ok,
+float64,2,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.09580694604665041,0.9525228947032721,0.024232411012053496,ok,
+float64,2,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.1096784450346604,0.9520843273997912,0.025994252383708956,ok,
+float64,2,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.1171144510153681,0.9546195759977224,0.02449314914643766,ok,
+float64,2,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.11775369208771735,0.954091663485807,0.02864515572786331,ok,
+float64,2,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.005416149972006679,0.9525086116071275,0.02415648730099202,ok,
+float64,2,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.09442745998967439,0.9525032106131043,0.024127716856103175,ok,
+float64,2,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.07437811698764563,0.9523209090905594,0.026476487381884888,ok,
+float64,2,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 273, in robustness
+    m.fit(zc, yc)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/adapters.py"", line 79, in fit
+    self.m.fit(DataLoader(TensorDataset(z, y), batch_size=65536), progress=False)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch_uncertainty/post_processing/calibration/scaler.py"", line 99, in fit
+    optimizer.step(calib_eval)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/optim/optimizer.py"", line 567, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/utils/_contextlib.py"", line 158, in no_grad
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/optim/lbfgs.py"", line 342, in step
+    orig_loss = closure()
+                ^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/utils/_contextlib.py"", line 158, in enable_grad
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch_uncertainty/post_processing/calibration/scaler.py"", line 94, in calib_eval
+    loss = self.criterion(self._scale(all_logits), all_labels)
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch_uncertainty/post_processing/calibration/matrix_scaler.py"", line 87, in _scale
+    return linear(logits, self.inv_temperature_weight, self.inv_temperature_bias)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: mat1 and mat2 must have the same dtype, but got Double and Float
+"
+float64,2,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,0.33915580401662737,0.9541006141170747,0.028802612021565435,ok,
+float64,2,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.1247170950518921,0.9519676950113198,0.02596436940133573,ok,
+float64,2,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.12323338910937309,0.9540916682784917,0.02864514502882959,ok,
+float64,2,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.004785119090229273,0.9525086116071275,0.02415648730099202,ok,
+float64,3,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,1.6819685697555542e-06,1.1642816274522694,0.18134428789804002,ok,
+float64,3,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.09753422497306019,0.9302718610211372,0.02714090476930143,ok,
+float64,3,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.12137599801644683,0.9305224709993845,0.022747092172503477,ok,
+float64,3,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.11531499191187322,0.9323649609112047,0.02457283850014211,ok,
+float64,3,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.11629554990213364,0.9353304763890655,0.0269022645652294,ok,
+float64,3,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.005092432023957372,0.9302719923939813,0.027148627012968073,ok,
+float64,3,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.09406546200625598,0.9302716790787242,0.02713000457585053,ok,
+float64,3,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.0774063760181889,0.9297961699381692,0.027748054741285767,ok,
+float64,3,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 273, in robustness
+    m.fit(zc, yc)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/adapters.py"", line 79, in fit
+    self.m.fit(DataLoader(TensorDataset(z, y), batch_size=65536), progress=False)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch_uncertainty/post_processing/calibration/scaler.py"", line 99, in fit
+    optimizer.step(calib_eval)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/optim/optimizer.py"", line 567, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/utils/_contextlib.py"", line 158, in no_grad
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/optim/lbfgs.py"", line 342, in step
+    orig_loss = closure()
+                ^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/utils/_contextlib.py"", line 158, in enable_grad
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch_uncertainty/post_processing/calibration/scaler.py"", line 94, in calib_eval
+    loss = self.criterion(self._scale(all_logits), all_labels)
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch_uncertainty/post_processing/calibration/matrix_scaler.py"", line 87, in _scale
+    return linear(logits, self.inv_temperature_weight, self.inv_temperature_bias)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: mat1 and mat2 must have the same dtype, but got Double and Float
+"
+float64,3,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,0.31573306198697537,0.9353379974072028,0.02699666729569434,ok,
+float64,3,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.12373420794028789,0.930991846299014,0.02224903796613215,ok,
+float64,3,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.1141434310702607,0.9353304677731124,0.026902262181043628,ok,
+float64,3,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.004785232013091445,0.9302719923939813,0.027148627012968073,ok,
+float64,4,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,1.1880183592438698e-06,1.2729489328733645,0.2068272863333716,ok,
+float64,4,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.09743636497296393,0.9356880243464528,0.031412002637982356,ok,
+float64,4,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.10979676491115242,0.936293812028051,0.030354215949773777,ok,
+float64,4,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.12966113106813282,0.9370974431410953,0.03863927522301674,ok,
+float64,4,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.12376406393013895,0.9359289095029201,0.0323497999757528,ok,
+float64,4,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.004776272922754288,0.9356937133352451,0.03142473661899566,ok,
+float64,4,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.09328563790768385,0.9356871061350763,0.031409949195343796,ok,
+float64,4,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.08294221898540854,0.9359874931940164,0.033205269777705736,ok,
+float64,4,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 273, in robustness
+    m.fit(zc, yc)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/adapters.py"", line 79, in fit
+    self.m.fit(DataLoader(TensorDataset(z, y), batch_size=65536), progress=False)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch_uncertainty/post_processing/calibration/scaler.py"", line 99, in fit
+    optimizer.step(calib_eval)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/optim/optimizer.py"", line 567, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/utils/_contextlib.py"", line 158, in no_grad
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/optim/lbfgs.py"", line 342, in step
+    orig_loss = closure()
+                ^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/utils/_contextlib.py"", line 158, in enable_grad
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch_uncertainty/post_processing/calibration/scaler.py"", line 94, in calib_eval
+    loss = self.criterion(self._scale(all_logits), all_labels)
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch_uncertainty/post_processing/calibration/matrix_scaler.py"", line 87, in _scale
+    return linear(logits, self.inv_temperature_weight, self.inv_temperature_bias)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: mat1 and mat2 must have the same dtype, but got Double and Float
+"
+float64,4,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,0.3360601629829034,0.9359389758042145,0.03298777574300765,ok,
+float64,4,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.12326454895082861,0.9353774684642104,0.030715962871909166,ok,
+float64,4,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.11780079000163823,0.9359312294792017,0.032300668150186534,ok,
+float64,4,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.00473828602116555,0.9356937133352451,0.03142473661899566,ok,
+float64,5,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,1.552049070596695e-06,1.390000478460994,0.23542220310156825,ok,
+float64,5,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.09540292096789926,0.9537109287220201,0.057579860433936106,ok,
+float64,5,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.10729453107342124,0.9571289683922506,0.06179861287772655,ok,
+float64,5,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.11294489388819784,0.9603059924967856,0.06153312787413598,ok,
+float64,5,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.11269302200525999,0.9606131794983297,0.0581602168381214,ok,
+float64,5,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.0046850129729136825,0.9536923920157886,0.0575501968562603,ok,
+float64,5,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.09152198699302971,0.9537069155516051,0.057573439315344886,ok,
+float64,5,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.07448251196183264,0.9566963568160136,0.06137590594711653,ok,
+float64,5,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 273, in robustness
+    m.fit(zc, yc)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/adapters.py"", line 79, in fit
+    self.m.fit(DataLoader(TensorDataset(z, y), batch_size=65536), progress=False)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch_uncertainty/post_processing/calibration/scaler.py"", line 99, in fit
+    optimizer.step(calib_eval)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/optim/optimizer.py"", line 567, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/utils/_contextlib.py"", line 158, in no_grad
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/optim/lbfgs.py"", line 342, in step
+    orig_loss = closure()
+                ^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/utils/_contextlib.py"", line 158, in enable_grad
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch_uncertainty/post_processing/calibration/scaler.py"", line 94, in calib_eval
+    loss = self.criterion(self._scale(all_logits), all_labels)
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch_uncertainty/post_processing/calibration/matrix_scaler.py"", line 87, in _scale
+    return linear(logits, self.inv_temperature_weight, self.inv_temperature_bias)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: mat1 and mat2 must have the same dtype, but got Double and Float
+"
+float64,5,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,0.33142175304237753,0.9606252753875506,0.05818708978593348,ok,
+float64,5,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.11464689299464226,0.9584803343047363,0.054365432009100885,ok,
+float64,5,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.11413537291809916,0.9606320378673263,0.058208783805370326,ok,
+float64,5,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.004790570004843175,0.9536923920157886,0.0575501968562603,ok,
+float64,6,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,1.152046024799347e-06,1.1872511053181594,0.19841767006795805,ok,
+float64,6,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.09486265003215522,0.9051236776513287,0.052982738047838214,ok,
+float64,6,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.10726742201950401,0.9094328770227614,0.04983994995057584,ok,
+float64,6,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.11472206295002252,0.9130252779996068,0.05262706173956393,ok,
+float64,6,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.11229790898505598,0.9139518565350939,0.0525414368957281,ok,
+float64,6,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.004280063905753195,0.9051029483533682,0.05293490903079511,ok,
+float64,6,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.09103783208411187,0.9051159030703021,0.05296480513477508,ok,
+float64,6,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.07594569202046841,0.9082598975123938,0.04906589707227968,ok,
+float64,6,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 273, in robustness
+    m.fit(zc, yc)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/adapters.py"", line 79, in fit
+    self.m.fit(DataLoader(TensorDataset(z, y), batch_size=65536), progress=False)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch_uncertainty/post_processing/calibration/scaler.py"", line 99, in fit
+    optimizer.step(calib_eval)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/optim/optimizer.py"", line 567, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/utils/_contextlib.py"", line 158, in no_grad
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/optim/lbfgs.py"", line 342, in step
+    orig_loss = closure()
+                ^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/utils/_contextlib.py"", line 158, in enable_grad
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch_uncertainty/post_processing/calibration/scaler.py"", line 94, in calib_eval
+    loss = self.criterion(self._scale(all_logits), all_labels)
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch_uncertainty/post_processing/calibration/matrix_scaler.py"", line 87, in _scale
+    return linear(logits, self.inv_temperature_weight, self.inv_temperature_bias)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: mat1 and mat2 must have the same dtype, but got Double and Float
+"
+float64,6,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,0.28510285494849086,0.9139410561861846,0.052527530193328856,ok,
+float64,6,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.11293236596975476,0.9092887338980089,0.046608883336186444,ok,
+float64,6,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.11318600201047957,0.9139518762283517,0.052541444048285466,ok,
+float64,6,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.004191924002952874,0.9051029483533682,0.05293490903079511,ok,
+float64,7,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,9.560026228427887e-07,1.2041282002717921,0.19462421503246582,ok,
+float64,7,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.09475215803831816,0.9369683554544578,0.019194994032382964,ok,
+float64,7,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.10855180805083364,0.9371165156641508,0.020226670771837263,ok,
+float64,7,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.11302210600115359,0.9402370098708485,0.018335648775100688,ok,
+float64,7,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.11303099303040653,0.9400333843528306,0.03044052778184415,ok,
+float64,7,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.005213643074966967,0.9369567155909104,0.01929967179894447,ok,
+float64,7,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.0946312160231173,0.9369530378673694,0.01929055478537473,ok,
+float64,7,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.07706689392216504,0.9373288131619183,0.02268335614728102,ok,
+float64,7,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 273, in robustness
+    m.fit(zc, yc)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/adapters.py"", line 79, in fit
+    self.m.fit(DataLoader(TensorDataset(z, y), batch_size=65536), progress=False)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch_uncertainty/post_processing/calibration/scaler.py"", line 99, in fit
+    optimizer.step(calib_eval)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/optim/optimizer.py"", line 567, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/utils/_contextlib.py"", line 158, in no_grad
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/optim/lbfgs.py"", line 342, in step
+    orig_loss = closure()
+                ^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/utils/_contextlib.py"", line 158, in enable_grad
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch_uncertainty/post_processing/calibration/scaler.py"", line 94, in calib_eval
+    loss = self.criterion(self._scale(all_logits), all_labels)
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch_uncertainty/post_processing/calibration/matrix_scaler.py"", line 87, in _scale
+    return linear(logits, self.inv_temperature_weight, self.inv_temperature_bias)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: mat1 and mat2 must have the same dtype, but got Double and Float
+"
+float64,7,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,0.29055142297875136,0.9400226838178845,0.030816760152578376,ok,
+float64,7,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.11877777799963951,0.9384987172437173,0.02683879521489142,ok,
+float64,7,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.11277825699653476,0.9400223717357458,0.030815800264477753,ok,
+float64,7,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.004741859971545637,0.9369567155909104,0.01929967179894447,ok,
+float64,8,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,1.286040060222149e-06,1.360940628888565,0.2296626319393793,ok,
+float64,8,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.09477899700868875,0.9584882623371873,0.047581461429595955,ok,
+float64,8,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.11369103298056871,0.9589423587367114,0.04483314333856107,ok,
+float64,8,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.11284492793492973,0.962747532217401,0.05011276978254318,ok,
+float64,8,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.11358097789343446,0.9621116004872633,0.043466586232185356,ok,
+float64,8,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.004737454000860453,0.9585062095615561,0.04762631288170814,ok,
+float64,8,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.09176100802142173,0.9585180611899248,0.04765589166514238,ok,
+float64,8,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.07397662894800305,0.9585842426421654,0.046844374359997214,ok,
+float64,8,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 273, in robustness
+    m.fit(zc, yc)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/adapters.py"", line 79, in fit
+    self.m.fit(DataLoader(TensorDataset(z, y), batch_size=65536), progress=False)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch_uncertainty/post_processing/calibration/scaler.py"", line 99, in fit
+    optimizer.step(calib_eval)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/optim/optimizer.py"", line 567, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/utils/_contextlib.py"", line 158, in no_grad
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/optim/lbfgs.py"", line 342, in step
+    orig_loss = closure()
+                ^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/utils/_contextlib.py"", line 158, in enable_grad
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch_uncertainty/post_processing/calibration/scaler.py"", line 94, in calib_eval
+    loss = self.criterion(self._scale(all_logits), all_labels)
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch_uncertainty/post_processing/calibration/matrix_scaler.py"", line 87, in _scale
+    return linear(logits, self.inv_temperature_weight, self.inv_temperature_bias)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: mat1 and mat2 must have the same dtype, but got Double and Float
+"
+float64,8,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,0.2880144260125235,0.9621054053064017,0.043461340233683574,ok,
+float64,8,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.12251972791273147,0.958990847606635,0.049549941465258596,ok,
+float64,8,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.11384087102487683,0.9621303037978577,0.043527904123067854,ok,
+float64,8,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.004787374055013061,0.9585062095615561,0.04762631288170814,ok,
+float64,9,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,identity,none,,1.0030344128608704e-06,1.334577460757548,0.22770552073329617,ok,
+float64,9,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio TS,fiducio,0.4.0,0.09580255695618689,0.9274897606367632,0.05335835385322571,ok,
+float64,9,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS,fiducio,0.4.0,0.10739782196469605,0.9280055997960349,0.05202672764658928,ok,
+float64,9,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio MS,fiducio,0.4.0,0.11242510098963976,0.9316637493448565,0.0545049000531435,ok,
+float64,9,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC,fiducio,0.4.0,0.11091173603199422,0.9320660392505278,0.05698727674782278,ok,
+float64,9,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS,netcal,1.4.0,0.004775097011588514,0.9274921046619793,0.053363584145903586,ok,
+float64,9,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty TS,torch-uncertainty,0.13.0,0.09229849895928055,0.9275048704917856,0.053392038184063614,ok,
+float64,9,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty VS,torch-uncertainty,0.13.0,0.07337555394042283,0.9273997841818729,0.05322909170516772,ok,
+float64,9,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,torch-uncertainty MS,torch-uncertainty,0.13.0,,,,error,"Traceback (most recent call last):
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/run.py"", line 273, in robustness
+    m.fit(zc, yc)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/adapters.py"", line 79, in fit
+    self.m.fit(DataLoader(TensorDataset(z, y), batch_size=65536), progress=False)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch_uncertainty/post_processing/calibration/scaler.py"", line 99, in fit
+    optimizer.step(calib_eval)
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/optim/optimizer.py"", line 567, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/utils/_contextlib.py"", line 158, in no_grad
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/optim/lbfgs.py"", line 342, in step
+    orig_loss = closure()
+                ^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch/utils/_contextlib.py"", line 158, in enable_grad
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch_uncertainty/post_processing/calibration/scaler.py"", line 94, in calib_eval
+    loss = self.criterion(self._scale(all_logits), all_labels)
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/kirscher/Fiducio/.claude/worktrees/agent-a75783fab4b2c3aa7/benchmarks/.venv-bench/lib/python3.12/site-packages/torch_uncertainty/post_processing/calibration/matrix_scaler.py"", line 87, in _scale
+    return linear(logits, self.inv_temperature_weight, self.inv_temperature_bias)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: mat1 and mat2 must have the same dtype, but got Double and Float
+"
+float64,9,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,dirichletcal DC,dirichletcal,0.5.3,0.34632320993114263,0.9320660230621002,0.05698723655939104,ok,
+float64,9,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio VS (probs),fiducio,0.4.0,0.11317043204326183,0.9272152096271395,0.05555235850811005,ok,
+float64,9,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,fiducio DC (probs),fiducio,0.4.0,0.11240684299264103,0.9320673543386121,0.05699099454283715,ok,
+float64,9,4,2000,2000,float64,Intel(R) Xeon(R) W-2225 CPU @ 4.10GHz,8,4,2.15.0+cpu,netcal TS (raw dtype),netcal,1.4.0,0.004780323011800647,0.9274921046619793,0.053363584145903586,ok,

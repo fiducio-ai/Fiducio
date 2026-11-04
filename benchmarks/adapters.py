@@ -98,6 +98,34 @@ class Dirichletcal:
         return torch.tensor(self.m.predict_proba(z.softmax(1).double().numpy())).float()
 
 
+class FiducioProbs(Fiducio):
+    """Fiducio with ``input_type='probs'``: calibrators take ``log(p)`` internally."""
+
+    lib, dtype = "fiducio", "float32"
+
+    def __init__(self, C):
+        import fiducio
+
+        self.m = getattr(fiducio, self.cls)(input_type="probs", device="cpu")
+
+    def fit(self, z, y):
+        self.m.fit(z.softmax(1), y)
+
+    def predict(self, z):
+        return self.m.transform(z.softmax(1))
+
+
+class NetcalRaw(Netcal):
+    """netcal without the adapter's float64 cast, to expose dtype sensitivity."""
+
+    def fit(self, z, y):
+        self.m.fit(z.softmax(1).numpy(), y.numpy(), tensorboard=False)
+
+    def predict(self, z):
+        p = torch.tensor(self.m.transform(z.softmax(1).numpy())).float()
+        return torch.stack([1 - p, p], 1) if p.ndim == 1 else p
+
+
 def _sub(base, **attrs):
     return type(attrs.pop("name"), (base,), attrs)
 
@@ -114,6 +142,25 @@ ADAPTERS = {
     "torch-uncertainty VS": (_sub(TorchUncertainty, name="T2", cls="VectorScaler"), "fiducio VS"),
     "torch-uncertainty MS": (_sub(TorchUncertainty, name="T3", cls="MatrixScaler"), "fiducio MS"),
     "dirichletcal DC": (Dirichletcal, "fiducio DC"),
+}
+
+# Axis 4: Fiducio only, identity as the reference decision.
+DOWNSTREAM_ADAPTERS = {
+    name: ADAPTERS[name]
+    for name in ("identity", "fiducio TS", "fiducio VS", "fiducio MS", "fiducio DC")
+}
+DOWNSTREAM_ADAPTERS |= {
+    "fiducio CMSap": (_sub(Fiducio, name="F5", cls="CMSap"), None),
+    "fiducio CMSop": (_sub(Fiducio, name="F6", cls="CMSop"), None),
+}
+
+# Axis 5: every adapter, plus the probability-input and raw-dtype variants that
+# the robustness cases are about. No paired reference: the axis records status,
+# not an improvement.
+ROBUSTNESS_ADAPTERS = ADAPTERS | {
+    "fiducio VS (probs)": (_sub(FiducioProbs, name="FP1", cls="VectorScaling"), None),
+    "fiducio DC (probs)": (_sub(FiducioProbs, name="FP2", cls="DirichletCalibration"), None),
+    "netcal TS (raw dtype)": (NetcalRaw, None),
 }
 
 

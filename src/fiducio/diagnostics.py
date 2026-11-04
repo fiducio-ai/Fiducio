@@ -18,6 +18,7 @@ import numbers
 from dataclasses import dataclass, field
 from typing import Any
 
+import numpy as np
 import torch
 
 from .metrics.calibration import (
@@ -30,23 +31,29 @@ from .plots import _draw_reliability, _require_matplotlib
 from .utils import to_tensor, validate_predictions, validate_targets
 from .utils.tensors import prepare_targets, validation_positions
 
-__all__ = ["ClassStats", "FailureStats", "ReliabilityReport", "diagnose"]
+__all__ = ["BoundaryStats", "ClassStats", "FailureStats", "ReliabilityReport", "diagnose"]
 
 _FAIL_RATE_ALERT = 0.1  # a class failing on this share of its images is flagged
 _SATURATION = 0.999  # confidence above which a voxel counts as saturated
+NAN_CI = (float("nan"), float("nan"))
 
 
 @dataclass
 class ClassStats:
-    """Per-class balance, calibration and Dice summary (NaN when undefined)."""
+    """Per-class balance, calibration and Dice summary (NaN when undefined).
+
+    The ``*_ci`` fields are 95% percentile bootstrap intervals over images (not
+    voxels). They are NaN when fewer than two resamples or too few images are
+    available for that quantity.
+    """
 
     name: str
-    label_voxels: int
+    label_voxels: int | float
     label_fraction: float
     pred_voxels: int
     pred_fraction: float
     dice: float  # pooled over all images
-    class_ece: float  # p_k against 1[label == k]
+    class_ece: float  # p_k against q_k (or 1[label == k])
     routed_ece: float  # top-1 ECE on voxels whose argmax is this class
     n_present: int  # images where the class is in the labels
     n_failed: int  # of those, images with Dice below the threshold
@@ -54,6 +61,29 @@ class ClassStats:
     dice_median: float  # Dice over the images where the class is present
     dice_p10: float
     dice_min: float
+    class_ece_ci: tuple[float, float] = NAN_CI
+    routed_ece_ci: tuple[float, float] = NAN_CI
+    dice_ci: tuple[float, float] = NAN_CI
+
+
+@dataclass
+class BoundaryStats:
+    """Top-1 calibration in the first and last uniform confidence bins.
+
+    ``low_bin_mass``/``high_bin_mass`` are the shares of valid voxels whose
+    top-1 confidence falls in ``[0, 1/n_bins]`` and in
+    ``[(n_bins-1)/n_bins, 1]`` (the first bin includes 0, the last includes 1).
+    ``*_bin_gap`` is their mean confidence minus mean accuracy, so a positive
+    value is over-confidence. ``ece_contribution`` is exactly the part of the
+    report's ``ece`` that these two bins contribute, in ``[0, 1]``; it is
+    computed once when ``n_bins == 1``.
+    """
+
+    low_bin_mass: float
+    low_bin_gap: float
+    high_bin_mass: float
+    high_bin_gap: float
+    ece_contribution: float
 
 
 @dataclass
@@ -77,19 +107,23 @@ class ReliabilityReport:
     ``metrics`` maps ``ece``, ``nll``, ``brier`` and ``gap`` (mean confidence minus
     accuracy) to ``(value, ci_low, ci_high)``; the interval is NaN when it could not
     be computed. ``image_dice`` is the ``(n_images, n_classes)`` Dice matrix, NaN where
-    the class is absent from both labels and prediction.
+    the class is absent from both labels and prediction, or everywhere for soft
+    targets (hard-label Dice is undefined there). ``boundary`` reports the first and
+    last confidence bins. ``soft_targets`` records which target kind was diagnosed.
     """
 
     n_images: int
     n_valid: int
     n_bins: int
     saturated_fraction: float
+    boundary: BoundaryStats
     metrics: dict[str, tuple[float, float, float]]
     classes: list[ClassStats]
     failures: FailureStats
     curve: ReliabilityCurve
     image_dice: torch.Tensor
     warnings: list[str]
+    soft_targets: bool = False
 
     @property
     def bias(self) -> str:
@@ -118,6 +152,10 @@ class ReliabilityReport:
             f"  Brier {est('brier')}",
             f"  Bias  {self.bias} (confidence - accuracy = {est('gap')})",
             f"  Saturated voxels (confidence > {_SATURATION}): {self.saturated_fraction:.1%}",
+            f"  First/last bin mass {self.boundary.low_bin_mass:.1%}/"
+            f"{self.boundary.high_bin_mass:.1%}, gap "
+            f"{_f(self.boundary.low_bin_gap)}/{_f(self.boundary.high_bin_gap)}, "
+            f"ECE contribution {_f(self.boundary.ece_contribution)}",
             "",
         ]
         rows = [["class", "label %", "pred %", "Dice", "class ECE", "routed vox", "routed ECE"]] + [
@@ -129,6 +167,17 @@ class ReliabilityReport:
                 _f(c.class_ece),
                 str(c.pred_voxels),
                 _f(c.routed_ece),
+            ]
+            for c in self.classes
+        ]
+        lines += _table(rows) + [""]
+        lines.append("  Per-class 95% intervals (bootstrap over images):")
+        rows = [["class", "class ECE", "routed ECE", "Dice"]] + [
+            [
+                c.name,
+                _fmt_interval(c.class_ece, *c.class_ece_ci),
+                _fmt_interval(c.routed_ece, *c.routed_ece_ci),
+                _fmt_interval(c.dice, *c.dice_ci),
             ]
             for c in self.classes
         ]
@@ -286,6 +335,139 @@ def _dice_summary(values: torch.Tensor) -> tuple[float, float, float]:
     return float(q[0]), float(q[1]), float(values.min())
 
 
+def _boundary_stats(pooled: torch.Tensor, total: float) -> BoundaryStats:
+    """First/last-bin statistics from ``(n_bins, 3)`` pooled top-1 statistics."""
+    counts, conf_sum, acc_sum = pooled[:, 0], pooled[:, 1], pooled[:, 2]
+
+    def gap(i: int) -> float:
+        return float((conf_sum[i] - acc_sum[i]) / counts[i]) if counts[i] > 0 else float("nan")
+
+    indices = [0] if pooled.shape[0] == 1 else [0, -1]
+    contribution = float(sum((conf_sum[i] - acc_sum[i]).abs() for i in indices) / total)
+    return BoundaryStats(
+        low_bin_mass=float(counts[0] / total),
+        low_bin_gap=gap(0),
+        high_bin_mass=float(counts[-1] / total),
+        high_bin_gap=gap(-1),
+        ece_contribution=contribution,
+    )
+
+
+def _move_to_device(value: Any, device: torch.device) -> Any:
+    """Move tensors in a model input (tensor, list, tuple or dict) to ``device``."""
+    if torch.is_tensor(value):
+        return value.to(device)
+    if isinstance(value, dict):
+        return {k: _move_to_device(v, device) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return type(value)(_move_to_device(v, device) for v in value)
+    return value
+
+
+@dataclass
+class _Accumulator:
+    """Per-image sufficient statistics, filled batch by batch.
+
+    Holds only ``O(n_images)`` summaries (per-bin counts and sums, confusion
+    matrices), never the images themselves, so a DataLoader path can run on data
+    that does not fit in memory. The bootstrap resamples these summaries.
+    """
+
+    num_classes: int
+    n_bins: int
+    input_type: str
+    ignore_index: int
+    top: list[torch.Tensor] = field(default_factory=list)
+    per_class: list[torch.Tensor] = field(default_factory=list)
+    routed: list[torch.Tensor] = field(default_factory=list)
+    confusion: list[torch.Tensor] = field(default_factory=list)
+    nll_sum: list[float] = field(default_factory=list)
+    brier_sum: list[float] = field(default_factory=list)
+    n_valid: list[int] = field(default_factory=list)
+    n_saturated: list[int] = field(default_factory=list)
+    label_counts: list[torch.Tensor] = field(default_factory=list)
+    soft: bool | None = None
+
+    def add(self, x: torch.Tensor, y: torch.Tensor, mask: torch.Tensor | None) -> None:
+        """Accumulate one validated batch ``(B, C, *spatial)`` / ``(B, *spatial)``."""
+        soft = y.shape == x.shape
+        if self.soft is None:
+            self.soft = soft
+        elif self.soft != soft:
+            raise ValueError("hard and soft targets must not be mixed across batches")
+        for i in range(x.shape[0]):
+            self._add_image(
+                x[i : i + 1],
+                y[i : i + 1],
+                None if mask is None else mask[i : i + 1],
+                soft,
+            )
+
+    def _add_image(
+        self, xi: torch.Tensor, yi: torch.Tensor, mi: torch.Tensor | None, soft: bool
+    ) -> None:
+        if self.input_type == "probs":
+            p = xi
+        else:
+            p = torch.softmax(xi.double() if xi.dtype == torch.float64 else xi.float(), dim=1)
+        valid = validation_positions(xi, yi, mi, self.ignore_index)
+        if valid is None:
+            valid = torch.ones(xi.shape[0], *xi.shape[2:], dtype=torch.bool, device=xi.device)
+        pred = p.argmax(dim=1)
+        self.top.append(_bin_stats(reliability_curve(p, yi, mi, self.ignore_index, self.n_bins)))
+        self.per_class.append(
+            torch.stack(
+                [
+                    _bin_stats(
+                        reliability_curve(
+                            p, yi, mi, self.ignore_index, self.n_bins, class_index=c
+                        )
+                    )
+                    for c in range(self.num_classes)
+                ]
+            )
+        )
+        self.routed.append(
+            torch.stack(
+                [
+                    _bin_stats(
+                        reliability_curve(
+                            p, yi, valid & (pred == c), self.ignore_index, self.n_bins
+                        )
+                    )
+                    for c in range(self.num_classes)
+                ]
+            )
+        )
+        n = int(valid.sum())
+        self.n_valid.append(n)
+        self.nll_sum.append(
+            n * negative_log_likelihood(p, yi, mi, self.ignore_index) if n > 0 else 0.0
+        )
+        self.brier_sum.append(n * brier_score(p, yi, mi, self.ignore_index) if n > 0 else 0.0)
+        self.n_saturated.append(int((p.max(dim=1).values[valid] > _SATURATION).sum()))
+        if soft:
+            # Expected class counts: a soft target may split a voxel across classes.
+            self.label_counts.append(yi.movedim(1, -1)[valid].sum(0))
+        else:
+            joint = yi[valid] * self.num_classes + pred[valid]
+            self.confusion.append(
+                torch.bincount(joint, minlength=self.num_classes**2).view(self.num_classes, -1)
+            )
+
+    @property
+    def n_images(self) -> int:
+        return len(self.n_valid)
+
+    def stacked(self) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor | None]:
+        """Stacked float64 CPU statistics; the confusion is ``None`` for soft targets."""
+        top = torch.stack(self.top).cpu()
+        per_class = torch.stack(self.per_class).cpu()
+        routed = torch.stack(self.routed).cpu()
+        confusion = None if self.soft else torch.stack(self.confusion).cpu().double()
+        return top, per_class, routed, confusion
+
+
 def _string_sequence(value: Any, name: str) -> list[str]:
     """Materialise a sequence of strings without exploding a bare string."""
     if isinstance(value, str):
@@ -306,6 +488,7 @@ def diagnose(
     input_type: str = "logits",
     mask: Any | None = None,
     ignore_index: int = -100,
+    device: Any | None = None,
     n_bins: int = 15,
     class_names: list[str] | None = None,
     image_ids: list[str] | None = None,
@@ -324,11 +507,24 @@ def diagnose(
     ----------
     logits:
         ``(B, C, *spatial)`` logits (or probabilities with ``input_type="probs"``);
-        ``B`` is the number of images or cases.
+        ``B`` is the number of images or cases. Alternatively a ``torch.nn.Module``:
+        ``labels`` is then a ``DataLoader`` and each batch is ``(inputs, labels)`` or
+        ``(inputs, labels, mask)``. ``inputs`` are whatever the model accepts (moved
+        to ``device``); the model output must have shape ``(B, C, *spatial)``. The
+        model runs under ``torch.no_grad()`` and its ``training`` flag is unchanged
+        (call ``model.eval()`` yourself if you want inference-mode dropout/batchnorm).
+        Only per-image statistics are retained, so the loader's images are never
+        materialised together.
     labels:
-        ``(B, *spatial)`` integer labels. Soft targets are not supported.
+        ``(B, *spatial)`` integer labels, or ``(B, C, *spatial)`` floating class
+        distributions (soft targets / MHR, same convention as the metrics). With a
+        model, the DataLoader instead of labels.
     mask, ignore_index:
-        Voxel selection, as in the metrics.
+        Voxel selection, as in the metrics. For soft targets only ``mask`` applies.
+        With the DataLoader path, pass per-batch masks in the batch instead.
+    device:
+        Device for the DataLoader path's batches (default: the device of the model's
+        first parameter, otherwise CPU). Ignored for tensor inputs.
     class_names, image_ids:
         Optional display names (default: indices).
     background_class:
@@ -342,12 +538,25 @@ def diagnose(
     n_boot, seed:
         Bootstrap resamples over images for the 95% intervals (``0`` disables them;
         an interval needs at least two resamples, so ``1`` yields NaN) and the seed
-        of the resampling.
+        of the resampling. Per-class ECE, routed ECE and Dice intervals reuse the same
+        resampling.
     min_images, min_class_fraction, min_class_voxels:
         Thresholds of the warnings. They are heuristics, not statistical guarantees.
 
     Notes
     -----
+    Soft targets. Per-class ECE compares ``p_c`` with the target mass ``q_c`` and the
+    top-1/routed ECE compares the top-1 confidence with ``q[argmax(p)]``; NLL and
+    Brier follow :mod:`fiducio.metrics.calibration`. Hard-label Dice and the failure
+    statistics are undefined: every Dice field, the image Dice matrix and the
+    per-image failure counts are NaN/0, and ``image_dice`` is all NaN. Class balance
+    still counts the expected label mass ``sum(q_c)``.
+
+    Boundary bins. ``report.boundary`` describes the first ``[0, 1/n_bins]`` and last
+    ``[(n_bins-1)/n_bins, 1]`` top-1 confidence bins: their voxel mass, their mean
+    confidence minus accuracy, and their exact contribution to ``ece``. It is
+    additive reporting only; ``ece`` keeps its definition.
+
     The ECE interval is a percentile bootstrap. ECE has a finite-sample noise floor that
     resampling raises further, so for a well-calibrated model the interval can sit
     slightly above the estimate (it missed it in 15 of 100 simulated calibrated models
@@ -357,8 +566,10 @@ def diagnose(
     5 expected (``reproducibility/diagnose_interval_check.py`` reruns the simulation).
 
     Cost is ``2C + 1`` reliability curves per image (global, per-class and routed),
-    plus a few passes for NLL, Brier and the confusion matrix. Classes absent from both
-    labels and prediction have an undefined Dice and are never counted as failures.
+    plus a few passes for NLL, Brier and the confusion matrix. With a DataLoader the
+    model forward pass dominates; the accumulator keeps ``O(n_images)`` summaries
+    (``O(n_images * C * n_bins)``), not the voxels. Classes absent from both labels and
+    prediction have an undefined Dice and are never counted as failures.
     """
     if isinstance(ignore_index, bool) or not isinstance(ignore_index, numbers.Integral):
         raise TypeError(f"ignore_index must be an int, got {ignore_index!r}")
@@ -389,24 +600,84 @@ def diagnose(
     ):
         raise ValueError("dice_failure_threshold must be a number in [0, 1]")
 
-    x = to_tensor(logits).detach()
-    if not x.is_floating_point():
-        x = x.float()
-    m = None if mask is None else to_tensor(mask, device=x.device).bool()
-    if x.ndim < 3:
-        raise ValueError(
-            f"logits must have shape (B, C, *spatial) with at least one spatial axis; got {tuple(x.shape)}"
+    acc: _Accumulator | None = None
+    if isinstance(logits, torch.nn.Module):
+        if labels is None:
+            raise ValueError("labels must be a DataLoader when logits is a torch.nn.Module")
+        if isinstance(labels, (torch.Tensor, np.ndarray)):
+            raise ValueError(
+                "labels must be a DataLoader when logits is a torch.nn.Module, not an array"
+            )
+        if mask is not None:
+            raise ValueError("with a model and DataLoader, pass each mask in the batch")
+        model = logits
+        if device is None:
+            first_param = next(iter(model.parameters()), None)
+            device = first_param.device if first_param is not None else torch.device("cpu")
+        batch_device = torch.device(device)
+        for batch in labels:
+            try:
+                items = list(batch)
+            except TypeError as exc:
+                raise ValueError(
+                    "each loader batch must be (inputs, labels) or (inputs, labels, mask)"
+                ) from exc
+            if not 2 <= len(items) <= 3:
+                raise ValueError(
+                    "each loader batch must be (inputs, labels) or (inputs, labels, mask)"
+                )
+            inputs = _move_to_device(items[0], batch_device)
+            target = _move_to_device(items[1], batch_device)
+            batch_mask = _move_to_device(items[2], batch_device) if len(items) == 3 else None
+            with torch.no_grad():
+                output = model(inputs)
+            if not torch.is_tensor(output):
+                raise TypeError("the model must return a tensor of shape (B, C, *spatial)")
+            xb = output.detach()
+            if not xb.is_floating_point():
+                xb = xb.float()
+            if xb.ndim < 3:
+                raise ValueError(
+                    "the model output must have shape (B, C, *spatial) with at least one "
+                    f"spatial axis; got {tuple(xb.shape)}"
+                )
+            mb = None if batch_mask is None else to_tensor(batch_mask, device=xb.device).bool()
+            yb = prepare_targets(xb, target)
+            positions = validation_positions(xb, yb, mb, ignore_index)
+            if acc is None:
+                num_classes = validate_predictions(xb, input_type=input_type, mask=positions)
+                acc = _Accumulator(num_classes, n_bins, input_type, ignore_index)
+            else:
+                validate_predictions(
+                    xb,
+                    input_type=input_type,
+                    mask=positions,
+                    expected_num_classes=acc.num_classes,
+                )
+            validate_targets(xb, yb, mb, num_classes=acc.num_classes, ignore_index=ignore_index)
+            acc.add(xb, yb, mb)
+        if acc is None or acc.n_images == 0:
+            raise ValueError("at least one image is required")
+    else:
+        x = to_tensor(logits).detach()
+        if not x.is_floating_point():
+            x = x.float()
+        m = None if mask is None else to_tensor(mask, device=x.device).bool()
+        if x.ndim < 3:
+            raise ValueError(
+                f"logits must have shape (B, C, *spatial) with at least one spatial axis; got {tuple(x.shape)}"
+            )
+        if x.shape[0] == 0:
+            raise ValueError("at least one image is required")
+        y = prepare_targets(x, labels)
+        num_classes = validate_predictions(
+            x, input_type=input_type, mask=validation_positions(x, y, m, ignore_index)
         )
-    y = prepare_targets(x, labels)
-    if y.shape == x.shape:
-        raise ValueError("diagnose supports hard integer labels only, not class distributions")
-    num_classes = validate_predictions(
-        x, input_type=input_type, mask=validation_positions(x, y, m, ignore_index)
-    )
-    validate_targets(x, y, m, num_classes=num_classes, ignore_index=ignore_index)
-    n_images = int(x.shape[0])
-    if n_images == 0:
-        raise ValueError("at least one image is required")
+        validate_targets(x, y, m, num_classes=num_classes, ignore_index=ignore_index)
+        acc = _Accumulator(num_classes, n_bins, input_type, ignore_index)
+        acc.add(x, y, m)
+
+    num_classes, n_images = acc.num_classes, acc.n_images
     names = (
         _string_sequence(class_names, "class_names")
         if class_names is not None
@@ -426,58 +697,15 @@ def diagnose(
         if not 0 <= background_class < num_classes:
             raise ValueError(f"background_class must lie in [0, {num_classes - 1}]")
 
-    # --- per-image sufficient statistics --------------------------------------------------
-    top, per_class, routed, confusion = [], [], [], []
-    nll_sum, brier_sum, n_valid, n_saturated = [], [], [], []
-    for i in range(n_images):
-        xi, yi = x[i : i + 1], y[i : i + 1]
-        mi = None if m is None else m[i : i + 1]
-        if input_type == "probs":
-            p = xi
-        else:
-            p = torch.softmax(xi.double() if xi.dtype == torch.float64 else xi.float(), dim=1)
-        valid = yi != ignore_index
-        if mi is not None:
-            valid = valid & mi
-        pred = p.argmax(dim=1)
-        curve = reliability_curve(p, yi, mi, ignore_index, n_bins)
-        top.append(_bin_stats(curve))
-        per_class.append(
-            torch.stack(
-                [
-                    _bin_stats(reliability_curve(p, yi, mi, ignore_index, n_bins, class_index=c))
-                    for c in range(num_classes)
-                ]
-            )
-        )
-        routed.append(
-            torch.stack(
-                [
-                    _bin_stats(reliability_curve(p, yi, valid & (pred == c), ignore_index, n_bins))
-                    for c in range(num_classes)
-                ]
-            )
-        )
-        n = int(valid.sum())
-        n_valid.append(n)
-        has_voxels = n > 0
-        nll_sum.append(n * negative_log_likelihood(p, yi, mi, ignore_index) if has_voxels else 0.0)
-        brier_sum.append(n * brier_score(p, yi, mi, ignore_index) if has_voxels else 0.0)
-        n_saturated.append(int((p.max(dim=1).values[valid] > _SATURATION).sum()))
-        joint = yi[valid] * num_classes + pred[valid]
-        confusion.append(torch.bincount(joint, minlength=num_classes**2).view(num_classes, -1))
-
-    # Everything below is small: move it to the CPU once.
-    total_valid = float(sum(n_valid))
+    # Everything below is small: the accumulator holds O(n_images) summaries.
+    top_s, class_s, routed_s, conf = acc.stacked()
+    nll_t = torch.tensor(acc.nll_sum, dtype=torch.float64)
+    brier_t = torch.tensor(acc.brier_sum, dtype=torch.float64)
+    nvox = torch.tensor(acc.n_valid, dtype=torch.float64)
+    soft = bool(acc.soft)
+    total_valid = float(nvox.sum())
     if total_valid == 0:
         raise ValueError("no valid voxels: every label is ignored or masked out")
-    top_s = torch.stack(top).cpu()  # (B, bins, 3)
-    class_s = torch.stack(per_class).cpu()  # (B, C, bins, 3)
-    routed_s = torch.stack(routed).cpu()
-    conf = torch.stack(confusion).cpu().double()  # (B, C, C): rows labels, columns predictions
-    nll_t = torch.tensor(nll_sum, dtype=torch.float64)
-    brier_t = torch.tensor(brier_sum, dtype=torch.float64)
-    nvox = torch.tensor(n_valid, dtype=torch.float64)
 
     # --- global metrics and bootstrap over images -----------------------------------------
     pooled = top_s.sum(0)
@@ -487,7 +715,10 @@ def diagnose(
         "brier": float(brier_t.sum() / nvox.sum()),
         "gap": float(_gap(pooled)),
     }
-    intervals = {k: (float("nan"), float("nan")) for k in point}
+    intervals = {k: NAN_CI for k in point}
+    class_ece_ci: list[tuple[float, float]] = [NAN_CI] * num_classes
+    routed_ece_ci: list[tuple[float, float]] = [NAN_CI] * num_classes
+    boot_w: torch.Tensor | None = None
     if n_boot > 0 and n_images >= 2:
         g = torch.Generator().manual_seed(seed)
         draws = torch.randint(n_images, (n_boot, n_images), generator=g)
@@ -502,29 +733,72 @@ def diagnose(
             "brier": _ci((w @ brier_t) / boot_n),
             "gap": _ci(_gap(boot_top)),
         }
+        boot_class = torch.einsum("rb,bckj->rckj", w, class_s)
+        boot_routed = torch.einsum("rb,bckj->rckj", w, routed_s)
+        class_ece_ci = [_ci(_ece(boot_class[:, c])) for c in range(num_classes)]
+        routed_images = (routed_s[..., 0] > 0).sum(dim=(0, 2))  # (C,) images with routed voxels
+        routed_ece_ci = [
+            _ci(_ece(boot_routed[:, c])) if int(routed_images[c]) >= 2 else NAN_CI
+            for c in range(num_classes)
+        ]
+        boot_w = w
     metrics = {k: (point[k], *intervals[k]) for k in point}
 
     # --- Dice, failures -------------------------------------------------------------------
-    tp = conf.diagonal(dim1=1, dim2=2)  # (B, C)
-    lab, prd = conf.sum(2), conf.sum(1)
-    dice = 2 * tp / (lab + prd)  # NaN where the class is in neither labels nor prediction
-    present = lab > 0
-    failed_cls = present & (dice < dice_failure_threshold)
-    spurious = (lab == 0) & (prd > 0)
-    considered = present.clone()
-    if background_class is not None:
-        considered[:, background_class] = False
-    mean_dice = dice.masked_fill(~considered, float("nan")).nanmean(dim=1)  # (B,)
-    failed_img = mean_dice < dice_failure_threshold
-    pooled_conf = conf.sum(0)
-    pooled_dice = 2 * pooled_conf.diagonal() / (pooled_conf.sum(1) + pooled_conf.sum(0))
+    if soft:
+        # Hard-label Dice is undefined for class distributions; do not invent a soft Dice.
+        dice = torch.full((n_images, num_classes), float("nan"))
+        present = torch.zeros((n_images, num_classes), dtype=torch.bool)
+        failed_cls, spurious, considered = present.clone(), present.clone(), present.clone()
+        mean_dice = torch.full((n_images,), float("nan"))
+        failed_img = torch.zeros(n_images, dtype=torch.bool)
+        pooled_dice = torch.full((num_classes,), float("nan"))
+        label_totals = torch.stack(acc.label_counts).sum(0)  # (C,) expected mass
+        pred_totals = routed_s[..., 0].sum(dim=(0, 2))  # (C,) argmax counts
+        tp = lab = prd = None
+    else:
+        assert conf is not None
+        tp = conf.diagonal(dim1=1, dim2=2)  # (B, C)
+        lab, prd = conf.sum(2), conf.sum(1)
+        dice = 2 * tp / (lab + prd)  # NaN where the class is in neither labels nor prediction
+        present = lab > 0
+        failed_cls = present & (dice < dice_failure_threshold)
+        spurious = (lab == 0) & (prd > 0)
+        considered = present.clone()
+        if background_class is not None:
+            considered[:, background_class] = False
+        mean_dice = dice.masked_fill(~considered, float("nan")).nanmean(dim=1)  # (B,)
+        failed_img = mean_dice < dice_failure_threshold
+        pooled_conf = conf.sum(0)
+        pooled_dice = 2 * pooled_conf.diagonal() / (pooled_conf.sum(1) + pooled_conf.sum(0))
+
+    dice_ci: list[tuple[float, float]] = [NAN_CI] * num_classes
+    if boot_w is not None and tp is not None and lab is not None and prd is not None:
+        for c in range(num_classes):
+            if int(present[:, c].sum()) < 2:
+                continue
+            boot_dice = 2 * (boot_w @ tp[:, c]) / (boot_w @ (lab[:, c] + prd[:, c]))
+            dice_ci[c] = _ci(boot_dice)
 
     routed_pool, class_pool = routed_s.sum(0), class_s.sum(0)
     classes = []
     for c in range(num_classes):
-        d_c = dice[:, c][present[:, c]]
-        median, p10, lowest = _dice_summary(d_c)
-        label_vox, pred_vox = int(pooled_conf[c].sum()), int(pooled_conf[:, c].sum())
+        class_ece = float(_ece(class_pool[c]))
+        routed_ece = float(_ece(routed_pool[c]))
+        if soft:
+            label_vox: int | float = float(label_totals[c])
+            pred_vox = int(pred_totals[c])
+            dice_c = median = p10 = lowest = float("nan")
+            n_present = n_failed = n_spurious = 0
+        else:
+            assert conf is not None
+            d_c = dice[:, c][present[:, c]]
+            median, p10, lowest = _dice_summary(d_c)
+            label_vox, pred_vox = int(pooled_conf[c].sum()), int(pooled_conf[:, c].sum())
+            dice_c = float(pooled_dice[c])
+            n_present = int(present[:, c].sum())
+            n_failed = int(failed_cls[:, c].sum())
+            n_spurious = int(spurious[:, c].sum())
         classes.append(
             ClassStats(
                 name=names[c],
@@ -532,40 +806,57 @@ def diagnose(
                 label_fraction=label_vox / total_valid,
                 pred_voxels=pred_vox,
                 pred_fraction=pred_vox / total_valid,
-                dice=float(pooled_dice[c]),
-                class_ece=float(_ece(class_pool[c])),
-                routed_ece=float(_ece(routed_pool[c])),
-                n_present=int(present[:, c].sum()),
-                n_failed=int(failed_cls[:, c].sum()),
-                n_spurious=int(spurious[:, c].sum()),
+                dice=dice_c,
+                class_ece=class_ece,
+                routed_ece=routed_ece,
+                n_present=n_present,
+                n_failed=n_failed,
+                n_spurious=n_spurious,
                 dice_median=median,
                 dice_p10=p10,
                 dice_min=lowest,
+                class_ece_ci=class_ece_ci[c],
+                routed_ece_ci=routed_ece_ci[c],
+                dice_ci=dice_ci[c],
             )
         )
 
-    def mean_conf(sel: torch.Tensor) -> float:
-        s = top_s[sel].sum(0)
-        return float(s[:, 1].sum() / s[:, 0].sum())
+    if soft:
+        failures = FailureStats(
+            threshold=dice_failure_threshold,
+            n_failed=0,
+            ece_all=point["ece"],
+            ece_without_failed=float("nan"),
+            confidence_failed=float("nan"),
+            confidence_rest=float("nan"),
+        )
+    else:
+        assert conf is not None
 
-    rest = ~failed_img
-    ranked = torch.argsort(mean_dice.nan_to_num(float("inf")))[: min(n_worst, n_images)]
-    worst = []
-    for i in (
-        int(j) for j in ranked if float(mean_dice[j]) < 1.0
-    ):  # NaN and perfect images excluded
-        row = dice[i].masked_fill(~considered[i], float("inf"))
-        c = int(row.argmin())
-        worst.append((ids[i], float(mean_dice[i]), names[c], float(dice[i, c])))
-    failures = FailureStats(
-        threshold=dice_failure_threshold,
-        n_failed=int(failed_img.sum()),
-        ece_all=point["ece"],
-        ece_without_failed=float(_ece(top_s[rest].sum(0))) if rest.any() else float("nan"),
-        confidence_failed=mean_conf(failed_img) if failed_img.any() else float("nan"),
-        confidence_rest=mean_conf(rest) if rest.any() else float("nan"),
-        worst=worst,
-    )
+        def mean_conf(sel: torch.Tensor) -> float:
+            s = top_s[sel].sum(0)
+            return float(s[:, 1].sum() / s[:, 0].sum())
+
+        rest = ~failed_img
+        ranked = torch.argsort(mean_dice.nan_to_num(float("inf")))[: min(n_worst, n_images)]
+        worst = []
+        for i in (
+            int(j) for j in ranked if float(mean_dice[j]) < 1.0
+        ):  # NaN and perfect images excluded
+            row = dice[i].masked_fill(~considered[i], float("inf"))
+            c = int(row.argmin())
+            worst.append((ids[i], float(mean_dice[i]), names[c], float(dice[i, c])))
+        failures = FailureStats(
+            threshold=dice_failure_threshold,
+            n_failed=int(failed_img.sum()),
+            ece_all=point["ece"],
+            ece_without_failed=float(_ece(top_s[rest].sum(0)))
+            if rest.any()
+            else float("nan"),
+            confidence_failed=mean_conf(failed_img) if failed_img.any() else float("nan"),
+            confidence_rest=mean_conf(rest) if rest.any() else float("nan"),
+            worst=worst,
+        )
 
     # --- curve of the pooled top-1 statistics ---------------------------------------------
     counts = pooled[:, 0]
@@ -584,16 +875,18 @@ def diagnose(
         n_images=n_images,
         n_valid=int(total_valid),
         n_bins=n_bins,
-        saturated_fraction=sum(n_saturated) / total_valid,
+        saturated_fraction=sum(acc.n_saturated) / total_valid,
+        boundary=_boundary_stats(pooled, total_valid),
         metrics=metrics,
         classes=classes,
         failures=failures,
         curve=curve,
         image_dice=dice,
         warnings=[],
+        soft_targets=soft,
     )
     report.warnings = _warnings(report, min_images, min_class_fraction, min_class_voxels)
-    if bool(mean_dice.isnan().all()):
+    if background_class is not None and not soft and bool(mean_dice.isnan().all()):
         report.warnings.insert(
             0,
             "background_class leaves no class in the per-image Dice; "
@@ -609,6 +902,11 @@ def _warnings(
     min_class_voxels: int,
 ) -> list[str]:
     out = []
+    if r.soft_targets:
+        out.append(
+            "soft targets: hard-label Dice and failure statistics are undefined "
+            "(Dice fields and image_dice are NaN)"
+        )
     if r.n_images < min_images:
         out.append(
             f"only {r.n_images} image{'s' * (r.n_images != 1)} (< {min_images}): the intervals are wide because the "

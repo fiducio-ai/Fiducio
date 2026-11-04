@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `diagnose` accepts a model and a `DataLoader` (`diagnose(model, loader, ...)`) and
+  accumulates per-image statistics, so the dataset is streamed instead of
+  materialised. Batches are `(inputs, labels)` or `(inputs, labels, mask)`, run under
+  `no_grad` with `model.training` unchanged and moved to `device`.
+- `diagnose` accepts soft class-distribution targets (MHR). Top-1/routed/class ECE,
+  NLL and Brier follow the existing soft-target metrics; hard-label Dice and failure
+  statistics are reported as undefined (NaN).
+- `ReliabilityReport.boundary` (`BoundaryStats`): mass, confidence-accuracy gap and
+  exact ECE contribution of the first and last uniform confidence bins.
+- Per-class 95% bootstrap intervals over images: `ClassStats.class_ece_ci`,
+  `routed_ece_ci`, `dice_ci`, shown in `summary()` and `to_dict()`.
+
 ## [0.4.0] - 2026-11-03
 
 ### Added

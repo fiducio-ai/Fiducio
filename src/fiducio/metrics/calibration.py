@@ -169,20 +169,37 @@ def reliability_curve(
     if n_bins < 1:
         raise ValueError("n_bins must be an integer >= 1")
     p, y, valid = _voxels(probs, targets, mask, ignore_index)
+    if class_index is not None:
+        try:
+            class_index = -1 if isinstance(class_index, bool) else operator.index(class_index)
+        except TypeError:
+            class_index = -1
+        if not 0 <= class_index < p.shape[1]:
+            raise ValueError(f"class_index must be an integer in [0, {p.shape[1] - 1}]")
+    return _binned_curve(p, y, valid, n_bins, class_index)
+
+
+def _binned_curve(
+    p: torch.Tensor,
+    y: torch.Tensor,
+    valid: torch.Tensor | None,
+    n_bins: int,
+    class_index: int | None,
+) -> ReliabilityCurve:
+    """Binned reliability of already validated predictions.
+
+    ``p`` and ``y`` are class-first; ``valid`` selects voxels (``None`` means
+    all). No validation is repeated, so callers holding validated tensors can
+    compute many curves without re-checking them.
+    """
     # Construct the same float32 boundaries as before, then accumulate in double.
     edges = torch.linspace(0.0, 1.0, n_bins + 1, device=p.device).double()
     if class_index is None:
         confidence, prediction = p.max(dim=1)
         observed = _true_class_probs(y, prediction) if y.shape == p.shape else prediction == y
     else:
-        try:
-            c = -1 if isinstance(class_index, bool) else operator.index(class_index)
-        except TypeError:
-            c = -1
-        if not 0 <= c < p.shape[1]:
-            raise ValueError(f"class_index must be an integer in [0, {p.shape[1] - 1}]")
-        confidence = p[:, c]
-        observed = y[:, c] if y.shape == p.shape else y == c
+        confidence = p[:, class_index]
+        observed = y[:, class_index] if y.shape == p.shape else y == class_index
     correct = _select(observed, valid).double()
     confidence = _select(confidence, valid).double().contiguous()
     if confidence.numel() == 0:

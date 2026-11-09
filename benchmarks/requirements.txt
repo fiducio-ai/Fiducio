@@ -8,7 +8,7 @@
 -e ..
 netcal==1.4.0
 torch-uncertainty[cpu]==0.13.0
-torchvision==0.29.1+cpu
+torchvision==0.29.2+cpu
 dirichletcal==0.5.3
 pandas==3.1.0
 matplotlib==3.11.1

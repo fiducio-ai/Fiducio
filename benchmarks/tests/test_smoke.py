@@ -2,6 +2,7 @@
 
 import argparse
 import csv
+import json
 import sys
 from pathlib import Path
 
@@ -37,6 +38,13 @@ def test_adapter_runs(name):
     m.fit(z, y)
     p = m.predict(z)
     assert p.shape == z.shape and bool(((p.sum(1) - 1).abs() < 1e-4).all())
+
+
+def test_child_records_device(capsys):
+    run.child(argparse.Namespace(method="fiducio TS", n=1000, reps=1, threads=1, device="cpu"))
+    row = json.loads(capsys.readouterr().out.strip().splitlines()[-1])
+    assert {"fit_s", "transform_s", "peak_rss_mb"} <= row.keys()
+    assert "peak_vram_mb" not in row  # VRAM is only meaningful on a CUDA run
 
 
 def test_downstream_rows_parseable(tmp_path):

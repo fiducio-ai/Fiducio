@@ -1,7 +1,7 @@
 """Benchmark Fiducio against netcal, torch-uncertainty and dirichletcal on synthetic voxels.
 
     python run.py calibration [--seeds 10] [--out results/calibration.csv]
-    python run.py scaling [--sizes 100000 1000000] [--timeout 600] [--out results/scaling.csv]
+    python run.py scaling [--sizes 100000 1000000] [--timeout 600] [--device cpu] [--out results/scaling.csv]
     python run.py downstream [--seeds 10] [--out results/downstream.csv]
     python run.py robustness [--seeds 10] [--cases ...] [--out results/robustness.csv]
     python run.py report [--out ../docs/benchmark.md]
@@ -93,11 +93,19 @@ def write(path, rows):
         w.writerows(rows)
 
 
+def _sync(device):
+    """Wait for queued CUDA work, so a timing measures execution and not launch."""
+    if str(device).startswith("cuda") and torch.cuda.is_available():
+        torch.cuda.synchronize()
+
+
 def fit_timed(cls, C, zc, yc):
     """Construct and fit an adapter, returning it with the fit duration in seconds."""
     m = cls(C)
+    _sync(adapters.DEVICE)
     t = time.perf_counter()
     m.fit(zc, yc)
+    _sync(adapters.DEVICE)
     return m, time.perf_counter() - t
 
 
@@ -289,39 +297,49 @@ def robustness(a):
 def child(a):
     """One (method, N) measurement in a fresh process: median fit and transform times, peak RSS."""
     torch.set_num_threads(a.threads)
+    adapters.use_device(a.device)
     cls = adapters.ADAPTERS[a.method][0]
     zc, yc, _ = data.simulate("over", 4, max(1, a.n // VOX), VOX, 0)
     zt, _, _ = data.simulate("over", 4, max(1, a.n // VOX), VOX, 1)
     cls(4).fit(zc[:2000], yc[:2000])  # warm-up
+    _sync(a.device)
+    if a.device.startswith("cuda"):
+        torch.cuda.reset_peak_memory_stats()
     fit, pred = [], []
     for _ in range(a.reps):
         m, dt = fit_timed(cls, 4, zc, yc)
         fit.append(dt)
+        _sync(a.device)
         t = time.perf_counter()
         m.predict(zt)
+        _sync(a.device)
         pred.append(time.perf_counter() - t)
-    print(
-        json.dumps(
-            dict(
-                fit_s=statistics.median(fit),
-                transform_s=statistics.median(pred),
-                peak_rss_mb=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024,
-            )
-        )
+    out = dict(
+        fit_s=statistics.median(fit),
+        transform_s=statistics.median(pred),
+        peak_rss_mb=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024,
     )
+    if a.device.startswith("cuda"):
+        out["peak_vram_mb"] = torch.cuda.max_memory_allocated() / 2**20
+    print(json.dumps(out))
 
 
 def scaling(a):
     hw, rows = hardware(), []
     hw["threads"] = a.threads
+    if a.device.startswith("cuda"):
+        hw["gpu"] = torch.cuda.get_device_name(0)
     for n in a.sizes:
         for name, (cls, _) in adapters.ADAPTERS.items():
+            # netcal and dirichletcal are numpy/JAX and stay on the host CPU.
+            device = a.device if cls.lib in {"fiducio", "torch-uncertainty"} else "cpu"
             row = dict(
                 method=name,
                 lib=cls.lib,
                 lib_version=adapters.version(cls.lib),
                 n=n,
                 reps=a.reps,
+                device=device,
                 **hw,
             )
             cmd = [
@@ -336,6 +354,8 @@ def scaling(a):
                 str(a.reps),
                 "--threads",
                 str(a.threads),
+                "--device",
+                device,
             ]
             try:
                 r = subprocess.run(cmd, capture_output=True, text=True, timeout=a.timeout, cwd=HERE)
@@ -603,6 +623,32 @@ def report(a):
             "",
         ]
 
+    def scaling_table(frame):
+        vram = "peak_vram_mb" in frame.columns
+        has_dev = "device" in frame.columns
+        rows = [
+            "| N | method |"
+            + (" device |" if has_dev else "")
+            + " status | fit (s) | transform (s) | peak RSS (MB) |"
+            + (" peak VRAM (MB) |" if vram else ""),
+            "|--:|---|"
+            + (":-:|" if has_dev else "")
+            + "---|--:|--:|--:|"
+            + ("--:|" if vram else ""),
+        ]
+        f = lambda x: "" if pd.isna(x) else f"{x:.2f}"  # noqa: E731
+        tf = lambda x: "" if pd.isna(x) else f"{x:.4f}" if vram else f(x)  # noqa: E731
+        for r in frame.itertuples():
+            device = "" if not has_dev or pd.isna(r.device) else f" {r.device} |"
+            row = (
+                f"| {r.n} | {r.method} |{device} {r.status} | {f(r.fit_s)} | "
+                f"{tf(r.transform_s)} | {f(r.peak_rss_mb)} |"
+            )
+            if vram:
+                row += f" {f(r.peak_vram_mb)} |"
+            rows.append(row)
+        return rows
+
     out += [
         "## Scaling",
         "",
@@ -614,16 +660,38 @@ def report(a):
         "uses Adam with `max_iter=200`, which dominates its fit time at 1M voxels, while netcal's "
         "default is much cheaper.",
         "",
-        "| N | method | status | fit (s) | transform (s) | peak RSS (MB) |",
-        "|--:|---|---|--:|--:|--:|",
-    ]
-    for r in sc.itertuples():
-        f = lambda x: "" if pd.isna(x) else f"{x:.2f}"  # noqa: E731
-        out.append(
-            f"| {r.n} | {r.method} | {r.status} | {f(r.fit_s)} | {f(r.transform_s)} | {f(r.peak_rss_mb)} |"
-        )
-    out += [
+        f"The table reports medians over {int(sc.reps.iloc[0])} repetitions; the figures show no spread.",
         "",
+        *scaling_table(sc),
+        "",
+    ]
+    gpu_path = HERE / "results/scaling-gpu.csv"
+    if gpu_path.exists():
+        gpu = pd.read_csv(gpu_path)
+        has_gpu_plot = bool(((gpu.device == "cuda") & (gpu.status == "ok")).any())
+        out += [
+            "## Scaling (GPU)",
+            "",
+            f"Same scenario and process, on {gpu.iloc[0].gpu} (torch {gpu.iloc[0].torch}). "
+            "Fiducio and torch-uncertainty run on the GPU; netcal and dirichletcal are numpy/JAX "
+            "and stay on the CPU, so only the CUDA rows are comparable with each other, and only "
+            "on this machine.",
+            "",
+        ]
+        if has_gpu_plot:
+            out += [
+                figure(
+                    "scaling-gpu",
+                    f"CUDA torch methods on {gpu.iloc[0].gpu}: median fit time, transform time, and peak VRAM over input sizes",
+                ),
+                f"The graph shows CUDA rows only; the table also includes CPU baselines. Medians over "
+                f"{int(gpu.reps.iloc[0])} repetitions; no spread is shown.",
+                "",
+            ]
+        else:
+            out += ["No successful CUDA rows; graph omitted.", ""]
+        out += [*scaling_table(gpu), ""]
+    out += [
         "## Features",
         "",
         FEATURES,
@@ -634,6 +702,8 @@ def report(a):
         "pip install -r requirements.txt  # Python 3.12 or 3.13",
         "python run.py calibration && python run.py scaling && "
         "python run.py downstream && python run.py robustness && python run.py report",
+        "# with a CUDA build of torch, for the GPU table:",
+        "python run.py scaling --device cuda --out results/scaling-gpu.csv && python run.py report",
         "```",
         "",
     ]
@@ -653,6 +723,7 @@ def main():
     s.add_argument("--timeout", type=int, default=600)
     s.add_argument("--reps", type=int, default=3)
     s.add_argument("--threads", type=int, default=4)
+    s.add_argument("--device", default="cpu", choices=("cpu", "cuda"))
     s.add_argument("--out", default=HERE / "results/scaling.csv")
     d = sub.add_parser("downstream")
     d.add_argument("--seeds", type=int, default=10)
@@ -669,6 +740,7 @@ def main():
     k.add_argument("--n", type=int, required=True)
     k.add_argument("--reps", type=int, default=3)
     k.add_argument("--threads", type=int, default=4)
+    k.add_argument("--device", default="cpu", choices=("cpu", "cuda"))
     r = sub.add_parser("report")
     r.add_argument("--out", default=HERE.parent / "docs/benchmark.md")
     a = p.parse_args()

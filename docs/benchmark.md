@@ -293,6 +293,8 @@ Scenario `over`, 4 classes, one process per row.
 
 Fit times reflect each library's default optimiser budget: Fiducio's temperature scaling uses Adam with `max_iter=200`, which dominates its fit time at 1M voxels, while netcal's default is much cheaper.
 
+The table reports medians over 3 repetitions; the figures show no spread.
+
 | N | method | status | fit (s) | transform (s) | peak RSS (MB) |
 |--:|---|---|--:|--:|--:|
 | 100000 | identity | ok | 0.00 | 0.00 | 290.32 |
@@ -316,6 +318,38 @@ Fit times reflect each library's default optimiser budget: Fiducio's temperature
 | 1000000 | torch-uncertainty MS | ok | 10.45 | 0.02 | 668.88 |
 | 1000000 | dirichletcal DC | ok | 24.08 | 0.09 | 5631.00 |
 
+## Scaling (GPU)
+
+Same scenario and process, on NVIDIA GeForce RTX 3090 (torch 2.15.0+cu132). Fiducio and torch-uncertainty run on the GPU; netcal and dirichletcal are numpy/JAX and stay on the CPU, so only the CUDA rows are comparable with each other, and only on this machine.
+
+![CUDA torch methods on NVIDIA GeForce RTX 3090: median fit time, transform time, and peak VRAM over input sizes](assets/benchmark/scaling-gpu-light.png#only-light)
+![CUDA torch methods on NVIDIA GeForce RTX 3090: median fit time, transform time, and peak VRAM over input sizes](assets/benchmark/scaling-gpu-dark.png#only-dark)
+
+The graph shows CUDA rows only; the table also includes CPU baselines. Medians over 3 repetitions; no spread is shown.
+
+| N | method | device | status | fit (s) | transform (s) | peak RSS (MB) | peak VRAM (MB) |
+|--:|---|:-:|---|--:|--:|--:|--:|
+| 100000 | identity | cpu | ok | 0.00 | 0.0057 | 799.41 |  |
+| 100000 | fiducio TS | cuda | ok | 0.29 | 0.0007 | 1393.97 | 12.21 |
+| 100000 | fiducio VS | cuda | ok | 0.24 | 0.0007 | 1307.01 | 9.16 |
+| 100000 | fiducio MS | cuda | ok | 0.23 | 0.0007 | 1404.30 | 14.24 |
+| 100000 | fiducio DC | cuda | ok | 0.31 | 0.0010 | 1404.70 | 15.76 |
+| 100000 | netcal TS | cpu | ok | 0.08 | 0.0083 | 940.59 |  |
+| 100000 | torch-uncertainty TS | cuda | ok | 0.99 | 0.0004 | 1381.91 | 10.53 |
+| 100000 | torch-uncertainty VS | cuda | ok | 0.97 | 0.0004 | 1382.82 | 10.52 |
+| 100000 | torch-uncertainty MS | cuda | ok | 1.01 | 0.0004 | 1477.25 | 12.06 |
+| 100000 | dirichletcal DC | cpu | ok | 2.76 | 0.0131 | 1859.47 |  |
+| 1000000 | identity | cpu | ok | 0.00 | 0.0301 | 862.17 |  |
+| 1000000 | fiducio TS | cuda | ok | 0.59 | 0.0025 | 1451.34 | 126.52 |
+| 1000000 | fiducio VS | cuda | ok | 0.63 | 0.0025 | 1363.92 | 94.52 |
+| 1000000 | fiducio MS | cuda | ok | 0.64 | 0.0026 | 1461.45 | 93.78 |
+| 1000000 | fiducio DC | cuda | ok | 0.65 | 0.0027 | 1464.34 | 109.78 |
+| 1000000 | netcal TS | cpu | ok | 0.64 | 0.0797 | 1318.34 |  |
+| 1000000 | torch-uncertainty TS | cuda | ok | 8.36 | 0.0020 | 1431.36 | 71.01 |
+| 1000000 | torch-uncertainty VS | cuda | ok | 8.34 | 0.0020 | 1427.14 | 71.01 |
+| 1000000 | torch-uncertainty MS | cuda | ok | 8.39 | 0.0027 | 1527.36 | 71.00 |
+| 1000000 | dirichletcal DC | cpu | ok | 23.38 | 0.0856 | 6062.28 |  |
+
 ## Features
 
 | | Fiducio | netcal | torch-uncertainty | dirichletcal |
@@ -337,4 +371,6 @@ tested for that library.
 cd benchmarks
 pip install -r requirements.txt  # Python 3.12 or 3.13
 python run.py calibration && python run.py scaling && python run.py downstream && python run.py robustness && python run.py report
+# with a CUDA build of torch, for the GPU table:
+python run.py scaling --device cuda --out results/scaling-gpu.csv && python run.py report
 ```

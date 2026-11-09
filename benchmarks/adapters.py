@@ -15,6 +15,15 @@ import torch
 
 C_DEFAULT = 4
 
+# Torch-based adapters run on this device; set by the benchmark process.
+DEVICE = "cpu"
+
+
+def use_device(device):
+    """Select the device of the torch-based adapters (``"cpu"`` or ``"cuda"``)."""
+    global DEVICE
+    DEVICE = str(device)
+
 
 class Identity:
     lib, dtype = "none", "float32"
@@ -36,7 +45,7 @@ class Fiducio:
     def __init__(self, C):
         import fiducio
 
-        self.m = getattr(fiducio, self.cls)(input_type="logits", device="cpu")
+        self.m = getattr(fiducio, self.cls)(input_type="logits", device=DEVICE)
 
     def fit(self, z, y):
         self.m.fit(z, y)
@@ -71,7 +80,7 @@ class TorchUncertainty:
         from torch_uncertainty import post_processing as pp
 
         kw = {} if self.cls == "TemperatureScaler" else {"num_classes": C}
-        self.m = getattr(pp, self.cls)(device="cpu", **kw)
+        self.m = getattr(pp, self.cls)(device=DEVICE, **kw)
 
     def fit(self, z, y):
         from torch.utils.data import DataLoader, TensorDataset
@@ -80,7 +89,7 @@ class TorchUncertainty:
 
     def predict(self, z):
         with torch.no_grad():
-            return self.m(z).softmax(1)
+            return self.m(z.to(DEVICE)).softmax(1)
 
 
 class Dirichletcal:
@@ -106,7 +115,7 @@ class FiducioProbs(Fiducio):
     def __init__(self, C):
         import fiducio
 
-        self.m = getattr(fiducio, self.cls)(input_type="probs", device="cpu")
+        self.m = getattr(fiducio, self.cls)(input_type="probs", device=DEVICE)
 
     def fit(self, z, y):
         self.m.fit(z.softmax(1), y)

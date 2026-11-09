@@ -7,6 +7,7 @@ single axis scale per panel; the tables on the page carry the exact values.
 
 from __future__ import annotations
 
+import csv
 from pathlib import Path
 
 import adapters
@@ -83,7 +84,7 @@ def _legend_handles(mode):
 def calibration(ok, mode, path):
     """NLL excess over the oracle and ECE for 4 classes, one column per scenario."""
     t = _setup(mode)
-    fig, axes = plt.subplots(2, 4, figsize=(12, 6.4), sharey=True)
+    fig, axes = plt.subplots(2, 4, figsize=(12, 6.4), sharex="row", sharey=True)
     rows = [("NLL − oracle NLL (lower is better)", "nll"), ("ECE (lower is better)", "ece")]
     ypos = {m: i for i, m in enumerate(reversed(METHODS))}
     for j, scenario in enumerate(data.SCENARIOS):
@@ -111,12 +112,14 @@ def calibration(ok, mode, path):
                 )
             if col == "ece":
                 ax.axvline(oracle[col].mean(), color=t["ink2"], linestyle=":", linewidth=1)
-            ax.set_xlim(left=0)
-            ax.xaxis.set_major_locator(MaxNLocator(4))
+            if j == 0:
+                ax.xaxis.set_major_locator(MaxNLocator(4))
             if i == 0:
                 ax.set_title(SCENARIO_TITLES[scenario], color=t["ink"], fontsize=11)
             if j == 0:
                 ax.set_ylabel(label, color=t["ink2"], fontsize=9)
+    for row in axes:
+        row[0].set_xlim(left=0)
     axes[0, 0].set_yticks(list(ypos.values()), list(ypos))
     fig.suptitle(
         "Calibration quality, 4 classes (mean ± 95% CI over 10 seeds; dotted line: oracle ECE)",
@@ -253,6 +256,75 @@ def tradeoff(sc, mode, path):
     plt.close(fig)
 
 
+def scaling_gpu(rows, mode, path):
+    """CUDA fit time, transform time and allocated VRAM across input sizes."""
+    rows = [r for r in rows if r["device"] == "cuda" and r["status"] == "ok"]
+    if not rows:
+        Path(path).unlink(missing_ok=True)
+        return
+    t = _setup(mode)
+    sizes = sorted({int(r["n"]) for r in rows})
+    methods = [m for m in METHODS if any(r["method"] == m for r in rows)]
+    markers = dict(zip(methods, ("o", "s", "^", "D", "v", "P", "X"), strict=False))
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5), sharex=True)
+    columns = (
+        ("fit_s", "Median fit time (s)"),
+        ("transform_s", "Median transform time (s)"),
+        ("peak_vram_mb", "Peak allocated VRAM (MB)"),
+    )
+    handles = []
+    for method in methods:
+        method_rows = sorted((r for r in rows if r["method"] == method), key=lambda r: int(r["n"]))
+        lib = LIB_OF[method]
+        color, marker = _colour(lib, mode), markers[method]
+        handles.append(
+            Line2D([], [], color=color, marker=marker, linewidth=1.2, markersize=7, label=method)
+        )
+        xs = [int(r["n"]) for r in method_rows]
+        for ax, (column, label) in zip(axes, columns, strict=True):
+            ys = [float(r[column]) for r in method_rows]
+            ax.plot(xs, ys, color=color, linewidth=1.2, zorder=1)
+            for x, y in zip(xs, ys, strict=True):
+                ax.plot(
+                    x,
+                    y,
+                    marker,
+                    color=color,
+                    markerfacecolor=t["surface"] if x == sizes[0] else color,
+                    markeredgecolor=color,
+                    markeredgewidth=1.5,
+                    markersize=8,
+                    zorder=2,
+                )
+            _clean(ax, t, grid="both")
+            ax.set_xscale("log")
+            ax.set_yscale("log")
+            ax.set_xlabel("voxels (hollow = smaller input)", color=t["ink2"])
+            ax.set_ylabel(label, color=t["ink2"])
+            ax.set_xticks(
+                sizes,
+                [f"{n / 1_000_000:g}M" if n >= 1_000_000 else f"{n / 1_000:g}k" for n in sizes],
+            )
+    gpu = next((r.get("gpu") for r in rows if r.get("gpu")), "CUDA device")
+    fig.suptitle(
+        f"GPU scaling on {gpu}: CUDA methods only (filled = larger input)",
+        color=t["ink"],
+        fontsize=12,
+        x=0.01,
+        ha="left",
+    )
+    fig.tight_layout(rect=(0, 0.16, 1, 0.92))
+    fig.legend(
+        handles=handles,
+        loc="lower center",
+        ncol=4,
+        frameon=False,
+        labelcolor=t["ink2"],
+    )
+    fig.savefig(path, dpi=180)
+    plt.close(fig)
+
+
 def draw_all(ok, sc, out_dir):
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -260,3 +332,9 @@ def draw_all(ok, sc, out_dir):
         calibration(ok, mode, out_dir / f"calibration-{mode}.png")
         scaling(sc, mode, out_dir / f"scaling-{mode}.png")
         tradeoff(sc, mode, out_dir / f"tradeoff-{mode}.png")
+    gpu_path = Path(__file__).parent / "results" / "scaling-gpu.csv"
+    if gpu_path.exists():
+        with gpu_path.open(newline="") as f:
+            gpu = list(csv.DictReader(f))
+        for mode in THEMES:
+            scaling_gpu(gpu, mode, out_dir / f"scaling-gpu-{mode}.png")

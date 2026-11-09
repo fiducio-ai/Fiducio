@@ -38,9 +38,18 @@ pin.
 
 `python run.py child` is internal: `scaling` spawns one per row so that memory
 and time are isolated. Use `--seeds`, `--sizes`, `--reps`, `--threads`,
-`--timeout`, `--cases`, `--methods` and `--out` to shorten a run; the defaults
-reproduce the committed results. `robustness` bounds each fit-and-transform with
-an in-process SIGALRM deadline rather than a fresh process.
+`--timeout`, `--cases`, `--methods`, `--device` and `--out` to shorten a run; the
+defaults reproduce the committed results. `robustness` bounds each fit-and-transform
+with an in-process SIGALRM deadline rather than a fresh process.
+
+`scaling --device cuda` runs the torch adapters (Fiducio and torch-uncertainty) on
+the GPU, synchronises before and after each timed call, and records peak VRAM next
+to peak RSS. netcal and dirichletcal are numpy/JAX and stay on the host CPU, so a
+CUDA run only makes the two torch libraries comparable to themselves: a GPU row is
+not comparable with a CPU row from a different device. Install a CUDA build of torch
+(and matching torchvision) after the requirements install above, replacing its CPU
+wheels. For example: `pip install --force-reinstall torch torchvision --index-url
+https://download.pytorch.org/whl/cu132`.
 
 On the eight-core machine used for the committed run, the five commands take
 about 30–40 minutes.
@@ -54,8 +63,12 @@ about 30–40 minutes.
   the independent cross-check scores, argmax agreement and the traceback if a
   method failed.
 - `results/scaling.csv` — one row per method and voxel count, with library
-  version, repetitions, hardware, `status` (`ok`, `timeout`, `oom`, `error`),
-  median fit and transform times and peak RSS.
+  version, repetitions, hardware, `device` (`cpu` or `cuda`), `status` (`ok`,
+  `timeout`, `oom`, `error`), median fit and transform times, peak RSS and, for
+  torch rows on a CUDA run, peak VRAM.
+- `results/scaling-gpu.csv` — the same rows for the committed RTX 3090 run
+  (`scaling --device cuda`). `report` adds it as a separate GPU table when the
+  file is present; its CPU rows are not comparable with the CPU table.
 - `results/downstream.csv` — one row per scenario, seed and Fiducio method, with
   per-class ECE, per-class volume bias (predicted share minus label share),
   Dice and the share of changed argmax voxels. The report pairs Dice against
@@ -96,9 +109,11 @@ limitations:
   float32/float64 case is about input dtype; the `netcal TS (raw dtype)` variant
   exposes netcal's float32 pitfall, which the main adapter masks by casting to
   float64.
-- CPU only. Timings depend on the recorded hardware and thread count; peak RSS
-  includes the interpreter and imported libraries, and fit/transform times
-  exclude imports and the warm-up.
+- CPU by default. Timings depend on the recorded hardware and thread count; peak
+  RSS includes the interpreter and imported libraries, and fit/transform times
+  exclude imports and the warm-up. With `--device cuda`, timings are synchronised
+  and peak VRAM is recorded for the torch adapters; netcal and dirichletcal stay on
+  the CPU, so only the torch libraries are compared on equal footing.
 - One process per scaling row: rows cannot share state, which makes memory and
   timeout results meaningful at the cost of process startup outside the measured
   window.

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-09
+
 ### Added
 
 - `diagnose` accepts a model and a `DataLoader` (`diagnose(model, loader, ...)`) and
@@ -24,6 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   class volume bias, Dice and argmax change) and for robustness (saturated
   probabilities, tiny N, a class absent from calibration, float32 vs float64).
   The committed benchmark results are regenerated on Fiducio 0.4.0.
+- `benchmarks/run.py scaling --device cuda` runs the torch adapters on the GPU,
+  synchronises each timed call and records peak VRAM; the committed RTX 3090 run
+  is published as a separate GPU table in `docs/benchmark.md`.
 
 ## [0.4.0] - 2026-11-03
 
@@ -288,7 +293,8 @@ Calibration in Semantic Segmentation* (Transactions on Machine Learning Research
   reliability figure (`examples/readme_figure.py`), locked uv development
   environments and a CI matrix for Python 3.10, 3.11 and 3.12.
 
-[Unreleased]: https://github.com/fiducio-ai/Fiducio/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/fiducio-ai/Fiducio/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/fiducio-ai/Fiducio/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/fiducio-ai/Fiducio/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/fiducio-ai/Fiducio/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/fiducio-ai/Fiducio/compare/v0.2.0...v0.3.0

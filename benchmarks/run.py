@@ -668,6 +668,7 @@ def report(a):
     gpu_path = HERE / "results/scaling-gpu.csv"
     if gpu_path.exists():
         gpu = pd.read_csv(gpu_path)
+        has_gpu_plot = bool(((gpu.device == "cuda") & (gpu.status == "ok")).any())
         out += [
             "## Scaling (GPU)",
             "",
@@ -676,16 +677,20 @@ def report(a):
             "and stay on the CPU, so only the CUDA rows are comparable with each other, and only "
             "on this machine.",
             "",
-            figure(
-                "scaling-gpu",
-                f"CUDA torch methods on {gpu.iloc[0].gpu}: median fit time, transform time, and peak VRAM over input sizes",
-            ),
-            f"The graph shows CUDA rows only; the table also includes CPU baselines. Medians over "
-            f"{int(gpu.reps.iloc[0])} repetitions; no spread is shown.",
-            "",
-            *scaling_table(gpu),
-            "",
         ]
+        if has_gpu_plot:
+            out += [
+                figure(
+                    "scaling-gpu",
+                    f"CUDA torch methods on {gpu.iloc[0].gpu}: median fit time, transform time, and peak VRAM over input sizes",
+                ),
+                f"The graph shows CUDA rows only; the table also includes CPU baselines. Medians over "
+                f"{int(gpu.reps.iloc[0])} repetitions; no spread is shown.",
+                "",
+            ]
+        else:
+            out += ["No successful CUDA rows; graph omitted.", ""]
+        out += [*scaling_table(gpu), ""]
     out += [
         "## Features",
         "",

@@ -258,10 +258,11 @@ def tradeoff(sc, mode, path):
 
 def scaling_gpu(rows, mode, path):
     """CUDA fit time, transform time and allocated VRAM across input sizes."""
-    t = _setup(mode)
     rows = [r for r in rows if r["device"] == "cuda" and r["status"] == "ok"]
     if not rows:
+        Path(path).unlink(missing_ok=True)
         return
+    t = _setup(mode)
     sizes = sorted({int(r["n"]) for r in rows})
     methods = [m for m in METHODS if any(r["method"] == m for r in rows)]
     markers = dict(zip(methods, ("o", "s", "^", "D", "v", "P", "X"), strict=False))

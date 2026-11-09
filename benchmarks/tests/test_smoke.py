@@ -67,6 +67,43 @@ def test_gpu_scaling_plot_renders_both_themes(tmp_path):
         assert path.stat().st_size > 10_000
 
 
+def test_gpu_scaling_plot_removes_stale_image_when_all_rows_fail(tmp_path):
+    import plots
+
+    path = tmp_path / "scaling-gpu-light.png"
+    path.write_bytes(b"stale")
+    plots.scaling_gpu([{"device": "cuda", "status": "error"}], "light", path)
+    assert not path.exists()
+
+
+def test_report_omits_gpu_graph_when_cuda_rows_fail(tmp_path, monkeypatch):
+    import shutil
+
+    pytest.importorskip("pandas")
+    source = Path(__file__).parents[1] / "results"
+    results = tmp_path / "benchmarks" / "results"
+    results.mkdir(parents=True)
+    for name in ("calibration.csv", "scaling.csv", "downstream.csv", "robustness.csv"):
+        shutil.copyfile(source / name, results / name)
+    with (source / "scaling-gpu.csv").open(newline="") as f:
+        rows = list(csv.DictReader(f))
+    for row in rows:
+        if row["device"] == "cuda":
+            row["status"] = "error"
+    with (results / "scaling-gpu.csv").open("w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=rows[0])
+        writer.writeheader()
+        writer.writerows(rows)
+
+    monkeypatch.setattr(run, "HERE", tmp_path / "benchmarks")
+    monkeypatch.setattr(run.plots, "draw_all", lambda *_: None)
+    out = tmp_path / "benchmark.md"
+    run.report(argparse.Namespace(out=out))
+    report = out.read_text()
+    assert "No successful CUDA rows; graph omitted." in report
+    assert "scaling-gpu-light.png" not in report
+
+
 def test_downstream_rows_parseable(tmp_path):
     out = tmp_path / "downstream.csv"
     run.downstream(argparse.Namespace(seeds=1, cases=1, out=out))

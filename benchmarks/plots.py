@@ -273,15 +273,11 @@ def scaling_gpu(rows, mode, path):
     )
     handles = []
     for method in methods:
-        method_rows = sorted(
-            (r for r in rows if r["method"] == method), key=lambda r: int(r["n"])
-        )
+        method_rows = sorted((r for r in rows if r["method"] == method), key=lambda r: int(r["n"]))
         lib = LIB_OF[method]
         color, marker = _colour(lib, mode), markers[method]
         handles.append(
-            Line2D(
-                [], [], color=color, marker=marker, linewidth=1.2, markersize=7, label=method
-            )
+            Line2D([], [], color=color, marker=marker, linewidth=1.2, markersize=7, label=method)
         )
         xs = [int(r["n"]) for r in method_rows]
         for ax, (column, label) in zip(axes, columns, strict=True):
@@ -304,7 +300,10 @@ def scaling_gpu(rows, mode, path):
             ax.set_yscale("log")
             ax.set_xlabel("voxels (hollow = smaller input)", color=t["ink2"])
             ax.set_ylabel(label, color=t["ink2"])
-            ax.set_xticks(sizes, [f"{n / 1_000_000:g}M" if n >= 1_000_000 else f"{n / 1_000:g}k" for n in sizes])
+            ax.set_xticks(
+                sizes,
+                [f"{n / 1_000_000:g}M" if n >= 1_000_000 else f"{n / 1_000:g}k" for n in sizes],
+            )
     gpu = next((r.get("gpu") for r in rows if r.get("gpu")), "CUDA device")
     fig.suptitle(
         f"GPU scaling on {gpu}: CUDA methods only (filled = larger input)",

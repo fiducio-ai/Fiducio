@@ -47,8 +47,9 @@ the GPU, synchronises before and after each timed call, and records peak VRAM ne
 to peak RSS. netcal and dirichletcal are numpy/JAX and stay on the host CPU, so a
 CUDA run only makes the two torch libraries comparable to themselves: a GPU row is
 not comparable with a CPU row from a different device. Install a CUDA build of torch
-(e.g. `pip install torch --index-url https://download.pytorch.org/whl/cu132`) in the
-benchmark environment first.
+(and matching torchvision) after the requirements install above, replacing its CPU
+wheels. For example: `pip install --force-reinstall torch torchvision --index-url
+https://download.pytorch.org/whl/cu132`.
 
 On the eight-core machine used for the committed run, the five commands take
 about 30–40 minutes.

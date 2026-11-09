@@ -93,19 +93,19 @@ def write(path, rows):
         w.writerows(rows)
 
 
-def _sync():
+def _sync(device):
     """Wait for queued CUDA work, so a timing measures execution and not launch."""
-    if torch.cuda.is_available():
+    if str(device).startswith("cuda") and torch.cuda.is_available():
         torch.cuda.synchronize()
 
 
 def fit_timed(cls, C, zc, yc):
     """Construct and fit an adapter, returning it with the fit duration in seconds."""
     m = cls(C)
-    _sync()
+    _sync(adapters.DEVICE)
     t = time.perf_counter()
     m.fit(zc, yc)
-    _sync()
+    _sync(adapters.DEVICE)
     return m, time.perf_counter() - t
 
 
@@ -302,17 +302,17 @@ def child(a):
     zc, yc, _ = data.simulate("over", 4, max(1, a.n // VOX), VOX, 0)
     zt, _, _ = data.simulate("over", 4, max(1, a.n // VOX), VOX, 1)
     cls(4).fit(zc[:2000], yc[:2000])  # warm-up
-    _sync()
+    _sync(a.device)
     if a.device.startswith("cuda"):
         torch.cuda.reset_peak_memory_stats()
     fit, pred = [], []
     for _ in range(a.reps):
         m, dt = fit_timed(cls, 4, zc, yc)
         fit.append(dt)
-        _sync()
+        _sync(a.device)
         t = time.perf_counter()
         m.predict(zt)
-        _sync()
+        _sync(a.device)
         pred.append(time.perf_counter() - t)
     out = dict(
         fit_s=statistics.median(fit),
@@ -637,11 +637,12 @@ def report(a):
             + ("--:|" if vram else ""),
         ]
         f = lambda x: "" if pd.isna(x) else f"{x:.2f}"  # noqa: E731
+        tf = lambda x: "" if pd.isna(x) else f"{x:.4f}" if vram else f(x)  # noqa: E731
         for r in frame.itertuples():
             device = "" if not has_dev or pd.isna(r.device) else f" {r.device} |"
             row = (
                 f"| {r.n} | {r.method} |{device} {r.status} | {f(r.fit_s)} | "
-                f"{f(r.transform_s)} | {f(r.peak_rss_mb)} |"
+                f"{tf(r.transform_s)} | {f(r.peak_rss_mb)} |"
             )
             if vram:
                 row += f" {f(r.peak_vram_mb)} |"

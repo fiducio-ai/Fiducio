@@ -47,6 +47,16 @@ def test_child_records_device(capsys):
     assert "peak_vram_mb" not in row  # VRAM is only meaningful on a CUDA run
 
 
+def test_sync_only_waits_for_cuda_work(monkeypatch):
+    calls = []
+    monkeypatch.setattr(run.torch.cuda, "is_available", lambda: True)
+    monkeypatch.setattr(run.torch.cuda, "synchronize", lambda: calls.append(True))
+    run._sync("cpu")
+    assert calls == []
+    run._sync("cuda")
+    assert calls == [True]
+
+
 def test_downstream_rows_parseable(tmp_path):
     out = tmp_path / "downstream.csv"
     run.downstream(argparse.Namespace(seeds=1, cases=1, out=out))

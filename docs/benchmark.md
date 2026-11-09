@@ -293,6 +293,8 @@ Scenario `over`, 4 classes, one process per row.
 
 Fit times reflect each library's default optimiser budget: Fiducio's temperature scaling uses Adam with `max_iter=200`, which dominates its fit time at 1M voxels, while netcal's default is much cheaper.
 
+The table reports medians over 3 repetitions; the figures show no spread.
+
 | N | method | status | fit (s) | transform (s) | peak RSS (MB) |
 |--:|---|---|--:|--:|--:|
 | 100000 | identity | ok | 0.00 | 0.00 | 290.32 |
@@ -319,6 +321,11 @@ Fit times reflect each library's default optimiser budget: Fiducio's temperature
 ## Scaling (GPU)
 
 Same scenario and process, on NVIDIA GeForce RTX 3090 (torch 2.15.0+cu132). Fiducio and torch-uncertainty run on the GPU; netcal and dirichletcal are numpy/JAX and stay on the CPU, so only the CUDA rows are comparable with each other, and only on this machine.
+
+![CUDA torch methods on NVIDIA GeForce RTX 3090: median fit time, transform time, and peak VRAM over input sizes](assets/benchmark/scaling-gpu-light.png#only-light)
+![CUDA torch methods on NVIDIA GeForce RTX 3090: median fit time, transform time, and peak VRAM over input sizes](assets/benchmark/scaling-gpu-dark.png#only-dark)
+
+The graph shows CUDA rows only; the table also includes CPU baselines. Medians over 3 repetitions; no spread is shown.
 
 | N | method | device | status | fit (s) | transform (s) | peak RSS (MB) | peak VRAM (MB) |
 |--:|---|:-:|---|--:|--:|--:|--:|

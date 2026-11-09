@@ -660,6 +660,8 @@ def report(a):
         "uses Adam with `max_iter=200`, which dominates its fit time at 1M voxels, while netcal's "
         "default is much cheaper.",
         "",
+        f"The table reports medians over {int(sc.reps.iloc[0])} repetitions; the figures show no spread.",
+        "",
         *scaling_table(sc),
         "",
     ]
@@ -673,6 +675,13 @@ def report(a):
             "Fiducio and torch-uncertainty run on the GPU; netcal and dirichletcal are numpy/JAX "
             "and stay on the CPU, so only the CUDA rows are comparable with each other, and only "
             "on this machine.",
+            "",
+            figure(
+                "scaling-gpu",
+                f"CUDA torch methods on {gpu.iloc[0].gpu}: median fit time, transform time, and peak VRAM over input sizes",
+            ),
+            f"The graph shows CUDA rows only; the table also includes CPU baselines. Medians over "
+            f"{int(gpu.reps.iloc[0])} repetitions; no spread is shown.",
             "",
             *scaling_table(gpu),
             "",

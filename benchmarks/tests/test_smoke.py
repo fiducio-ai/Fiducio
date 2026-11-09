@@ -57,6 +57,16 @@ def test_sync_only_waits_for_cuda_work(monkeypatch):
     assert calls == [True]
 
 
+def test_gpu_scaling_plot_renders_both_themes(tmp_path):
+    import plots
+
+    rows = rows_of(Path(__file__).parents[1] / "results/scaling-gpu.csv")
+    for mode in ("light", "dark"):
+        path = tmp_path / f"scaling-gpu-{mode}.png"
+        plots.scaling_gpu(rows, mode, path)
+        assert path.stat().st_size > 10_000
+
+
 def test_downstream_rows_parseable(tmp_path):
     out = tmp_path / "downstream.csv"
     run.downstream(argparse.Namespace(seeds=1, cases=1, out=out))
